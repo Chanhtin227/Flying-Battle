@@ -3,8 +3,13 @@
 --- !u!129 &1
 PlayerSettings:
   m_ObjectHideFlags: 0
+<<<<<<< HEAD
   serializedVersion: 29
   productGUID: 1d976d63343c93d4a897af7609b0d659
+=======
+  serializedVersion: 28
+  productGUID: f45161f8fdae43b44ad412e3deecb419
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +18,11 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
+<<<<<<< HEAD
   productName: Flying_Battle
+=======
+  productName: Flying Battle
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -41,6 +50,10 @@ PlayerSettings:
     height: 1
   m_SplashScreenLogos: []
   m_VirtualRealitySplashScreen: {fileID: 0}
+<<<<<<< HEAD
+=======
+  m_HolographicTrackingLossScreen: {fileID: 0}
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   defaultScreenWidth: 1024
   defaultScreenHeight: 768
   defaultScreenWidthWeb: 960
@@ -65,15 +78,21 @@ PlayerSettings:
   useOSAutorotation: 1
   use32BitDisplayBuffer: 1
   preserveFramebufferAlpha: 0
+<<<<<<< HEAD
   adjustIOSFPSUsingThermalState: 1
   thermalStateSeriousIOSFPS: 30
   thermalStateCriticalIOSFPS: 15
+=======
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   disableDepthAndStencilBuffers: 0
   androidStartInFullscreen: 1
   androidRenderOutsideSafeArea: 1
   androidUseSwappy: 0
+<<<<<<< HEAD
   androidRequestedVisibleInsets: 0
   androidSystemBarsBehavior: 2
+=======
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   androidDisplayOptions: 1
   androidBlitType: 0
   androidResizeableActivity: 1
@@ -152,10 +171,18 @@ PlayerSettings:
   preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
+<<<<<<< HEAD
+=======
+  m_HolographicPauseOnTrackingLoss: 1
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   xboxOneDisableKinectGpuReservation: 1
   xboxOneEnable7thCore: 1
   vrSettings:
     enable360StereoCapture: 0
+<<<<<<< HEAD
+=======
+  isWsaHolographicRemotingEnabled: 0
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   enableFrameTimingStats: 0
   enableOpenGLProfilerGPURecorders: 1
   allowHDRDisplaySupport: 0
@@ -179,7 +206,11 @@ PlayerSettings:
     tvOS: 0
   overrideDefaultApplicationIdentifier: 1
   AndroidBundleVersionCode: 1
+<<<<<<< HEAD
   AndroidMinSdkVersion: 26
+=======
+  AndroidMinSdkVersion: 25
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 1
   AndroidPreferredDataLocation: 1
@@ -204,7 +235,10 @@ PlayerSettings:
   tvOSTargetOSVersionString: 15.0
   VisionOSSdkVersion: 0
   VisionOSTargetOSVersionString: 1.0
+<<<<<<< HEAD
   xcodeProjectType: 0
+=======
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   uIPrerenderedIcon: 0
   uIRequiresPersistentWiFi: 0
   uIRequiresFullScreen: 1
@@ -272,6 +306,10 @@ PlayerSettings:
   useCustomGradleSettingsTemplate: 0
   useCustomProguardFile: 0
   AndroidTargetArchitectures: 2
+<<<<<<< HEAD
+=======
+  AndroidAllowedArchitectures: -13
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
   AndroidKeystoreName: 
@@ -538,6 +576,10 @@ PlayerSettings:
   - m_BuildTarget: AndroidPlayer
     m_APIs: 150000000b000000
     m_Automatic: 0
+<<<<<<< HEAD
+=======
+  m_BuildTargetVRSettings: []
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   m_DefaultShaderChunkSizeInMB: 16
   m_DefaultShaderChunkCount: 0
   openGLRequireES31: 0
@@ -719,8 +761,11 @@ PlayerSettings:
   switchMicroSleepForYieldTime: 25
   switchRamDiskSpaceSize: 12
   switchUpgradedPlayerSettingsToNMETA: 0
+<<<<<<< HEAD
   switchCaStoreSource: 0
   switchCaStoreFilePath: 
+=======
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   ps4NPAgeRating: 12
   ps4NPTitleSecret: 
   ps4NPTrophyPackPath: 
@@ -827,7 +872,11 @@ PlayerSettings:
   webGLWebAssemblyTable: 0
   webGLWebAssemblyBigInt: 0
   webGLCloseOnQuit: 0
+<<<<<<< HEAD
   webWasm2023: 1
+=======
+  webWasm2023: 0
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols: {}
   additionalCompilerArguments: {}
@@ -836,7 +885,10 @@ PlayerSettings:
     Android: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration: {}
+<<<<<<< HEAD
   il2cppLTOMode: {}
+=======
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   il2cppStacktraceInformation: {}
   managedStrippingLevel: {}
   incrementalIl2cppBuild: {}
@@ -851,14 +903,22 @@ PlayerSettings:
   editorAssembliesCompatibilityLevel: 1
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
+<<<<<<< HEAD
   metroPackageName: Flying_Battle
+=======
+  metroPackageName: Flying Battle
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
+<<<<<<< HEAD
   metroApplicationDescription: Flying_Battle
+=======
+  metroApplicationDescription: Flying Battle
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -906,6 +966,10 @@ PlayerSettings:
   XboxOneXTitleMemory: 8
   XboxOneOverrideIdentityName: 
   XboxOneOverrideIdentityPublisher: 
+<<<<<<< HEAD
+=======
+  vrEditorSettings: {}
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   cloudServicesEnabled: {}
   luminIcon:
     m_Name: 
@@ -926,6 +990,7 @@ PlayerSettings:
   qnxGraphicConfPath: 
   apiCompatibilityLevel: 6
   captureStartupLogs: {}
+<<<<<<< HEAD
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
   enableDirectStorage: 0
@@ -934,6 +999,15 @@ PlayerSettings:
   qualitySettingsNames: []
   projectName: Flying_Battle
   organizationId: lhuan8449
+=======
+  activeInputHandler: 1
+  windowsGamepadBackendHint: 0
+  cloudProjectId: 
+  framebufferDepthMemorylessMode: 0
+  qualitySettingsNames: []
+  projectName: 
+  organizationId: 
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}

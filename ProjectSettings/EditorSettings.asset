@@ -3,7 +3,11 @@
 --- !u!159 &1
 EditorSettings:
   m_ObjectHideFlags: 0
+<<<<<<< HEAD
   serializedVersion: 16
+=======
+  serializedVersion: 15
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   m_SerializationMode: 2
   m_LineEndingsForNewScripts: 0
   m_DefaultBehaviorMode: 0
@@ -23,8 +27,11 @@ EditorSettings:
   m_EnableTextureStreamingInPlayMode: 1
   m_EnableEditorAsyncCPUTextureLoading: 0
   m_AsyncShaderCompilation: 1
+<<<<<<< HEAD
   m_BlockShaders: 0
   m_UnlockBlockShaders: 0
+=======
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   m_PrefabModeAllowAutoSave: 1
   m_EnterPlayModeOptionsEnabled: 1
   m_EnterPlayModeOptions: 0
@@ -43,11 +50,19 @@ EditorSettings:
   m_CacheServerNamespacePrefix: default
   m_CacheServerEnableDownload: 1
   m_CacheServerEnableUpload: 1
+<<<<<<< HEAD
   m_CacheServerEnableTls: 0
   m_CacheServerImportResultCachingEnabled: 0
+=======
+  m_CacheServerEnableAuth: 0
+  m_CacheServerEnableTls: 0
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   m_CacheServerValidationMode: 2
   m_CacheServerDownloadBatchSize: 128
   m_EnableEnlightenBakedGI: 0
   m_ReferencedClipsExactNaming: 1
   m_ForceAssetUnloadAndGCOnSceneLoad: 1
+<<<<<<< HEAD
   m_HideBuildProfileClassicPlatforms: 0
+=======
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82

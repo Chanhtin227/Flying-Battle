@@ -74,6 +74,10 @@ MonoBehaviour:
   m_MixedLightingSupported: 1
   m_SupportsLightCookies: 1
   m_SupportsLightLayers: 1
+<<<<<<< HEAD
+=======
+  m_DebugLevel: 0
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   m_StoreActionsOptimization: 0
   m_UseAdaptivePerformance: 1
   m_ColorGradingMode: 0
@@ -135,7 +139,10 @@ MonoBehaviour:
   m_PrefilterReflectionProbeBlending: 0
   m_PrefilterReflectionProbeBoxProjection: 0
   m_PrefilterReflectionProbeAtlas: 0
+<<<<<<< HEAD
   m_PrefilterPointSamplingUpsampling: 0
+=======
+>>>>>>> c26cc3c3a764f9d1e1251fbbd2fb045b7cbdcd82
   m_ShaderVariantLogLevel: 0
   m_ShadowCascades: 0
   m_Textures:
