@@ -527,7 +527,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4952914378736412972, guid: 019c3fd29c7e31c45837c8375036d0f4, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5762243359782630294, guid: 019c3fd29c7e31c45837c8375036d0f4, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1020,7 +1020,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
     - target: {fileID: -8679921383154817045, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 136.23
+      value: 146.59
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1028,7 +1028,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 123.61
+      value: 116.19
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1438,6 +1438,9 @@ PrefabInstance:
       addedObject: {fileID: 2270641106786434766}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 1600288243756836947}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 2614666991485716670}
   m_SourcePrefab: {fileID: 100100000, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
 --- !u!4 &2891825818682833851 stripped
@@ -1488,13 +1491,13 @@ CharacterController:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Height: 2
+  m_Height: 1.17
   m_Radius: 0.5
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.84, z: 0}
+  m_Center: {x: 0, y: 0.66, z: 0}
 --- !u!114 &4713323537150237153
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1538,11 +1541,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fec75ef21edc6d47afbe40c67aedc68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWeapon
+  rifleMagazineSize: 30
+  rifleAmmo: 30
+  pistolMagazineSize: 12
+  pistolAmmo: 12
+  rifleReserveAmmo: 90
+  pistolReserveAmmo: 36
+  rifleAmmoText: {fileID: 0}
+  pistolAmmoText: {fileID: 0}
+  batUI: {fileID: 0}
+  shovelUI: {fileID: 0}
+  rifleReloadTime: 2
+  pistolReloadTime: 1.5
   gun: {fileID: 6949992391029123967}
   pistol: {fileID: 1621556315030243548}
   bat: {fileID: 1580805019639322907}
   shovel: {fileID: 459484594032373187}
-  currentWeapon: 0
+  currentWeapon: 1
   fpsCamera: {fileID: 9205494430748297962}
   rifleDamage: 25
   rifleFireRate: 10
@@ -1561,8 +1576,25 @@ MonoBehaviour:
   pistolShotSound: {fileID: 8300000, guid: 867e5eee532ff2d4695c17134af57c37, type: 3}
   batHitSound: {fileID: 8300000, guid: 28fa253d6c2125f459ee92ce2db31310, type: 3}
   shovelHitSound: {fileID: 8300000, guid: 28fa253d6c2125f459ee92ce2db31310, type: 3}
+  rifleReloadSound: {fileID: 8300000, guid: 049cfaafbf81cd04eb202c489108794b, type: 3}
+  pistolReloadSound: {fileID: 8300000, guid: b7dea84c0d1df4d46af20e41ff3aa8f3, type: 3}
   tracerPrefab: {fileID: 8941377978627608511, guid: 2a2395de5b97e73499da6fdc62d7b768, type: 3}
   firePoint: {fileID: 8055155273452660666}
+--- !u!114 &1600288243756836947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8323938116521971073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5e36e09b803884daaa0274b12aa477, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  currentHealth: 0
+  healthSlider: {fileID: 0}
 --- !u!82 &2614666991485716670
 AudioSource:
   m_ObjectHideFlags: 0

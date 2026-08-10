@@ -24,9 +24,20 @@ public class BulletTracer : MonoBehaviour
         lr.positionCount = 2;
 
         float distance = Vector3.Distance(start, end);
-        float t = 0;
 
-        while (t < 1)
+        // Tránh chia cho 0
+        if (distance <= 0.01f)
+        {
+            lr.SetPosition(0, start);
+            lr.SetPosition(1, end);
+            yield return new WaitForSeconds(lifeTime);
+            Destroy(gameObject);
+            yield break;
+        }
+
+        float t = 0f;
+
+        while (t < 1f)
         {
             t += Time.deltaTime * speed / distance;
 

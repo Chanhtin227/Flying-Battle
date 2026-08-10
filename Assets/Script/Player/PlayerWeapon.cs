@@ -1,15 +1,36 @@
 using UnityEngine;
+using TMPro;
+using System.Collections;
+using System;
 
 public class PlayerWeapon : MonoBehaviour
 {
-    public enum WeaponType
-    {
-        None,
-        Rifle,
-        Pistol,
-        Bat,
-        Shovel
-    }
+    public enum WeaponType { None, Rifle, Pistol, Bat, Shovel }
+
+[Header("Ammo")]
+
+    public int rifleMagazineSize = 30;
+    public int rifleAmmo = 30;
+
+    public int pistolMagazineSize = 12;
+    public int pistolAmmo = 12;
+
+    public int rifleReserveAmmo = 90;
+    public int pistolReserveAmmo = 36;
+
+    [Header("Ammo UI")]
+    public TMP_Text rifleAmmoText;
+    public TMP_Text pistolAmmoText;
+
+    [Header("Melee UI")]
+    public TMP_Text batUI;
+    public TMP_Text shovelUI;
+
+    bool isReloading = false;
+
+    [Header("Reload Time")]
+    public float rifleReloadTime = 2f;
+    public float pistolReloadTime = 1.5f;
 
     [Header("Weapons")]
     public GameObject gun;
@@ -22,6 +43,11 @@ public class PlayerWeapon : MonoBehaviour
     bool hasPistol = false;
     bool hasBat = false;
     bool hasShovel = false;
+
+    [Header("Inventory Weapons")]
+    public int maxWeaponSlots = 2;
+
+    private int weaponCount = 0;
 
     [Header("Gun Settings")]
     public Camera fpsCamera;
@@ -56,6 +82,9 @@ public class PlayerWeapon : MonoBehaviour
     public AudioClip batHitSound;
     public AudioClip shovelHitSound;
 
+    public AudioClip rifleReloadSound;
+    public AudioClip pistolReloadSound;
+
     public GameObject tracerPrefab;
     public Transform firePoint;
 
@@ -67,12 +96,46 @@ public class PlayerWeapon : MonoBehaviour
     {
         playerAnim = GetComponent<PlayerAnimation>();
 
-        gun.SetActive(false);
-        pistol.SetActive(false);
-        bat.SetActive(false);
-        shovel.SetActive(false);
+        // Nếu player đã có vũ khí sẵn
+        if (currentWeapon != WeaponType.None)
+        {
+            // Đưa vũ khí ban đầu vào Slot 1
+            slot1 = currentWeapon;
+            weaponCount = 1;
 
-        playerAnim.SetMelee(false);
+            // Đánh dấu đã sở hữu
+            switch (currentWeapon)
+            {
+                case WeaponType.Rifle:
+                    hasRifle = true;
+                    break;
+
+                case WeaponType.Pistol:
+                    hasPistol = true;
+                    break;
+
+                case WeaponType.Bat:
+                    hasBat = true;
+                    break;
+
+                case WeaponType.Shovel:
+                    hasShovel = true;
+                    break;
+            }
+
+            UpdateWeaponVisibility();
+        }
+        else
+        {
+            // Không có vũ khí ban đầu
+            gun.SetActive(false);
+            pistol.SetActive(false);
+            bat.SetActive(false);
+            shovel.SetActive(false);
+
+            if (playerAnim != null)
+                playerAnim.SetMelee(false);
+        }
     }
 
     void Update()
@@ -83,45 +146,70 @@ public class PlayerWeapon : MonoBehaviour
 
         MeleeInput();
 
-        if (Input.GetKeyDown(KeyCode.H))
-            playerAnim.Hit();
+        UpdateAmmoUI();
 
-        if (Input.GetKeyDown(KeyCode.K))
-            playerAnim.Die();
+        if (Input.GetKeyDown(KeyCode.R) && !isReloading)
+        {
+            StartCoroutine(Reload());
+        }
     }
+
+    private WeaponType slot1 = WeaponType.None;
+    private WeaponType slot2 = WeaponType.None;
 
     void SwitchWeapon()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1) && hasRifle)
-            currentWeapon = WeaponType.Rifle;
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            if (slot1 != WeaponType.None)
+            {
+                currentWeapon = slot1;
+                UpdateWeaponVisibility();
+            }
+        }
 
-        if (Input.GetKeyDown(KeyCode.Alpha2) && hasPistol)
-            currentWeapon = WeaponType.Pistol;
-
-        if (Input.GetKeyDown(KeyCode.Alpha3) && hasBat)
-            currentWeapon = WeaponType.Bat;
-
-        if (Input.GetKeyDown(KeyCode.Alpha4) && hasShovel)
-            currentWeapon = WeaponType.Shovel;
-
-        gun.SetActive(currentWeapon == WeaponType.Rifle);
-        pistol.SetActive(currentWeapon == WeaponType.Pistol);
-        bat.SetActive(currentWeapon == WeaponType.Bat);
-        shovel.SetActive(currentWeapon == WeaponType.Shovel);
-
-        playerAnim.SetMelee(
-            currentWeapon == WeaponType.Bat ||
-            currentWeapon == WeaponType.Shovel);
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            if (slot2 != WeaponType.None)
+            {
+                currentWeapon = slot2;
+                UpdateWeaponVisibility();
+            }
+        }
     }
 
     void ShootInput()
     {
+
+        if (isReloading)
+            return;
+
+        if (currentWeapon != WeaponType.Rifle &&
+            currentWeapon != WeaponType.Pistol)
+            return;
+
+
         if (currentWeapon != WeaponType.Rifle &&
             currentWeapon != WeaponType.Pistol)
             return;
 
         if (Input.GetMouseButton(0) && Time.time >= nextFireTime)
         {
+            if (currentWeapon == WeaponType.Rifle)
+            {
+                if (rifleAmmo <= 0)
+                    return;
+
+                rifleAmmo--;
+            }
+            else
+            {
+                if (pistolAmmo <= 0)
+                    return;
+
+                pistolAmmo--;
+            }
+
             float rate = currentWeapon == WeaponType.Rifle
                 ? rifleFireRate
                 : pistolFireRate;
@@ -131,6 +219,8 @@ public class PlayerWeapon : MonoBehaviour
             playerAnim.Shoot();
 
             Shoot();
+
+            UpdateAmmoUI();
         }
     }
 
@@ -142,14 +232,73 @@ public class PlayerWeapon : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            playerAnim.MeleeAttack();
+            // Animation
+            if (playerAnim != null)
+                playerAnim.MeleeAttack();
 
+            // Âm thanh
             if (audioSource != null)
             {
                 if (currentWeapon == WeaponType.Bat)
-                    audioSource.PlayOneShot(batHitSound);
+                {
+                    if (batHitSound != null)
+                        audioSource.PlayOneShot(batHitSound);
+                }
                 else
-                    audioSource.PlayOneShot(shovelHitSound);
+                {
+                    if (shovelHitSound != null)
+                        audioSource.PlayOneShot(shovelHitSound);
+                }
+            }
+
+            // Gây damage
+            MeleeAttack();
+        }
+    }
+    void MeleeAttack()
+    {
+        float damage = 0f;
+        float range = 0f;
+
+        // Damage của từng vũ khí
+        if (currentWeapon == WeaponType.Bat)
+        {
+            damage = batDamage;
+            range = batRange;
+        }
+        else if (currentWeapon == WeaponType.Shovel)
+        {
+            damage = shovelDamage;
+            range = shovelRange;
+        }
+
+        RaycastHit hit;
+
+        if (Physics.Raycast(
+            fpsCamera.transform.position,
+            fpsCamera.transform.forward,
+            out hit,
+            range))
+        {
+            Debug.Log("Cận chiến trúng: " + hit.collider.name);
+
+            // Tìm PlayerHealth
+            PlayerHealth target =
+                hit.collider.GetComponentInParent<PlayerHealth>();
+
+            if (target != null)
+            {
+                // Không đánh chính mình
+                if (target.gameObject != gameObject)
+                {
+                    target.TakeDamage(damage);
+
+                    Debug.Log(
+                        currentWeapon +
+                        " đánh Player, Damage: " +
+                        damage
+                    );
+                }
             }
         }
     }
@@ -170,80 +319,370 @@ public class PlayerWeapon : MonoBehaviour
                 currentDamage = pistolDamage;
                 currentRange = pistolRange;
                 break;
+
+            default:
+                return;
         }
-        // Hiệu ứng đầu nòng
+
+        // =========================
+        // MUZZLE FLASH
+        // =========================
+
         if (currentWeapon == WeaponType.Rifle && rifleMuzzleFlash != null)
         {
-            rifleMuzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            rifleMuzzleFlash.Stop(
+                true,
+                ParticleSystemStopBehavior.StopEmittingAndClear
+            );
+
             rifleMuzzleFlash.Play();
         }
 
         if (currentWeapon == WeaponType.Pistol && pistolMuzzleFlash != null)
         {
-            pistolMuzzleFlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            pistolMuzzleFlash.Stop(
+                true,
+                ParticleSystemStopBehavior.StopEmittingAndClear
+            );
+
             pistolMuzzleFlash.Play();
         }
 
-        // Phát âm thanh
+        // =========================
+        // SOUND
+        // =========================
+
         if (audioSource != null)
         {
-            if (currentWeapon == WeaponType.Rifle && rifleShotSound != null)
+            if (currentWeapon == WeaponType.Rifle &&
+                rifleShotSound != null)
+            {
                 audioSource.PlayOneShot(rifleShotSound);
+            }
 
-            if (currentWeapon == WeaponType.Pistol && pistolShotSound != null)
+            if (currentWeapon == WeaponType.Pistol &&
+                pistolShotSound != null)
+            {
                 audioSource.PlayOneShot(pistolShotSound);
+            }
         }
 
+        // =========================
+        // RAYCAST TỪ CAMERA
+        // =========================
+
         RaycastHit cameraHit;
+
         Vector3 targetPoint;
 
-        // Raycast từ camera để xác định điểm ngắm
-        if (Physics.Raycast(fpsCamera.transform.position,
-                            fpsCamera.transform.forward,
-                            out cameraHit,
-                            currentRange))
+        if (Physics.Raycast(
+            fpsCamera.transform.position,
+            fpsCamera.transform.forward,
+            out cameraHit,
+            currentRange))
         {
             targetPoint = cameraHit.point;
-            Debug.Log("Trúng: " + cameraHit.collider.name);
+
+            Debug.Log("Camera trúng: " + cameraHit.collider.name);
         }
         else
         {
-            targetPoint = fpsCamera.transform.position +
-                          fpsCamera.transform.forward * currentRange;
+            targetPoint =
+                fpsCamera.transform.position +
+                fpsCamera.transform.forward * currentRange;
         }
 
-        // Tính hướng bắn từ đầu nòng đến mục tiêu
-        Vector3 shootDirection = (targetPoint - firePoint.position).normalized;
+        // =========================
+        // HƯỚNG TỪ NÒNG SÚNG
+        // =========================
 
-        // Raycast từ đầu nòng để tránh bắn xuyên tường gần người chơi
+        Vector3 shootDirection =
+            (targetPoint - firePoint.position).normalized;
+
+        // =========================
+        // RAYCAST TỪ NÒNG SÚNG
+        // =========================
+
         RaycastHit gunHit;
 
-        if (Physics.Raycast(firePoint.position,
-                            shootDirection,
-                            out gunHit,
-                            currentRange))
+        if (Physics.Raycast(
+            firePoint.position,
+            shootDirection,
+            out gunHit,
+            currentRange))
         {
             targetPoint = gunHit.point;
+
+            Debug.Log("Đạn trúng: " + gunHit.collider.name);
+
+            // =========================
+            // GÂY DAMAGE PLAYER
+            // =========================
+
+            PlayerHealth target =
+                gunHit.collider.GetComponentInParent<PlayerHealth>();
+
+            if (target != null)
+            {
+                // Không gây damage cho chính mình
+                if (target.gameObject != gameObject)
+                {
+                    target.TakeDamage(currentDamage);
+
+                    Debug.Log(
+                        "Bắn trúng Player khác! Damage: "
+                        + currentDamage
+                    );
+                }
+            }
         }
 
-        // Hiệu ứng tia đạn
+        // =========================
+        // BULLET TRACER
+        // =========================
+
         if (tracerPrefab != null && firePoint != null)
         {
             GameObject tracer = Instantiate(
                 tracerPrefab,
                 firePoint.position,
-                Quaternion.LookRotation(shootDirection));
+                Quaternion.LookRotation(shootDirection)
+            );
 
-            BulletTracer bulletTracer = tracer.GetComponent<BulletTracer>();
+            BulletTracer bulletTracer =
+                tracer.GetComponent<BulletTracer>();
 
             if (bulletTracer != null)
             {
-                bulletTracer.Fire(firePoint.position, targetPoint);
+                bulletTracer.Fire(
+                    firePoint.position,
+                    targetPoint
+                );
             }
         }
     }
-    public void PickupWeapon(WeaponType weapon)
+    void UpdateWeaponVisibility()
     {
+        if (gun != null)
+            gun.SetActive(currentWeapon == WeaponType.Rifle);
+
+        if (pistol != null)
+            pistol.SetActive(currentWeapon == WeaponType.Pistol);
+
+        if (bat != null)
+            bat.SetActive(currentWeapon == WeaponType.Bat);
+
+        if (shovel != null)
+            shovel.SetActive(currentWeapon == WeaponType.Shovel);
+
+        if (playerAnim != null)
+        {
+            playerAnim.SetMelee(
+                currentWeapon == WeaponType.Bat ||
+                currentWeapon == WeaponType.Shovel
+            );
+        }
+    }
+
+    bool HasWeapon(WeaponType weapon)
+    {
+        switch (weapon)
+        {
+            case WeaponType.Rifle:
+                return hasRifle;
+
+            case WeaponType.Pistol:
+                return hasPistol;
+
+            case WeaponType.Bat:
+                return hasBat;
+
+            case WeaponType.Shovel:
+                return hasShovel;
+        }
+
+        return false;
+    }
+    void UpdateAmmoUI()
+    {
+        // Ẩn tất cả UI trước
+        if (rifleAmmoText != null)
+            rifleAmmoText.gameObject.SetActive(false);
+
+        if (pistolAmmoText != null)
+            pistolAmmoText.gameObject.SetActive(false);
+
+        if (batUI != null)
+            batUI.gameObject.SetActive(false);
+
+        if (shovelUI != null)
+            shovelUI.gameObject.SetActive(false);
+
+
+        // =========================
+        // RIFLE
+        // =========================
+        if (currentWeapon == WeaponType.Rifle)
+        {
+            if (rifleAmmoText != null)
+            {
+                rifleAmmoText.gameObject.SetActive(true);
+
+                if (isReloading)
+                    rifleAmmoText.text = "Reloading!";
+                else
+                    rifleAmmoText.text = rifleAmmo + " / " + rifleReserveAmmo;
+            }
+        }
+
+
+        // =========================
+        // PISTOL
+        // =========================
+        else if (currentWeapon == WeaponType.Pistol)
+        {
+            if (pistolAmmoText != null)
+            {
+                pistolAmmoText.gameObject.SetActive(true);
+
+                if (isReloading)
+                    pistolAmmoText.text = "Reloading!";
+                else
+                    pistolAmmoText.text = pistolAmmo + " / " + pistolReserveAmmo;
+            }
+        }
+
+
+        // =========================
+        // BAT - GẬY
+        // =========================
+        else if (currentWeapon == WeaponType.Bat)
+        {
+            if (batUI != null)
+            {
+                batUI.gameObject.SetActive(true);
+                batUI.text = "BAT";
+            }
+        }
+
+
+        // =========================
+        // SHOVEL - XẺNG
+        // =========================
+        else if (currentWeapon == WeaponType.Shovel)
+        {
+            if (shovelUI != null)
+            {
+                shovelUI.gameObject.SetActive(true);
+                shovelUI.text = "SHOVEL";
+            }
+        }
+    }
+    IEnumerator Reload()
+    {
+        // Chỉ Rifle hoặc Pistol mới được reload
+        if (currentWeapon != WeaponType.Rifle &&
+            currentWeapon != WeaponType.Pistol)
+            yield break;
+
+        // Kiểm tra Rifle
+        if (currentWeapon == WeaponType.Rifle)
+        {
+            if (rifleAmmo >= rifleMagazineSize)
+                yield break;
+
+            if (rifleReserveAmmo <= 0)
+                yield break;
+        }
+
+        // Kiểm tra Pistol
+        if (currentWeapon == WeaponType.Pistol)
+        {
+            if (pistolAmmo >= pistolMagazineSize)
+                yield break;
+
+            if (pistolReserveAmmo <= 0)
+                yield break;
+        }
+
+        isReloading = true;
+        UpdateAmmoUI();
+
+        // Âm thanh reload
+        if (audioSource != null)
+        {
+            if (currentWeapon == WeaponType.Rifle &&
+                rifleReloadSound != null)
+            {
+                audioSource.PlayOneShot(rifleReloadSound);
+            }
+
+            if (currentWeapon == WeaponType.Pistol &&
+                pistolReloadSound != null)
+            {
+                audioSource.PlayOneShot(pistolReloadSound);
+            }
+        }
+
+        float reloadTime = currentWeapon == WeaponType.Rifle
+            ? rifleReloadTime
+            : pistolReloadTime;
+
+        yield return new WaitForSeconds(reloadTime);
+
+        // Nạp Rifle
+        if (currentWeapon == WeaponType.Rifle)
+        {
+            int need = rifleMagazineSize - rifleAmmo;
+            int load = Mathf.Min(need, rifleReserveAmmo);
+
+            rifleAmmo += load;
+            rifleReserveAmmo -= load;
+        }
+
+        // Nạp Pistol
+        else if (currentWeapon == WeaponType.Pistol)
+        {
+            int need = pistolMagazineSize - pistolAmmo;
+            int load = Mathf.Min(need, pistolReserveAmmo);
+
+            pistolAmmo += load;
+            pistolReserveAmmo -= load;
+        }
+
+        isReloading = false;
+
+        UpdateAmmoUI();
+    }
+
+    public bool PickupWeapon(WeaponType weapon)
+    {
+        // Đã có vũ khí này rồi
+        if (HasWeapon(weapon))
+        {
+            Debug.Log("Bạn đã có " + weapon);
+            return false;
+        }
+
+        // Kiểm tra đủ 2 slot
+        if (slot1 != WeaponType.None && slot2 != WeaponType.None)
+        {
+            Debug.Log("Đã đủ 2 vũ khí!");
+            return false;
+        }
+
+        // Thêm vào slot 1
+        if (slot1 == WeaponType.None)
+        {
+            slot1 = weapon;
+        }
+        // Nếu slot 1 đầy thì thêm slot 2
+        else if (slot2 == WeaponType.None)
+        {
+            slot2 = weapon;
+        }
+
+        // Đánh dấu đã sở hữu
         switch (weapon)
         {
             case WeaponType.Rifle:
@@ -263,15 +702,20 @@ public class PlayerWeapon : MonoBehaviour
                 break;
         }
 
+        weaponCount++;
+
+        // Cầm ngay vũ khí vừa nhặt
         currentWeapon = weapon;
 
-        gun.SetActive(currentWeapon == WeaponType.Rifle);
-        pistol.SetActive(currentWeapon == WeaponType.Pistol);
-        bat.SetActive(currentWeapon == WeaponType.Bat);
-        shovel.SetActive(currentWeapon == WeaponType.Shovel);
+        UpdateWeaponVisibility();
 
-        playerAnim.SetMelee(
-            currentWeapon == WeaponType.Bat ||
-            currentWeapon == WeaponType.Shovel);
+        Debug.Log(
+            "Đã nhặt: " + weapon +
+            " | Slot 1: " + slot1 +
+            " | Slot 2: " + slot2
+        );
+
+        return true;
     }
+
 }

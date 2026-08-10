@@ -106,3 +106,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPickup
   weaponType: 2
+  inventoryItem: {fileID: 11400000, guid: 6eb6162f1bf65d34390abf063e7bc1bd, type: 2}
