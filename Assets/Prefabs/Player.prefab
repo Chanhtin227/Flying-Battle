@@ -110,12 +110,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCamera
   target: {fileID: 8705248287685351227}
+  cam: {fileID: 9205494430748297962}
   mouseSensitivity: 150
   shoulderOffset: {x: 0.6, y: 1.6, z: 0}
-  distance: 3.5
+  normalDistance: 4
+  isAiming: 0
+  aimDistance: 2
+  normalFOV: 60
+  aimFOV: 40
+  aimSpeed: 8
+  aimShoulderOffset: {x: 0.75, y: 1.55, z: 0}
   minPitch: -30
   maxPitch: 60
-  cam: {fileID: 9205494430748297962}
+  rotationSmoothTime: 0.06
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  cameraRadius: 0.2
+  minDistance: 0.5
+  collisionOffset: 0.1
+  walkBobAmount: 0.01
+  walkBobSpeed: 7
+  runBobAmount: 0.025
+  runBobSpeed: 11
 --- !u!1 &8178592744746196493
 GameObject:
   m_ObjectHideFlags: 0
