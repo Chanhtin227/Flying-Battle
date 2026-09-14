@@ -146,6 +146,14 @@ MonoBehaviour:
     m_Localized: different
     m_Metadata:
       m_Items: []
+  - m_Id: 1521856903413760
+    m_Localized: Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1521998662500352
+    m_Localized: Choose the language displayed in the game
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

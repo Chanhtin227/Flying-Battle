@@ -110,3 +110,9 @@ MonoBehaviour:
   - Key: more3
     Vietnamese: "Kh\xE1c"
     English: different
+  - Key: language2
+    Vietnamese: "Ng\xF4n ng\u1EEF"
+    English: Language
+  - Key: language3
+    Vietnamese: "Ch\u1ECDn ng\xF4n ng\u1EEF hi\u1EC3n th\u1ECB trong game"
+    English: Choose the language displayed in the game

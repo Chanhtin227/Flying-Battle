@@ -5,15 +5,26 @@ using System.Collections;
 
 public class IntroVideoController : MonoBehaviour
 {
+    [Header("Video")]
     public VideoPlayer videoPlayer;
-    public CanvasGroup titleGroup;
-    public RectTransform titleRect;
-    public double showTitleAtSecond = 10.0;
-    public string nextSceneName = "MainMenu";
 
-    [Header("Button hiện sau khi Title xong")]
-    public CanvasGroup buttonGroup;
-    public float delayAfterTitle = 1f;
+    [Header("Logo / Tên game")]
+    public CanvasGroup titleGroup;    
+    public RectTransform titleRect;    
+    public double showTitleAtSecond = 10.0; 
+
+    [Header("Chữ 'Chạm để vào game'")]
+    public CanvasGroup tapTextGroup;    
+    public float delayAfterTitle = 1f; 
+    public float blinkSpeed = 0.8f;     
+    public float minAlpha = 0.3f;   
+    public float maxAlpha = 1f;     
+
+    [Header("Vùng chạm toàn màn hình")]
+    public CanvasGroup tapAreaGroup;    
+
+    [Header("Chuyển scene")]
+    public string nextSceneName = "MainMenu";
 
     private bool titleShown = false;
 
@@ -22,26 +33,35 @@ public class IntroVideoController : MonoBehaviour
         titleGroup.alpha = 0;
         titleRect.localScale = Vector3.zero;
 
-        buttonGroup.alpha = 0;
-        buttonGroup.interactable = false;
-        buttonGroup.blocksRaycasts = false;
+        tapTextGroup.alpha = 0;
+
+        tapAreaGroup.alpha = 0;
+        tapAreaGroup.interactable = false;
+        tapAreaGroup.blocksRaycasts = false;
     }
 
     void Update()
     {
-        // Không còn reset khi video loop nữa — chỉ chạy 1 lần duy nhất
         if (!titleShown && videoPlayer.time >= showTitleAtSecond)
         {
             titleShown = true;
-            StartCoroutine(ShowTitleThenButton());
+            StartCoroutine(ShowTitleThenTapPrompt());
         }
     }
 
-    IEnumerator ShowTitleThenButton()
+    IEnumerator ShowTitleThenTapPrompt()
     {
         yield return StartCoroutine(AnimateTitleIn());
+
         yield return new WaitForSeconds(delayAfterTitle);
-        yield return StartCoroutine(AnimateButtonIn());
+
+        tapAreaGroup.alpha = 1f;
+        tapAreaGroup.interactable = true;
+        tapAreaGroup.blocksRaycasts = true;
+
+        yield return StartCoroutine(FadeCanvasGroup(tapTextGroup, 0f, 1f, 0.6f));
+
+        StartCoroutine(BlinkTapText());
     }
 
     IEnumerator AnimateTitleIn()
@@ -53,9 +73,12 @@ public class IntroVideoController : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
+
             float scale = Mathf.SmoothStep(0f, 1f, t) + Mathf.Sin(t * Mathf.PI) * 0.15f * (1 - t);
             titleRect.localScale = Vector3.one * scale;
+
             titleGroup.alpha = Mathf.SmoothStep(0f, 1f, t);
+
             yield return null;
         }
 
@@ -63,23 +86,25 @@ public class IntroVideoController : MonoBehaviour
         titleGroup.alpha = 1;
     }
 
-    IEnumerator AnimateButtonIn()
+    IEnumerator BlinkTapText()
     {
-        float duration = 0.6f;
+        while (true)
+        {
+            yield return StartCoroutine(FadeCanvasGroup(tapTextGroup, maxAlpha, minAlpha, blinkSpeed));
+            yield return StartCoroutine(FadeCanvasGroup(tapTextGroup, minAlpha, maxAlpha, blinkSpeed));
+        }
+    }
+
+    IEnumerator FadeCanvasGroup(CanvasGroup group, float from, float to, float duration)
+    {
         float elapsed = 0f;
-
-        buttonGroup.interactable = true;
-        buttonGroup.blocksRaycasts = true;
-
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-            buttonGroup.alpha = Mathf.SmoothStep(0f, 1f, t);
+            group.alpha = Mathf.Lerp(from, to, elapsed / duration);
             yield return null;
         }
-
-        buttonGroup.alpha = 1;
+        group.alpha = to;
     }
 
     public void GoToNextScene()

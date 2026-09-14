@@ -9,6 +9,6 @@ public class OpenLinkButton : MonoBehaviour
 
     public void OpenGitHub()
     {
-        Application.OpenURL("https://github.com/Chanhtin227/Flying-Battle.git");
+        Application.OpenURL("https://github.com/Chanhtin227/Flying-Battle");
     }
 }

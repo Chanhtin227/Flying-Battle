@@ -147,6 +147,14 @@ MonoBehaviour:
     m_Localized: "Kh\xE1c"
     m_Metadata:
       m_Items: []
+  - m_Id: 1521856903413760
+    m_Localized: "Ng\xF4n ng\u1EEF"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1521998662500352
+    m_Localized: "Ch\u1ECDn ng\xF4n ng\u1EEF hi\u1EC3n th\u1ECB trong game"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
