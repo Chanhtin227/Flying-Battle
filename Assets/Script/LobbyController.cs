@@ -58,6 +58,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     public GameObject panelSetting;
 
     private int maxPlayers = 2;
+    private Coroutine errorNotificationCoroutine;
 
     private void Start()
     {
@@ -162,10 +163,11 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         if (string.IsNullOrEmpty(roomID) || roomID.Length != 4)
         {
             Debug.LogWarning("[Lobby] ID phòng không hợp lệ!");
-            StartCoroutine(ShowErrorNotification());
+            ShowErrorNotification();
             return;
         }
 
+        HideErrorNotification();
         Debug.Log($"[Lobby] Joining Room: {roomID}");
 
         panelGameMode.SetActive(false);
@@ -255,11 +257,11 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             );
         }
 
-        if (mode == GameMode.Client)
-            {
-                panelGameMode.SetActive(true);
-                StartCoroutine(ShowErrorNotification());
-            }
+        if (!result.Ok && mode == GameMode.Client)
+        {
+            panelGameMode.SetActive(true);
+            ShowErrorNotification();
+        }
     }
 
     private void StartMatch()
@@ -337,7 +339,25 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    private System.Collections.IEnumerator ShowErrorNotification()
+    private void ShowErrorNotification()
+    {
+        HideErrorNotification();
+        errorNotificationCoroutine = StartCoroutine(ShowErrorNotificationCoroutine());
+    }
+
+    private void HideErrorNotification()
+    {
+        if (errorNotificationCoroutine != null)
+        {
+            StopCoroutine(errorNotificationCoroutine);
+            errorNotificationCoroutine = null;
+        }
+
+        if (errorText != null)
+            errorText.gameObject.SetActive(false);
+    }
+
+    private System.Collections.IEnumerator ShowErrorNotificationCoroutine()
     {
         if (errorText != null)
         {
@@ -346,6 +366,8 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             yield return new WaitForSeconds(1.5f);
             errorText.gameObject.SetActive(false);
         }
+
+        errorNotificationCoroutine = null;
     }
 
     public void OnInputMissing(
@@ -363,6 +385,14 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             $"[Fusion] Runner Shutdown: " +
             $"{shutdownReason}"
         );
+
+        if (runner == currentRunner)
+        {
+            runner.RemoveCallbacks(this);
+            Destroy(runner.gameObject);
+            currentRunner = null;
+            networkSceneManager = null;
+        }
     }
 
     public void OnConnectedToServer(
