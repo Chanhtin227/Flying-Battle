@@ -1,0 +1,156 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Languages Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: Languages
+  m_TableCollectionNameGuidString: cc1e1ffa59eeff445a75185089188659
+  m_Entries:
+  - m_Id: 7356157034496
+    m_Key: chung1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 7891958398976
+    m_Key: sound1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8143968960512
+    m_Key: control1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8385904803840
+    m_Key: language1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8739694346240
+    m_Key: sound2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8913124622336
+    m_Key: sound3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9190632357888
+    m_Key: sound4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9271670505472
+    m_Key: sound5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9519541288960
+    m_Key: sound6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 9879097999360
+    m_Key: control2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10102851534848
+    m_Key: control3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10264164466688
+    m_Key: control4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 44069420040192
+    m_Key: control5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 45371030011904
+    m_Key: control6
+    m_Metadata:
+      m_Items: []
+  - m_Id: 45634583298048
+    m_Key: control7
+    m_Metadata:
+      m_Items: []
+  - m_Id: 45745480695808
+    m_Key: control8
+    m_Metadata:
+      m_Items: []
+  - m_Id: 45882068205568
+    m_Key: control9
+    m_Metadata:
+      m_Items: []
+  - m_Id: 45966201749504
+    m_Key: control10
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46094924939264
+    m_Key: control11
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46276664131584
+    m_Key: control12
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46343898824704
+    m_Key: control13
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46445048659968
+    m_Key: control14
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46542784331776
+    m_Key: control15
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46645511225344
+    m_Key: control16
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46753489387520
+    m_Key: control17
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46854685360128
+    m_Key: control18
+    m_Metadata:
+      m_Items: []
+  - m_Id: 46937946488832
+    m_Key: control19
+    m_Metadata:
+      m_Items: []
+  - m_Id: 47077356765184
+    m_Key: control20
+    m_Metadata:
+      m_Items: []
+  - m_Id: 52407159521280
+    m_Key: control21
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1480975420784640
+    m_Key: more1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1481038578614272
+    m_Key: more2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1481210859651072
+    m_Key: more3
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 3636194037131903303
+  references:
+    version: 2
+    RefIds:
+    - rid: 3636194037131903303
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1789024999005

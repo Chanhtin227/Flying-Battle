@@ -1,0 +1,112 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad34dd0f112b50944800ac99348c7e5f, type: 3}
+  m_Name: LocalizationDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::Localization.LocalizationDatabase
+  Entries:
+  - Key: chung1
+    Vietnamese: Chung
+    English: Common
+  - Key: sound1
+    Vietnamese: "\xC2m thanh"
+    English: Sound
+  - Key: control1
+    Vietnamese: "\u0110i\u1EC1u khi\u1EC3n"
+    English: Control
+  - Key: language1
+    Vietnamese: "Ng\xF4n ng\u1EEF"
+    English: Language
+  - Key: sound2
+    Vietnamese: "T\u1ED5ng th\u1EC3"
+    English: Overall
+  - Key: sound3
+    Vietnamese: "Nh\u1EA1c n\u1EC1n"
+    English: Background music
+  - Key: sound4
+    Vietnamese: "Hi\u1EC7u \u1EE9ng"
+    English: Effect
+  - Key: sound5
+    Vietnamese: "\xC2m thanh"
+    English: Sound
+  - Key: sound6
+    Vietnamese: "\u0110i\u1EC1u ch\u1EC9nh m\u1EE9c \xE2m l\u01B0\u1EE3ng cho t\u1EEBng
+      k\xEAnh"
+    English: Adjust the volume for each channel
+  - Key: control2
+    Vietnamese: "Ti\u1EBFn v\u1EC1 ph\xEDa tr\u01B0\u1EDBc "
+    English: Move forward
+  - Key: control3
+    Vietnamese: "L\xF9i v\u1EC1 ph\xEDa sau"
+    English: Step back
+  - Key: control4
+    Vietnamese: "Sang tr\xE1i"
+    English: Move to the left
+  - Key: control5
+    Vietnamese: "Ti\u1EBFn v\u1EC1 ph\xEDa tr\u01B0\u1EDBc"
+    English: Move forward
+  - Key: control6
+    Vietnamese: "L\xF9i v\u1EC1 ph\xEDa sau"
+    English: Backwards
+  - Key: control7
+    Vietnamese: "Sang tr\xE1i"
+    English: Move left
+  - Key: control8
+    Vietnamese: "Sang ph\u1EA3i"
+    English: Move right
+  - Key: control9
+    Vietnamese: "Nh\u1EA3y"
+    English: Jump
+  - Key: control10
+    Vietnamese: Bay
+    English: Fly
+  - Key: control11
+    Vietnamese: Xoay camera
+    English: Rotate the camera
+  - Key: control12
+    Vietnamese: "B\u1EAFn / \u0111\xE1nh"
+    English: Shoot / hit
+  - Key: control13
+    Vietnamese: "Ng\u1EAFm aim / ADS"
+    English: Look at aim / ADS
+  - Key: control14
+    Vietnamese: "N\u1EA1p \u0111\u1EA1n "
+    English: Load ammo
+  - Key: control15
+    Vietnamese: "Nh\u1EB7t \u0111\u1ED3 / \u0111\u1ED5i v\u0169 kh\xED"
+    English: Pick up items / change weapons
+  - Key: control16
+    Vietnamese: "M\u1EDF R\u01B0\u01A1ng"
+    English: Open Chest
+  - Key: control17
+    Vietnamese: "M\u1EDF kho \u0111\u1ED3"
+    English: Open the inventory
+  - Key: control18
+    Vietnamese: "V\u0169 kh\xED ch\xEDnh / ph\u1EE5 / c\u1EADn chi\u1EBFn"
+    English: Primary / Secondary / Melee weapon
+  - Key: control19
+    Vietnamese: "Th\u1EA3 v\u1EADt ph\u1EA9m"
+    English: Drop item
+  - Key: control20
+    Vietnamese: Menu/Pause
+    English: Menu/Pause
+  - Key: control21
+    Vietnamese: "H\u01B0\u1EDBng d\u1EABn \u0111i\u1EC1u khi\u1EC3n"
+    English: Control guide
+  - Key: more1
+    Vietnamese: "Kh\xE1c"
+    English: different
+  - Key: more2
+    Vietnamese: "Li\xEAn k\u1EBFtv\xE0 th\xF4ng tin th\xEAm"
+    English: Links and more info
+  - Key: more3
+    Vietnamese: "Kh\xE1c"
+    English: different
