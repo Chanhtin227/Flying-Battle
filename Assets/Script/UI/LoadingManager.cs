@@ -28,7 +28,7 @@ public class LoadingManager : MonoBehaviour
             progressbar.GetComponent<Image>().fillAmount = progress;
             text.text = (progress * 100).ToString(format: "0") + "%";
 
-            yield return null;
+            yield return new WaitForSeconds(fixerloadingtime);
         }
     }
 }

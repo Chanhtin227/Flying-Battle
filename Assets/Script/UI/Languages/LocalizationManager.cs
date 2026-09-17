@@ -95,8 +95,7 @@ namespace Localization
         private void RefreshEverythingInScene()
         {
             var allBehaviours = FindObjectsByType<MonoBehaviour>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None
+                FindObjectsInactive.Include
             );
 
             int count = 0;
