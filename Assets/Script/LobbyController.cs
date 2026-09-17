@@ -46,15 +46,18 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     public Button settingBtn;
     public Button closeSettingBtn;
     public GameObject panelSetting;
-    public TMP_InputField settingNameInput; // Kéo object InputName vào đây
+    public TMP_InputField settingNameInput; 
+
+    [Header("Transition Effect")]
+    public Image fadeImage;
 
     private int maxPlayers = 2;
     private Coroutine errorNotificationCoroutine;
 
     private void Start()
     {
+        if (fadeImage != null) fadeImage.gameObject.SetActive(false);
         ResetUI();
-
         // Tải lại tên đã lưu trước đó lên ô InputField trong cài đặt (nếu có)
         if (settingNameInput != null)
         {
@@ -66,12 +69,16 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         settingBtn.onClick.AddListener(() => 
         {
             panelSetting.SetActive(true);
+            settingBtn.gameObject.SetActive(false);
+            gameModeBtn.gameObject.SetActive(false);
         });
         
         closeSettingBtn.onClick.AddListener(() => 
         {
             SavePlayerSettingName();
             panelSetting.SetActive(false);
+            settingBtn.gameObject.SetActive(true);
+            gameModeBtn.gameObject.SetActive(true);
         });
 
         btn1vs1.onClick.AddListener(() =>
@@ -134,11 +141,13 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     {
         panelGameMode.SetActive(true);
         gameModeBtn.gameObject.SetActive(false);
+        settingBtn.gameObject.SetActive(false);
     }
 
     private void ResetUI()
     {
         gameModeBtn.gameObject.SetActive(true);
+        settingBtn.gameObject.SetActive(true);
         panelGameMode.SetActive(false);
         panelRoom1vs1.SetActive(false);
         panelRoom2vs2.SetActive(false);
@@ -147,20 +156,18 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         panelSetting.SetActive(false);
     }
 
-    private void CreateRoom(int players, GameObject roomPanelToOpen, TextMeshProUGUI roomIDText)
+    private async void CreateRoom(int players, GameObject roomPanelToOpen, TextMeshProUGUI roomIDText)
     {
         maxPlayers = players;
         string randomID = UnityEngine.Random.Range(1000, 10000).ToString();
-        
+        await Fade(1f, 0.5f);
         panelGameMode.SetActive(false);
-        roomPanelToOpen.SetActive(true);
         roomIDText.text = "ID: " + randomID;
-
         Debug.Log($"[Lobby] Create Room\nRoom ID: {randomID}\nMax Players: {maxPlayers}");
         StartSession(GameMode.Host, randomID);
     }
 
-    private void JoinRoom()
+    private async void JoinRoom()
     {
         string roomID = inputID.text.Trim();
         if (string.IsNullOrEmpty(roomID) || roomID.Length != 4)
@@ -172,6 +179,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
         HideErrorNotification();
         Debug.Log($"[Lobby] Joining Room: {roomID}");
+        await Fade(1f, 0.5f);
         panelGameMode.SetActive(false);
         StartSession(GameMode.Client, roomID);
     }
@@ -200,13 +208,13 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         Debug.Log($"[Fusion] StartGame\nMode: {mode}\nSession: {sessionName}\nPlayerCount: {(mode == GameMode.Host ? maxPlayers : -1)}");
-
+        
         var result = await currentRunner.StartGame(startGameArgs);
 
         if (result.Ok)
         {
             Debug.Log($"[Fusion] StartGame SUCCESS\nSession: {sessionName}\nMode: {mode}");
-
+            await System.Threading.Tasks.Task.Delay(1000);
             if (currentRunner.IsServer)
             {
                 // HOST: Tự động Spawn Prefab quản lý dữ liệu tên người chơi
@@ -214,13 +222,10 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
                 {
                     currentRunner.Spawn(roomDataPrefab);
                 }
-                else
-                {
-                    Debug.LogError("[Lobby] BẠN CHƯA KÉO ROOM DATA PREFAB VÀO LOBBY CONTROLLER!");
-                }
-
                 startBtn_1vs1.gameObject.SetActive(maxPlayers == 2);
                 startBtn_2vs2.gameObject.SetActive(maxPlayers == 4);
+                if (maxPlayers == 2) panelRoom1vs1.SetActive(true);
+                else if (maxPlayers == 4) panelRoom2vs2.SetActive(true);
             }
             else 
             {
@@ -239,6 +244,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
                     roomID_2vs2.text = "ID: " + sessionName;
                 }
             }
+            await Fade(0f, 0.5f);
         }
         else
         {
@@ -246,6 +252,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             if (mode == GameMode.Client)
             {
                 panelGameMode.SetActive(true);
+                await Fade(0f, 0.5f);
                 ShowErrorNotification();
             }
         }
@@ -305,6 +312,32 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             errorText.gameObject.SetActive(false);
         }
         errorNotificationCoroutine = null;
+    }
+
+    private async System.Threading.Tasks.Task Fade(float targetAlpha, float duration)
+    {
+        if (fadeImage == null) return;
+        
+        fadeImage.gameObject.SetActive(true); // Bật tấm đen lên
+        
+        float startAlpha = fadeImage.color.a;
+        float time = 0;
+        
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            float a = Mathf.Lerp(startAlpha, targetAlpha, time / duration);
+            fadeImage.color = new Color(0, 0, 0, a);
+            await System.Threading.Tasks.Task.Yield(); // Chờ frame tiếp theo
+        }
+        
+        fadeImage.color = new Color(0, 0, 0, targetAlpha);
+        
+        // Nếu đã sáng hoàn toàn (Alpha = 0), tắt tấm đen đi để bấm được các nút
+        if (targetAlpha == 0) 
+        {
+            fadeImage.gameObject.SetActive(false);
+        }
     }
 
     // ==========================================
