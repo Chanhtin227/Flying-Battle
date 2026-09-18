@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 136.64465
+      value: 134.09044
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 8.31
+      value: 6.9552927
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 128.9319
+      value: 124.28138
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
       propertyPath: m_LocalRotation.w
@@ -66,6 +66,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
       insertIndex: -1
       addedObject: {fileID: -148333545794279529}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -2677815843141767284}
   m_SourcePrefab: {fileID: 100100000, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
 --- !u!1 &9043817966670324400 stripped
 GameObject:
@@ -106,4 +109,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPickup
   weaponType: 4
-  inventoryItem: {fileID: 11400000, guid: 376685aeafd05ec47b80ee6747117b12, type: 2}
+  pickupDistance: 3
+  pickupKey: 102
+--- !u!114 &-2677815843141767284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9043817966670324400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 3044448485
+  SendPriority: 1
+  EnableInterpolation: 1
+  Flags: 262146
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: -148333545794279529}
+  ForceRemoteRenderTimeframe: 0

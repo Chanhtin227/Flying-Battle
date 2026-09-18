@@ -1,4 +1,5 @@
 using UnityEngine;
+using Fusion;
 
 public class ThirdPersonCamera : MonoBehaviour
 {
@@ -31,6 +32,7 @@ public class ThirdPersonCamera : MonoBehaviour
     // =========================================================
 
     [Header("Normal Camera")]
+
     public Vector3 shoulderOffset =
         new Vector3(0.6f, 1.6f, 0f);
 
@@ -42,6 +44,7 @@ public class ThirdPersonCamera : MonoBehaviour
     // =========================================================
 
     [Header("Aim")]
+
     public bool isAiming = false;
 
     public Vector3 aimShoulderOffset =
@@ -61,6 +64,7 @@ public class ThirdPersonCamera : MonoBehaviour
     // =========================================================
 
     [Header("Camera Angle")]
+
     public float minPitch = -30f;
 
     public float maxPitch = 60f;
@@ -71,6 +75,7 @@ public class ThirdPersonCamera : MonoBehaviour
     // =========================================================
 
     [Header("Rotation Smooth")]
+
     public float rotationSmoothTime = 0.06f;
 
 
@@ -79,6 +84,7 @@ public class ThirdPersonCamera : MonoBehaviour
     // =========================================================
 
     [Header("Wall Collision")]
+
     public LayerMask wallLayer;
 
     public float cameraRadius = 0.2f;
@@ -104,46 +110,107 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
     // =========================================================
-    // INTERNAL VARIABLES
+    // INTERNAL
     // =========================================================
 
-    float yaw;
-    float pitch;
+    private float yaw;
 
-    float pitchVelocity;
+    private float pitch;
 
-    float bobTimer;
+    private float bobTimer;
 
-    float distance;
+    private float distance;
+
+    private PlayerWeapon playerWeapon;
+
+    private NetworkObject networkObject;
 
 
     // =========================================================
     // START
     // =========================================================
 
-    void Start()
+    private void Start()
     {
-        // Tự tìm Camera con
+        // =====================================================
+        // CAMERA
+        // =====================================================
+
         if (cam == null)
         {
             cam = GetComponentInChildren<Camera>();
         }
 
-        // Khóa chuột
-        Cursor.lockState = CursorLockMode.Locked;
+
+        // =====================================================
+        // NETWORK OBJECT
+        // =====================================================
+
+        if (target != null)
+        {
+            networkObject =
+                target.GetComponent<NetworkObject>();
+
+            playerWeapon =
+                target.GetComponent<PlayerWeapon>();
+
+
+            // Nếu PlayerWeapon không nằm ở root
+            if (playerWeapon == null)
+            {
+                playerWeapon =
+                    target.GetComponentInParent<PlayerWeapon>();
+            }
+        }
+
+
+        // =====================================================
+        // CHỈ PLAYER LOCAL ĐƯỢC DÙNG CAMERA
+        // =====================================================
+
+        if (networkObject != null &&
+            !networkObject.HasInputAuthority)
+        {
+            if (cam != null)
+            {
+                cam.gameObject.SetActive(false);
+            }
+
+            enabled = false;
+
+            return;
+        }
+
+
+        // =====================================================
+        // CURSOR
+        // =====================================================
+
+        Cursor.lockState =
+            CursorLockMode.Locked;
+
         Cursor.visible = false;
 
-        // FOV ban đầu
+
+        // =====================================================
+        // FOV
+        // =====================================================
+
         if (cam != null)
         {
             cam.fieldOfView = normalFOV;
         }
 
-        // Khoảng cách ban đầu
-        distance = normalDistance;
 
         // =====================================================
-        // LẤY HƯỚNG PLAYER LÀM HƯỚNG CAMERA
+        // DISTANCE
+        // =====================================================
+
+        distance = normalDistance;
+
+
+        // =====================================================
+        // YAW
         // =====================================================
 
         if (target != null)
@@ -155,7 +222,11 @@ public class ThirdPersonCamera : MonoBehaviour
             yaw = transform.eulerAngles.y;
         }
 
-        // Góc lên xuống ban đầu
+
+        // =====================================================
+        // PITCH
+        // =====================================================
+
         pitch = transform.eulerAngles.x;
 
         if (pitch > 180f)
@@ -175,9 +246,10 @@ public class ThirdPersonCamera : MonoBehaviour
     // LATE UPDATE
     // =========================================================
 
-    void LateUpdate()
+    private void LateUpdate()
     {
-        if (target == null || cam == null)
+        if (target == null ||
+            cam == null)
         {
             return;
         }
@@ -189,18 +261,33 @@ public class ThirdPersonCamera : MonoBehaviour
 
         bool canAim = false;
 
-        PlayerWeapon weapon =
-            target.GetComponent<PlayerWeapon>();
 
-        if (weapon != null)
+        if (playerWeapon == null)
         {
+            playerWeapon =
+                target.GetComponent<PlayerWeapon>();
+
+            if (playerWeapon == null)
+            {
+                playerWeapon =
+                    target.GetComponentInParent<PlayerWeapon>();
+            }
+        }
+
+
+        if (playerWeapon != null)
+        {
+            // ĐÃ SỬA:
+            // currentWeapon -> CurrentWeapon
+
             canAim =
-                weapon.currentWeapon ==
+                playerWeapon.CurrentWeapon ==
                 PlayerWeapon.WeaponType.Rifle ||
 
-                weapon.currentWeapon ==
+                playerWeapon.CurrentWeapon ==
                 PlayerWeapon.WeaponType.Pistol;
         }
+
 
         isAiming =
             canAim &&
@@ -219,7 +306,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // =====================================================
-        // XOAY PLAYER + CAMERA CÙNG NHAU
+        // YAW
         // =====================================================
 
         yaw +=
@@ -229,7 +316,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // =====================================================
-        // PLAYER XOAY THEO CAMERA
+        // PLAYER ROTATION
         // =====================================================
 
         Quaternion playerRotation =
@@ -239,17 +326,20 @@ public class ThirdPersonCamera : MonoBehaviour
                 0f
             );
 
-        target.rotation = playerRotation;
+
+        target.rotation =
+            playerRotation;
 
 
         // =====================================================
-        // PITCH CAMERA
+        // PITCH
         // =====================================================
 
         pitch -=
             mouseY *
             mouseSensitivity *
             Time.deltaTime;
+
 
         pitch =
             Mathf.Clamp(
@@ -280,6 +370,7 @@ public class ThirdPersonCamera : MonoBehaviour
             ? aimDistance
             : normalDistance;
 
+
         distance =
             Mathf.Lerp(
                 distance,
@@ -296,6 +387,7 @@ public class ThirdPersonCamera : MonoBehaviour
             isAiming
             ? aimFOV
             : normalFOV;
+
 
         cam.fieldOfView =
             Mathf.Lerp(
@@ -419,6 +511,7 @@ public class ThirdPersonCamera : MonoBehaviour
             Mathf.Sin(bobTimer) *
             bobAmount;
 
+
         float bobY =
             Mathf.Cos(bobTimer * 2f) *
             bobAmount;
@@ -491,25 +584,22 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // =====================================================
-        // ĐẶT CAMERA
+        // SET CAMERA
         // =====================================================
 
         cam.transform.position =
             desiredCameraPos;
+
 
         cam.transform.rotation =
             rotation;
 
 
         // =====================================================
-        // CAMERA OBJECT ĐI THEO PLAYER
+        // CAMERA OBJECT FOLLOW PLAYER
         // =====================================================
 
         transform.position =
             target.position;
-
-        // Quan trọng:
-        // Không xoay Camera Object riêng nữa.
-        // Camera đã có rotation ở trên.
     }
 }

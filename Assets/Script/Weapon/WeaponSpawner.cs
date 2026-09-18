@@ -1,115 +1,229 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Fusion;
 
-public class WeaponSpawner : MonoBehaviour
+public class WeaponSpawner : NetworkBehaviour
 {
+    // =========================================================
+    // CHEST
+    // =========================================================
+
     [Header("Chest")]
-    public GameObject chestPrefab;
+    public NetworkPrefabRef chestPrefab;
+
+
+    // =========================================================
+    // TERRAIN
+    // =========================================================
 
     [Header("Terrain")]
     public Terrain terrain;
 
+
+    // =========================================================
+    // SPAWN SETTINGS
+    // =========================================================
+
     [Header("Spawn Settings")]
+
     [Range(1, 4)]
     public int chestCount = 4;
 
-    // Khoảng cách tối thiểu giữa các rương
     public float minSpawnDistance = 30f;
+
+
+    // =========================================================
+    // SPAWN HEIGHT
+    // =========================================================
 
     [Header("Spawn Height")]
     public float spawnHeight = 20f;
 
+
+    // =========================================================
+    // SPAWN DELAY
+    // =========================================================
+
     [Header("Spawn Delay")]
     public float spawnDelay = 5f;
 
-    [Header("Weapons")]
-    public GameObject riflePrefab;
-    public GameObject pistolPrefab;
-    public GameObject batPrefab;
-    public GameObject shovelPrefab;
 
-    // Lưu các vị trí rương đã spawn
-    private List<Vector3> spawnedPositions = new List<Vector3>();
+    // =========================================================
+    // SPAWN POSITIONS
+    // =========================================================
 
-    IEnumerator Start()
+    private List<Vector3> spawnedPositions =
+        new List<Vector3>();
+
+
+    // =========================================================
+    // START
+    // =========================================================
+
+    public override void Spawned()
     {
-        // Chờ 5 giây trước khi bắt đầu
+        base.Spawned();
+
+
+        // Chỉ State Authority được spawn rương
+        if (!HasStateAuthority)
+            return;
+
+
+        StartCoroutine(SpawnChestRoutine());
+    }
+
+
+    // =========================================================
+    // SPAWN ROUTINE
+    // =========================================================
+
+    private IEnumerator SpawnChestRoutine()
+    {
+        // Chờ 5 giây
         yield return new WaitForSeconds(spawnDelay);
+
 
         // Spawn từng rương
         for (int i = 0; i < chestCount; i++)
         {
             SpawnChest();
 
-            // Nếu chưa phải rương cuối thì chờ 5 giây
+
+            // Nếu chưa phải rương cuối
             if (i < chestCount - 1)
             {
-                yield return new WaitForSeconds(spawnDelay);
+                yield return new WaitForSeconds(
+                    spawnDelay
+                );
             }
         }
 
-        Debug.Log("Đã spawn đủ " + chestCount + " rương!");
+
+        Debug.Log(
+            "[WeaponSpawner] Đã spawn đủ " +
+            chestCount +
+            " rương!"
+        );
     }
 
-    void SpawnChest()
+
+    // =========================================================
+    // SPAWN CHEST
+    // =========================================================
+
+    private void SpawnChest()
     {
+        // =====================================================
+        // CHECK TERRAIN
+        // =====================================================
+
         if (terrain == null)
         {
-            Debug.LogError("Chưa gán Terrain!");
+            Debug.LogError(
+                "[WeaponSpawner] Chưa gán Terrain!"
+            );
+
             return;
         }
 
-        if (chestPrefab == null)
+
+        // =====================================================
+        // CHECK PREFAB
+        // =====================================================
+
+        if (!chestPrefab.IsValid)
         {
-            Debug.LogError("Chưa gán Chest Prefab!");
+            Debug.LogError(
+                "[WeaponSpawner] Chest Prefab không hợp lệ!"
+            );
+
             return;
         }
 
-        TerrainData terrainData = terrain.terrainData;
 
-        Vector3 terrainPosition = terrain.transform.position;
-        Vector3 terrainSize = terrainData.size;
+        // =====================================================
+        // TERRAIN DATA
+        // =====================================================
 
-        Vector3 spawnPosition = Vector3.zero;
+        TerrainData terrainData =
+            terrain.terrainData;
 
-        bool validPosition = false;
 
-        // Thử tối đa 100 lần tìm vị trí
+        Vector3 terrainPosition =
+            terrain.transform.position;
+
+
+        Vector3 terrainSize =
+            terrainData.size;
+
+
+        Vector3 spawnPosition =
+            Vector3.zero;
+
+
+        bool validPosition =
+            false;
+
+
+        // =====================================================
+        // FIND RANDOM POSITION
+        // =====================================================
+
         for (int attempt = 0; attempt < 100; attempt++)
         {
             // Random X
-            float randomX = Random.Range(
-                0f,
-                terrainSize.x
-            );
+            float randomX =
+                Random.Range(
+                    0f,
+                    terrainSize.x
+                );
+
 
             // Random Z
-            float randomZ = Random.Range(
-                0f,
-                terrainSize.z
-            );
+            float randomZ =
+                Random.Range(
+                    0f,
+                    terrainSize.z
+                );
 
-            // World position
+
+            // World X
             float worldX =
-                terrainPosition.x + randomX;
+                terrainPosition.x +
+                randomX;
 
+
+            // World Z
             float worldZ =
-                terrainPosition.z + randomZ;
+                terrainPosition.z +
+                randomZ;
 
-            // Lấy độ cao Terrain
-            float groundY = terrain.SampleHeight(
-                new Vector3(worldX, 0f, worldZ)
-            ) + terrainPosition.y;
 
-            // Vị trí rương trên không
-            spawnPosition = new Vector3(
-                worldX,
-                groundY + spawnHeight,
-                worldZ
-            );
+            // Ground Y
+            float groundY =
+                terrain.SampleHeight(
+                    new Vector3(
+                        worldX,
+                        0f,
+                        worldZ
+                    )
+                )
+                +
+                terrainPosition.y;
 
-            // Kiểm tra khoảng cách
+
+            // Spawn trên không
+            spawnPosition =
+                new Vector3(
+                    worldX,
+                    groundY + spawnHeight,
+                    worldZ
+                );
+
+
+            // Check khoảng cách
             if (IsPositionValid(spawnPosition))
             {
                 validPosition = true;
@@ -117,69 +231,100 @@ public class WeaponSpawner : MonoBehaviour
             }
         }
 
-        // Không tìm được vị trí
+
+        // =====================================================
+        // KHÔNG TÌM ĐƯỢC
+        // =====================================================
+
         if (!validPosition)
         {
             Debug.LogWarning(
-                "Không tìm được vị trí spawn phù hợp!"
+                "[WeaponSpawner] Không tìm được vị trí spawn!"
             );
 
             return;
         }
 
-        // Lưu vị trí
-        spawnedPositions.Add(spawnPosition);
 
-        // Tạo rương
-        GameObject chest = Instantiate(
-            chestPrefab,
-            spawnPosition,
-            Quaternion.identity
+        // =====================================================
+        // LƯU VỊ TRÍ
+        // =====================================================
+
+        spawnedPositions.Add(
+            spawnPosition
         );
 
-        // Lấy WeaponChest
-        WeaponChest chestScript =
-            chest.GetComponent<WeaponChest>();
 
-        if (chestScript != null)
+        // =====================================================
+        // FUSION SPAWN
+        // =====================================================
+
+        NetworkObject chest =
+            Runner.Spawn(
+                chestPrefab,
+                spawnPosition,
+                Quaternion.identity
+            );
+
+
+        if (chest == null)
         {
-            chestScript.riflePrefab = riflePrefab;
-            chestScript.pistolPrefab = pistolPrefab;
-            chestScript.batPrefab = batPrefab;
-            chestScript.shovelPrefab = shovelPrefab;
+            Debug.LogError(
+                "[WeaponSpawner] Runner.Spawn Chest FAILED!"
+            );
+
+            return;
         }
 
+
         Debug.Log(
-            "Đã spawn rương " +
+            "[WeaponSpawner] Đã spawn rương " +
             spawnedPositions.Count +
             "/" +
             chestCount
         );
     }
 
-    bool IsPositionValid(Vector3 position)
-    {
-        foreach (Vector3 oldPosition in spawnedPositions)
-        {
-            // Chỉ kiểm tra khoảng cách X/Z
-            Vector2 newPos = new Vector2(
-                position.x,
-                position.z
-            );
 
-            Vector2 oldPos = new Vector2(
-                oldPosition.x,
-                oldPosition.z
-            );
+    // =========================================================
+    // CHECK POSITION
+    // =========================================================
+
+    private bool IsPositionValid(
+        Vector3 position)
+    {
+        foreach (
+            Vector3 oldPosition
+            in spawnedPositions
+        )
+        {
+            Vector2 newPos =
+                new Vector2(
+                    position.x,
+                    position.z
+                );
+
+
+            Vector2 oldPos =
+                new Vector2(
+                    oldPosition.x,
+                    oldPosition.z
+                );
+
 
             float distance =
-                Vector2.Distance(newPos, oldPos);
+                Vector2.Distance(
+                    newPos,
+                    oldPos
+                );
+
 
             if (distance < minSpawnDistance)
             {
                 return false;
             }
         }
+
 
         return true;
     }

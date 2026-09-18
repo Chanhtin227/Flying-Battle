@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 00b0954486464904da400844baf18142, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0
+      value: 138.80667
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 00b0954486464904da400844baf18142, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 7.16
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 00b0954486464904da400844baf18142, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 126.98917
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 00b0954486464904da400844baf18142, type: 3}
       propertyPath: m_LocalRotation.w
@@ -66,6 +66,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 00b0954486464904da400844baf18142, type: 3}
       insertIndex: -1
       addedObject: {fileID: -2866533609433916240}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 00b0954486464904da400844baf18142, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4031068980329519561}
   m_SourcePrefab: {fileID: 100100000, guid: 00b0954486464904da400844baf18142, type: 3}
 --- !u!1 &4952914378736412972 stripped
 GameObject:
@@ -106,4 +109,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPickup
   weaponType: 1
-  inventoryItem: {fileID: 11400000, guid: 583edba96bc1cd248988b3363ada8b8e, type: 2}
+  pickupDistance: 3
+  pickupKey: 102
+--- !u!114 &4031068980329519561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4952914378736412972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 2886393047
+  SendPriority: 1
+  EnableInterpolation: 1
+  Flags: 262146
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: -2866533609433916240}
+  ForceRemoteRenderTimeframe: 0

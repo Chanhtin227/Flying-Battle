@@ -1,10 +1,7 @@
 fileFormatVersion: 2
 guid: a497c7e2553f8024d87cdb293e6da087
-PrefabImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+labels:
+- FusionPrefab
 AssetOrigin:
   serializedVersion: 1
   productId: 391816
@@ -12,3 +9,8 @@ AssetOrigin:
   packageVersion: 1.0
   assetPath: Assets/TinyBirdDuo/Prefab/Weapon/Shovel.prefab
   uploadId: 949218
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

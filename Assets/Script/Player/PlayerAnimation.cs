@@ -48,7 +48,6 @@ public class PlayerAnimation : MonoBehaviour
         anim.SetBool("IsMelee", value);
     }
 
-    // Hàm gọi từ Animation Event
     public void PlayBatSound()
     {
         if (audioSource != null && batHitSound != null)

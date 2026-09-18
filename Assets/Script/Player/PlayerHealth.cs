@@ -1,103 +1,285 @@
 using UnityEngine;
-using UnityEngine.UI;
+using Fusion;
 
-public class PlayerHealth : MonoBehaviour
+public class PlayerHealth : NetworkBehaviour
 {
-    [Header("Health")]
-    public float maxHealth = 100f;
-    public float currentHealth;
+    // =========================================================
+    // HEALTH SETTINGS
+    // =========================================================
 
-    [Header("UI")]
-    public Slider healthSlider;
+    [Header("Health")]
+
+    public float maxHealth = 100f;
+
+
+    // =========================================================
+    // NETWORK HEALTH
+    // =========================================================
+
+    [Header("Network Health")]
+
+    [Networked]
+    public float CurrentHealth { get; set; }
+
+    [Networked]
+    public NetworkBool IsDead { get; set; }
+
+
+    // =========================================================
+    // GAME OVER UI
+    // =========================================================
+
+    [Header("Game Over UI")]
+
     public GameObject gameOverUI;
 
-    private bool isDead = false;
 
-    void Start()
+    // =========================================================
+    // SPAWN
+    // =========================================================
+
+    public override void Spawned()
     {
-        // Đảm bảo game chạy bình thường khi bắt đầu
-        Time.timeScale = 1f;
+        // =====================================================
+        // STATE AUTHORITY KHỞI TẠO MÁU
+        // =====================================================
 
-        currentHealth = maxHealth;
-
-        if (healthSlider != null)
+        if (HasStateAuthority)
         {
-            healthSlider.maxValue = maxHealth;
-            healthSlider.value = currentHealth;
+            CurrentHealth = maxHealth;
+            IsDead = false;
         }
 
-        if (gameOverUI != null)
+
+        // =====================================================
+        // GAME OVER UI
+        // =====================================================
+
+        // Chỉ UI của Player local được sử dụng
+        if (HasInputAuthority)
         {
-            gameOverUI.SetActive(false);
+            if (gameOverUI != null)
+            {
+                gameOverUI.SetActive(false);
+            }
         }
     }
 
+
+    // =========================================================
+    // TAKE DAMAGE
+    // =========================================================
+
     public void TakeDamage(float damage)
     {
-        if (isDead) return;
+        // =====================================================
+        // CHỈ HOST / STATE AUTHORITY ĐƯỢC TRỪ MÁU
+        // =====================================================
 
-        currentHealth -= damage;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        if (!HasStateAuthority)
+            return;
 
-        if (healthSlider != null)
+
+        // =====================================================
+        // ĐÃ CHẾT
+        // =====================================================
+
+        if (IsDead)
+            return;
+
+
+        // =====================================================
+        // DAMAGE
+        // =====================================================
+
+        CurrentHealth -= damage;
+
+        CurrentHealth =
+            Mathf.Clamp(
+                CurrentHealth,
+                0f,
+                maxHealth
+            );
+
+
+        Debug.Log(
+            "PLAYER " +
+            Object.InputAuthority +
+            " HP: " +
+            CurrentHealth +
+            " / " +
+            maxHealth
+        );
+
+
+        // =====================================================
+        // HIT
+        // =====================================================
+
+        if (CurrentHealth > 0)
         {
-            healthSlider.value = currentHealth;
+            Rpc_PlayHit();
         }
 
-        // Animation bị trúng đạn
-        if (currentHealth > 0)
-        {
-            PlayerAnimation playerAnim = GetComponent<PlayerAnimation>();
 
-            if (playerAnim != null)
-            {
-                playerAnim.Hit();
-            }
-        }
+        // =====================================================
+        // DEATH
+        // =====================================================
 
-        Debug.Log("Player HP: " + currentHealth);
-
-        if (currentHealth <= 0)
+        if (CurrentHealth <= 0)
         {
             Die();
         }
     }
 
-    void Die()
+
+    // =========================================================
+    // HIT RPC
+    // =========================================================
+
+    [Rpc(
+        RpcSources.StateAuthority,
+        RpcTargets.All
+    )]
+    private void Rpc_PlayHit()
     {
-        if (isDead) return;
+        PlayerAnimation playerAnim =
+            GetComponent<PlayerAnimation>();
 
-        isDead = true;
-
-        Debug.Log("PLAYER DEAD!");
-
-        // Chạy animation chết
-        PlayerAnimation playerAnim = GetComponent<PlayerAnimation>();
 
         if (playerAnim != null)
         {
-            playerAnim.Die();
+            playerAnim.Hit();
         }
+    }
 
-        // Tắt điều khiển Player
-        PlayerMovement controller = GetComponent<PlayerMovement>();
+
+    // =========================================================
+    // DIE
+    // =========================================================
+
+    private void Die()
+    {
+        // Chỉ Host
+        if (!HasStateAuthority)
+            return;
+
+
+        if (IsDead)
+            return;
+
+
+        IsDead = true;
+
+
+        Debug.Log(
+            "PLAYER DEAD: " +
+            Object.InputAuthority
+        );
+
+
+        // =====================================================
+        // GỬI ANIMATION CHẾT
+        // =====================================================
+
+        Rpc_PlayDeath();
+
+
+        // =====================================================
+        // CHỈ TẮT CONTROLLER CỦA PLAYER ĐÃ CHẾT
+        // =====================================================
+
+        PlayerMovement controller =
+            GetComponent<PlayerMovement>();
+
 
         if (controller != null)
         {
             controller.enabled = false;
         }
 
-        // Hiện Game Over UI
+
+        // =====================================================
+        // GAME OVER CHỈ HIỆN Ở MÁY CỦA PLAYER ĐÓ
+        // =====================================================
+
+        if (HasInputAuthority)
+        {
+            ShowGameOver();
+        }
+        else
+        {
+            Rpc_ShowGameOver();
+        }
+    }
+
+
+    // =========================================================
+    // DEATH ANIMATION RPC
+    // =========================================================
+
+    [Rpc(
+        RpcSources.StateAuthority,
+        RpcTargets.All
+    )]
+    private void Rpc_PlayDeath()
+    {
+        PlayerAnimation playerAnim =
+            GetComponent<PlayerAnimation>();
+
+
+        if (playerAnim != null)
+        {
+            playerAnim.Die();
+        }
+    }
+
+
+    // =========================================================
+    // GAME OVER RPC
+    // =========================================================
+
+    [Rpc(
+        RpcSources.StateAuthority,
+        RpcTargets.InputAuthority
+    )]
+    private void Rpc_ShowGameOver()
+    {
+        ShowGameOver();
+    }
+
+
+    // =========================================================
+    // SHOW GAME OVER
+    // =========================================================
+
+    private void ShowGameOver()
+    {
+        // =====================================================
+        // MỞ GAME OVER
+        // =====================================================
+
         if (gameOverUI != null)
         {
             gameOverUI.SetActive(true);
         }
 
-        // Mở chuột
-        Cursor.lockState = CursorLockMode.None;
+
+        // =====================================================
+        // MỞ CHUỘT
+        // =====================================================
+
+        Cursor.lockState =
+            CursorLockMode.None;
+
         Cursor.visible = true;
 
-        // DỪNG TOÀN BỘ GAME
-        Time.timeScale = 0f;
+
+        // =====================================================
+        // QUAN TRỌNG:
+        // KHÔNG DÙNG Time.timeScale = 0
+        // =====================================================
+
+        // Không được dừng toàn bộ game multiplayer
     }
 }

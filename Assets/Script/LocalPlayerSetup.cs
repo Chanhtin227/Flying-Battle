@@ -3,19 +3,37 @@ using Fusion;
 
 public class LocalPlayerSetup : NetworkBehaviour
 {
-    [Header("Components to Disable for Clones")]
+    [Header("Camera")]
     public GameObject cameraRoot;
 
     public override void Spawned()
     {
-        // Nếu đây là nhân vật của người khác (Clone)
-        if (!HasInputAuthority)
+        if (cameraRoot == null)
         {
-            // Tắt hoàn toàn CameraRoot (bao gồm Camera và AudioListener bên trong)
-            if (cameraRoot != null)
-            {
-                cameraRoot.SetActive(false);
-            }
+            Debug.LogError(
+                "[LocalPlayerSetup] CAMERA ROOT CHƯA ĐƯỢC GÁN!"
+            );
+
+            return;
+        }
+
+        if (Object.HasInputAuthority)
+        {
+            // Player của máy hiện tại
+            cameraRoot.SetActive(true);
+
+            Debug.Log(
+                "[LocalPlayerSetup] LOCAL PLAYER -> BẬT CAMERA"
+            );
+        }
+        else
+        {
+            // Player của máy khác
+            cameraRoot.SetActive(false);
+
+            Debug.Log(
+                "[LocalPlayerSetup] REMOTE PLAYER -> TẮT CAMERA"
+            );
         }
     }
 }

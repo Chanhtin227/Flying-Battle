@@ -104,6 +104,7 @@ GameObject:
   - component: {fileID: 5626935877070008370}
   - component: {fileID: 512424381717589371}
   - component: {fileID: 7479246298280463114}
+  - component: {fileID: -257035155299688238}
   m_Layer: 0
   m_Name: Chest_Orange
   m_TagString: Untagged
@@ -121,8 +122,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 140.2, y: 9.04, z: 124.62}
-  m_LocalScale: {x: 3, y: 3, z: 3}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 3.5, y: 2, z: 3}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6406986897481728367}
   - {fileID: 3466404524600148470}
@@ -161,10 +162,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f92fff2b2974fa84f8ad7d38903304f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponChest
-  riflePrefab: {fileID: 4952914378736412972, guid: 019c3fd29c7e31c45837c8375036d0f4, type: 3}
-  pistolPrefab: {fileID: 2370236019523784336, guid: 0117b8222c7b85941a9ed069bc8d470b, type: 3}
-  batPrefab: {fileID: 2418437592047882745, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
-  shovelPrefab: {fileID: 9043817966670324400, guid: a497c7e2553f8024d87cdb293e6da087, type: 3}
+  riflePrefab:
+    RawGuidValue: 019c3fd29c7e31c45837c8375036d0f4
+  pistolPrefab:
+    RawGuidValue: 0117b8222c7b85941a9ed069bc8d470b
+  batPrefab:
+    RawGuidValue: df17277d0d78dd34e94590af26b57b05
+  shovelPrefab:
+    RawGuidValue: a497c7e2553f8024d87cdb293e6da087
   fallSpeed: 8
   rotationSpeed: 100
   groundLayer:
@@ -199,6 +204,26 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-257035155299688238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4912859776047831965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 625815569
+  SendPriority: 1
+  EnableInterpolation: 1
+  Flags: 262146
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 512424381717589371}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &5200276249669113529
 GameObject:
   m_ObjectHideFlags: 0

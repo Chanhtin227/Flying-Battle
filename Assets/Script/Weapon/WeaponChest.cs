@@ -1,50 +1,91 @@
 using UnityEngine;
+using Fusion;
 
-public class WeaponChest : MonoBehaviour
+public class WeaponChest : NetworkBehaviour
 {
+    // =========================================================
+    // WEAPONS
+    // =========================================================
+
     [Header("Weapons")]
-    public GameObject riflePrefab;
-    public GameObject pistolPrefab;
-    public GameObject batPrefab;
-    public GameObject shovelPrefab;
+    public NetworkPrefabRef riflePrefab;
+    public NetworkPrefabRef pistolPrefab;
+    public NetworkPrefabRef batPrefab;
+    public NetworkPrefabRef shovelPrefab;
+
+
+    // =========================================================
+    // FALL
+    // =========================================================
 
     [Header("Fall Settings")]
     public float fallSpeed = 8f;
     public float rotationSpeed = 100f;
 
+
+    // =========================================================
+    // GROUND
+    // =========================================================
+
     [Header("Ground Detection")]
     public LayerMask groundLayer;
+
+
+    // =========================================================
+    // INTERACTION
+    // =========================================================
 
     [Header("Interaction")]
     public float interactDistance = 3f;
 
+
+    // =========================================================
+    // LIGHT
+    // =========================================================
+
     [Header("Light Beam")]
     public GameObject lightBeam;
+
+
+    // =========================================================
+    // STATE
+    // =========================================================
 
     private bool hasLanded = false;
     private bool opened = false;
 
-    void Start()
+
+    // =========================================================
+    // SPAWNED
+    // =========================================================
+
+    public override void Spawned()
     {
-        // Luôn bật cột sáng khi rương spawn
+        base.Spawned();
+
         if (lightBeam != null)
         {
             lightBeam.SetActive(true);
         }
-        else
-        {
-            Debug.LogWarning(
-                "Chest chưa được gán Light Beam!"
-            );
-        }
     }
 
-    void Update()
+
+    // =========================================================
+    // UPDATE
+    // =========================================================
+
+    private void Update()
     {
+        // Chỉ State Authority xử lý rương
+        if (!HasStateAuthority)
+            return;
+
+
         if (!hasLanded)
         {
             Fall();
         }
+
 
         // Xoay rương
         transform.Rotate(
@@ -52,18 +93,28 @@ public class WeaponChest : MonoBehaviour
             Space.World
         );
 
+
         CheckPlayer();
     }
 
-    void Fall()
+
+    // =========================================================
+    // FALL
+    // =========================================================
+
+    private void Fall()
     {
         transform.position +=
-            Vector3.down * fallSpeed * Time.deltaTime;
+            Vector3.down *
+            fallSpeed *
+            Time.deltaTime;
+
 
         Ray ray = new Ray(
             transform.position,
             Vector3.down
         );
+
 
         if (Physics.Raycast(
             ray,
@@ -73,84 +124,171 @@ public class WeaponChest : MonoBehaviour
         ))
         {
             transform.position =
-                hit.point + Vector3.up * 0.5f;
+                hit.point +
+                Vector3.up * 0.5f;
 
             hasLanded = true;
         }
     }
 
-    void CheckPlayer()
+
+    // =========================================================
+    // CHECK PLAYER
+    // =========================================================
+
+    private void CheckPlayer()
     {
         if (opened)
             return;
 
-        GameObject player =
-            GameObject.FindGameObjectWithTag("Player");
 
-        if (player == null)
-            return;
+        // Không dùng GameObject.FindGameObjectWithTag
+        // trong multiplayer
 
-        float distance = Vector3.Distance(
-            transform.position,
-            player.transform.position
-        );
 
-        if (distance <= interactDistance)
+        PlayerWeapon[] players =
+            FindObjectsByType<PlayerWeapon>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None
+            );
+
+
+        foreach (PlayerWeapon player in players)
         {
-            if (Input.GetKeyDown(KeyCode.E))
+            if (player == null)
+                continue;
+
+            if (player.Object == null)
+                continue;
+
+
+            float distance = Vector3.Distance(
+                transform.position,
+                player.transform.position
+            );
+
+
+            if (distance <= interactDistance)
             {
-                OpenChest();
+                // Chỉ player có Input Authority xử lý input
+                if (!player.Object.HasInputAuthority)
+                    continue;
+
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    OpenChest();
+                }
+
+
+                return;
             }
         }
     }
 
-    void OpenChest()
+
+    // =========================================================
+    // OPEN CHEST
+    // =========================================================
+
+    private void OpenChest()
     {
+        if (opened)
+            return;
+
+
+        if (!HasStateAuthority)
+            return;
+
+
         opened = true;
 
-        // Tắt cột sáng
+
+        // Tắt light
         if (lightBeam != null)
         {
             lightBeam.SetActive(false);
         }
 
+
+        // Spawn weapon
         SpawnRandomWeapon();
 
-        Destroy(gameObject);
+
+        // Despawn chest
+        Runner.Despawn(Object);
     }
 
-    void SpawnRandomWeapon()
-    {
-        GameObject weapon = null;
 
-        int randomWeapon = Random.Range(0, 4);
+    // =========================================================
+    // SPAWN RANDOM WEAPON
+    // =========================================================
+
+    private void SpawnRandomWeapon()
+    {
+        int randomWeapon =
+            Random.Range(0, 4);
+
+
+        NetworkPrefabRef selectedPrefab =
+            default;
+
 
         switch (randomWeapon)
         {
             case 0:
-                weapon = riflePrefab;
+                selectedPrefab = riflePrefab;
                 break;
 
             case 1:
-                weapon = pistolPrefab;
+                selectedPrefab = pistolPrefab;
                 break;
 
             case 2:
-                weapon = batPrefab;
+                selectedPrefab = batPrefab;
                 break;
 
             case 3:
-                weapon = shovelPrefab;
+                selectedPrefab = shovelPrefab;
                 break;
         }
 
-        if (weapon != null)
+
+        if (!selectedPrefab.IsValid)
         {
-            Instantiate(
-                weapon,
-                transform.position + Vector3.up * 0.5f,
+            Debug.LogError(
+                "[WeaponChest] NetworkPrefabRef không hợp lệ!"
+            );
+
+            return;
+        }
+
+
+        Vector3 spawnPosition =
+            transform.position +
+            Vector3.up * 0.5f;
+
+
+        NetworkObject weapon =
+            Runner.Spawn(
+                selectedPrefab,
+                spawnPosition,
                 Quaternion.identity
             );
+
+
+        if (weapon == null)
+        {
+            Debug.LogError(
+                "[WeaponChest] Spawn weapon FAILED!"
+            );
+
+            return;
         }
+
+
+        Debug.Log(
+            "[WeaponChest] Spawn weapon SUCCESS!"
+        );
     }
 }
