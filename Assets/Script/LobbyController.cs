@@ -21,6 +21,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
     [Header("Panel Game Mode")]
     public GameObject panelGameMode;
+    public Button btnBack;
     public Button btn1vs1;
     public Button btn2vs2;
     public TMP_InputField inputID;
@@ -65,6 +66,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         gameModeBtn.onClick.AddListener(OpenGameModePanel);
+        btnBack.onClick.AddListener(CloseGameModePanel);
 
         settingBtn.onClick.AddListener(() => 
         {
@@ -96,19 +98,18 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             JoinRoom();
         });
 
+        // Bất kể nút Start của 1vs1 hay 2vs2 đều gọi chung hàm StartMatch
         startBtn_1vs1.onClick.AddListener(StartMatch);
         startBtn_2vs2.onClick.AddListener(StartMatch);
     }
 
     private void Update()
     {
-        // Liên tục cập nhật UI tên người chơi trong phòng
         UpdateRoomUI();
     }
 
     private void UpdateRoomUI()
     {
-        // Kiểm tra xem dữ liệu mạng RoomData đã được spawn ra chưa
         if (RoomData.Instance == null) return;
 
         var syncNames = RoomData.Instance.SyncPlayerNames;
@@ -144,6 +145,13 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         settingBtn.gameObject.SetActive(false);
     }
 
+    private void CloseGameModePanel()
+    {
+        panelGameMode.SetActive(false);
+        gameModeBtn.gameObject.SetActive(true);
+        settingBtn.gameObject.SetActive(true);
+    }
+
     private void ResetUI()
     {
         gameModeBtn.gameObject.SetActive(true);
@@ -173,7 +181,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         if (string.IsNullOrEmpty(roomID) || roomID.Length != 4)
         {
             Debug.LogWarning("[Lobby] ID phòng không hợp lệ!");
-            ShowErrorNotification();
+            ShowErrorNotification(); // Sẽ dùng câu thông báo mặc định
             return;
         }
 
@@ -194,6 +202,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         currentRunner.ProvideInput = true;
+        GameInputManager.EnsureForRunner(currentRunner);
 
         var startGameArgs = new StartGameArgs()
         {
@@ -206,8 +215,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         {
             startGameArgs.PlayerCount = maxPlayers;
         }
-
-        Debug.Log($"[Fusion] StartGame\nMode: {mode}\nSession: {sessionName}\nPlayerCount: {(mode == GameMode.Host ? maxPlayers : -1)}");
         
         var result = await currentRunner.StartGame(startGameArgs);
 
@@ -217,7 +224,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             await System.Threading.Tasks.Task.Delay(1000);
             if (currentRunner.IsServer)
             {
-                // HOST: Tự động Spawn Prefab quản lý dữ liệu tên người chơi
                 if (roomDataPrefab != null)
                 {
                     currentRunner.Spawn(roomDataPrefab);
@@ -253,7 +259,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             {
                 panelGameMode.SetActive(true);
                 await Fade(0f, 0.5f);
-                ShowErrorNotification();
+                ShowErrorNotification(); // Thông báo mặc định
             }
         }
     }
@@ -274,9 +280,13 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
         int currentPlayers = currentRunner.SessionInfo.PlayerCount;
 
+        // KIỂM TRA SỐ LƯỢNG NGƯỜI CHƠI (Tự động áp dụng cho 1v1 hoặc 2v2 dựa trên maxPlayers)
         if (currentPlayers < maxPlayers)
         {
             Debug.LogWarning($"[Lobby] Chưa đủ người chơi!\nCurrent: {currentPlayers}\nRequired: {maxPlayers}");
+            
+            // Hiện thông báo sử dụng UI errorText hiện tại
+            ShowErrorNotification("Not enough players, please wait...");
             return;
         }
 
@@ -284,10 +294,11 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         currentRunner.LoadScene(SceneRef.FromIndex(1));
     }
 
-    private void ShowErrorNotification()
+    // Đã thêm tham số "message" với giá trị mặc định
+    private void ShowErrorNotification(string message = "Room ID not correct! Again please")
     {
         HideErrorNotification();
-        errorNotificationCoroutine = StartCoroutine(ShowErrorNotificationCoroutine());
+        errorNotificationCoroutine = StartCoroutine(ShowErrorNotificationCoroutine(message));
     }
 
     private void HideErrorNotification()
@@ -302,11 +313,11 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             errorText.gameObject.SetActive(false);
     }
 
-    private System.Collections.IEnumerator ShowErrorNotificationCoroutine()
+    private System.Collections.IEnumerator ShowErrorNotificationCoroutine(string message)
     {
         if (errorText != null)
         {
-            errorText.text = "Room ID not correct! Again please";
+            errorText.text = message; // Đưa message mới vào UI
             errorText.gameObject.SetActive(true);
             yield return new WaitForSeconds(1.5f);
             errorText.gameObject.SetActive(false);
@@ -318,7 +329,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (fadeImage == null) return;
         
-        fadeImage.gameObject.SetActive(true); // Bật tấm đen lên
+        fadeImage.gameObject.SetActive(true);
         
         float startAlpha = fadeImage.color.a;
         float time = 0;
@@ -328,12 +339,11 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             time += Time.deltaTime;
             float a = Mathf.Lerp(startAlpha, targetAlpha, time / duration);
             fadeImage.color = new Color(0, 0, 0, a);
-            await System.Threading.Tasks.Task.Yield(); // Chờ frame tiếp theo
+            await System.Threading.Tasks.Task.Yield();
         }
         
         fadeImage.color = new Color(0, 0, 0, targetAlpha);
         
-        // Nếu đã sáng hoàn toàn (Alpha = 0), tắt tấm đen đi để bấm được các nút
         if (targetAlpha == 0) 
         {
             fadeImage.gameObject.SetActive(false);
@@ -344,30 +354,13 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     // CÁC CALLBACK CỦA FUSION NETWORK RUNNER
     // ==========================================
 
-    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
-    {
-        Debug.Log($"[Fusion] Player Joined: {player} | Total Players: {runner.SessionInfo.PlayerCount}/{runner.SessionInfo.MaxPlayers}");
-    }
-
-    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
-    {
-        Debug.Log($"[Fusion] Player Left: {player}\nTotal Players: {runner.SessionInfo.PlayerCount}/{runner.SessionInfo.MaxPlayers}");
-    }
-
-    public void OnInput(NetworkRunner runner, NetworkInput input)
-    {
-        if (PlayerMovement.LocalPlayer != null)
-        {
-            input.Set(PlayerMovement.LocalPlayer.GetLocalInput());
-        }
-    }
-
+    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
+    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
+    public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
-        Debug.LogError($"[Fusion] Runner Shutdown: {shutdownReason}");
-
         if (runner == currentRunner)
         {
             runner.RemoveCallbacks(this);
@@ -377,42 +370,20 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    public void OnConnectedToServer(NetworkRunner runner)
-    {
-        Debug.Log($"[Fusion] Connected To Server\nSession: {runner.SessionInfo.Name}");
-    }
-
-    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
-    {
-        Debug.LogError($"[Fusion] Disconnected From Server\nReason: {reason}");
-    }
-
+    public void OnConnectedToServer(NetworkRunner runner) { }
+    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
-
-    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
-    {
-        Debug.LogError($"[Fusion] Connect Failed\nAddress: {remoteAddress}\nReason: {reason}");
-    }
-
+    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
 #pragma warning disable CS0618
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
 #pragma warning restore CS0618
-
-    public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
-    {
-        Debug.Log("========== SESSION LIST ==========");
-        foreach (var session in sessionList)
-        {
-            Debug.Log($"Room: {session.Name} | Players: {session.PlayerCount}/{session.MaxPlayers} | IsOpen: {session.IsOpen} | IsVisible: {session.IsVisible}");
-        }
-    }
-
+    public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { }
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, System.ReadOnlySpan<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
-    public void OnSceneLoadDone(NetworkRunner runner) { Debug.Log("[Fusion] Scene Load Done"); }
-    public void OnSceneLoadStart(NetworkRunner runner) { Debug.Log("[Fusion] Scene Load Start"); }
+    public void OnSceneLoadDone(NetworkRunner runner) { }
+    public void OnSceneLoadStart(NetworkRunner runner) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
 }

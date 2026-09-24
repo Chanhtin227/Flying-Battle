@@ -678,7 +678,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9073074160740678669, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
       propertyPath: Flags
-      value: 262146
+      value: 262402
       objectReference: {fileID: 0}
     - target: {fileID: 9073074160740678669, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
       propertyPath: SortKey
@@ -686,10 +686,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9073074160740678669, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
       propertyPath: NetworkedBehaviours.Array.size
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 9073074160740678669, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
       propertyPath: 'NetworkedBehaviours.Array.data[0]'
+      value: 
+      objectReference: {fileID: 5512836969069035675}
+    - target: {fileID: 9073074160740678669, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
+      propertyPath: 'NetworkedBehaviours.Array.data[1]'
       value: 
       objectReference: {fileID: 5474599676641011351}
     m_RemovedComponents: []
@@ -729,6 +733,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d1b1e0c8a6050242b1fba655c09e64a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPickup
+--- !u!114 &5512836969069035675 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8710429954681522297, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
+  m_PrefabInstance: {fileID: 3774053763887040738}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1580805019639322907}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
 --- !u!1001 &3919303731671615052
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1551,7 +1566,7 @@ PrefabInstance:
       addedObject: {fileID: -2570491720007723357}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4333970914068212478}
+      addedObject: {fileID: 4631321935511271409}
   m_SourcePrefab: {fileID: 100100000, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
 --- !u!4 &2891825818682833851 stripped
 Transform:
@@ -1843,7 +1858,7 @@ MonoBehaviour:
   - {fileID: 2392553683652010239}
   - {fileID: 2567510707079572256}
   NetworkedBehaviours:
-  - {fileID: 4333970914068212478}
+  - {fileID: 4631321935511271409}
   - {fileID: 4713323537150237153}
   - {fileID: 2270641106786434766}
   - {fileID: 1600288243756836947}
@@ -1862,7 +1877,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocalPlayerSetup
   cameraRoot: {fileID: 7626302090370302443}
---- !u!114 &4333970914068212478
+--- !u!114 &4631321935511271409
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

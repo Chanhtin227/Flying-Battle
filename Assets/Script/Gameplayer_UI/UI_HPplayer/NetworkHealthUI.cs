@@ -63,8 +63,7 @@ public class NetworkHealthUI : MonoBehaviour
 
         PlayerHealth[] players =
             FindObjectsByType<PlayerHealth>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None
+                FindObjectsInactive.Exclude
             );
 
 

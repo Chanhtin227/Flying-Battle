@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using System.Collections;
 using System.Collections.Generic;
 using Fusion;
@@ -34,11 +35,16 @@ public class WeaponSpawner : NetworkBehaviour
 
 
     // =========================================================
-    // SPAWN HEIGHT
+    // GROUND PLACEMENT
     // =========================================================
 
-    [Header("Spawn Height")]
-    public float spawnHeight = 20f;
+    private const float MaximumGroundOffset = 0.5f;
+
+    [Header("Ground Placement")]
+    [Tooltip("Small clearance above the sampled terrain. Chests are spawned already landed so every peer receives the same position.")]
+    [FormerlySerializedAs("spawnHeight")]
+    [Range(0f, MaximumGroundOffset)]
+    public float groundOffset = 0.5f;
 
 
     // =========================================================
@@ -214,11 +220,19 @@ public class WeaponSpawner : NetworkBehaviour
                 terrainPosition.y;
 
 
-            // Spawn trên không
+            // Spawn directly on terrain. A chest has no NetworkTransform, so
+            // the authoritative peer must not spawn it in the air and move it
+            // locally afterward; remote peers would keep the airborne position.
+            float safeGroundOffset = Mathf.Clamp(
+                groundOffset,
+                0f,
+                MaximumGroundOffset
+            );
+
             spawnPosition =
                 new Vector3(
                     worldX,
-                    groundY + spawnHeight,
+                    groundY + safeGroundOffset,
                     worldZ
                 );
 

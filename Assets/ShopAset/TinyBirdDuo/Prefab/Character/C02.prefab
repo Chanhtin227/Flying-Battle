@@ -215,11 +215,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCamera
   target: {fileID: 2871219127369312907}
+  cam: {fileID: 0}
   mouseSensitivity: 150
   shoulderOffset: {x: 0.6, y: 1.6, z: 0}
-  distance: 3.5
+  normalDistance: 4
+  isAiming: 0
+  aimShoulderOffset: {x: 0.75, y: 1.55, z: 0}
+  aimDistance: 2
+  normalFOV: 60
+  aimFOV: 40
+  aimSpeed: 8
   minPitch: -30
   maxPitch: 60
+  rotationSmoothTime: 0.06
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  cameraRadius: 0.2
+  minDistance: 0.5
+  collisionOffset: 0.1
+  walkBobAmount: 0.01
+  walkBobSpeed: 7
+  runBobAmount: 0.025
+  runBobSpeed: 11
 --- !u!1 &7736131964061467489
 GameObject:
   m_ObjectHideFlags: 0
@@ -308,6 +326,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9073074160740678669, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
+      propertyPath: SortKey
+      value: 3405544595
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -323,6 +345,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3088295622890441539, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
   m_PrefabInstance: {fileID: 1469603350958662417}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7606329729932877596 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9073074160740678669, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
+  m_PrefabInstance: {fileID: 1469603350958662417}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3888031837136253672}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
 --- !u!1001 &1558508089588971682
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -818,6 +851,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7426704771971553138}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7102324090298816886}
   m_SourcePrefab: {fileID: 100100000, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
 --- !u!4 &178225352393102319 stripped
 Transform:
@@ -878,8 +914,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   walkSpeed: 2
   runSpeed: 5
-  gravity: -20
-  jumpHeight: 2
+  jumpImpulse: 5
   cameraRoot: {fileID: 8348849138150238174}
 --- !u!114 &6111916094092569077
 MonoBehaviour:
@@ -907,11 +942,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fec75ef21edc6d47afbe40c67aedc68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWeapon
+  shootRotateSpeed: 10
+  rifleMagazineSize: 30
+  pistolMagazineSize: 12
+  rifleStartAmmo: 30
+  pistolStartAmmo: 12
+  rifleStartReserveAmmo: 90
+  pistolStartReserveAmmo: 36
+  _RifleAmmo: 0
+  _PistolAmmo: 0
+  _RifleReserveAmmo: 0
+  _PistolReserveAmmo: 0
+  _IsReloading:
+    RawValue: 0
+  rifleReloadTime: 2
+  pistolReloadTime: 1.5
   gun: {fileID: 1382981430380037309}
   pistol: {fileID: 1064740848647472629}
   bat: {fileID: 3888031837136253672}
   shovel: {fileID: 6883400415579785151}
-  currentWeapon: 0
+  _CurrentWeapon: 0
+  _HasRifle:
+    RawValue: 0
+  _HasPistol:
+    RawValue: 0
+  _HasBat:
+    RawValue: 0
+  _HasShovel:
+    RawValue: 0
+  maxWeaponSlots: 4
+  _Slot1: 0
+  _Slot2: 0
+  _Slot3: 0
+  _Slot4: 0
   fpsCamera: {fileID: 3047792288859290117}
   rifleDamage: 25
   rifleFireRate: 10
@@ -923,6 +986,7 @@ MonoBehaviour:
   batRange: 2
   shovelDamage: 40
   shovelRange: 2.5
+  meleeCooldown: 0.5
   rifleMuzzleFlash: {fileID: 4121186703198250229}
   pistolMuzzleFlash: {fileID: 4204761513500088922}
   audioSource: {fileID: 7426704771971553138}
@@ -930,6 +994,8 @@ MonoBehaviour:
   pistolShotSound: {fileID: 8300000, guid: 867e5eee532ff2d4695c17134af57c37, type: 3}
   batHitSound: {fileID: 8300000, guid: 28fa253d6c2125f459ee92ce2db31310, type: 3}
   shovelHitSound: {fileID: 8300000, guid: 28fa253d6c2125f459ee92ce2db31310, type: 3}
+  rifleReloadSound: {fileID: 0}
+  pistolReloadSound: {fileID: 0}
   tracerPrefab: {fileID: 8941377978627608511, guid: 2a2395de5b97e73499da6fdc62d7b768, type: 3}
   firePoint: {fileID: 6092285333908357983}
 --- !u!82 &7426704771971553138
@@ -1029,6 +1095,31 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &7102324090298816886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3211996969817337905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 2859274021
+  SendPriority: 1
+  EnableInterpolation: 1
+  Flags: 262146
+  NestedObjects:
+  - {fileID: 6952472379434120280}
+  - {fileID: 7606329729932877596}
+  - {fileID: 8706201481274575491}
+  - {fileID: 4316688883009791497}
+  NetworkedBehaviours:
+  - {fileID: 4623653286356419725}
+  - {fileID: 3566484386268359657}
+  ForceRemoteRenderTimeframe: 0
 --- !u!4 &4410670721355035110 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -7104430271930303354, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
@@ -1118,6 +1209,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8590066422545319435}
     m_Modifications:
+    - target: {fileID: -2677815843141767284, guid: a497c7e2553f8024d87cdb293e6da087, type: 3}
+      propertyPath: SortKey
+      value: 604238077
+      objectReference: {fileID: 0}
     - target: {fileID: 8559592653235058698, guid: a497c7e2553f8024d87cdb293e6da087, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1181,6 +1276,17 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 9043817966670324400, guid: a497c7e2553f8024d87cdb293e6da087, type: 3}
   m_PrefabInstance: {fileID: 2451322360738276623}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8706201481274575491 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -2677815843141767284, guid: a497c7e2553f8024d87cdb293e6da087, type: 3}
+  m_PrefabInstance: {fileID: 2451322360738276623}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6883400415579785151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
 --- !u!1001 &3324357133301320549
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1189,6 +1295,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8590066422545319435}
     m_Modifications:
+    - target: {fileID: -7654561805207130772, guid: 0117b8222c7b85941a9ed069bc8d470b, type: 3}
+      propertyPath: SortKey
+      value: 3953875744
+      objectReference: {fileID: 0}
     - target: {fileID: 2370236019523784336, guid: 0117b8222c7b85941a9ed069bc8d470b, type: 3}
       propertyPath: m_Name
       value: Pistol
@@ -1255,6 +1365,17 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2370236019523784336, guid: 0117b8222c7b85941a9ed069bc8d470b, type: 3}
   m_PrefabInstance: {fileID: 3324357133301320549}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &4316688883009791497 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -7654561805207130772, guid: 0117b8222c7b85941a9ed069bc8d470b, type: 3}
+  m_PrefabInstance: {fileID: 3324357133301320549}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064740848647472629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
 --- !u!1001 &4909320888069515116
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1471,6 +1592,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8590066422545319435}
     m_Modifications:
+    - target: {fileID: 4031068980329519561, guid: 019c3fd29c7e31c45837c8375036d0f4, type: 3}
+      propertyPath: SortKey
+      value: 1167295694
+      objectReference: {fileID: 0}
     - target: {fileID: 4952914378736412972, guid: 019c3fd29c7e31c45837c8375036d0f4, type: 3}
       propertyPath: m_Name
       value: AssaultRifle
@@ -1537,6 +1662,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5762243359782630294, guid: 019c3fd29c7e31c45837c8375036d0f4, type: 3}
   m_PrefabInstance: {fileID: 6308732919796051345}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6952472379434120280 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4031068980329519561, guid: 019c3fd29c7e31c45837c8375036d0f4, type: 3}
+  m_PrefabInstance: {fileID: 6308732919796051345}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382981430380037309}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
 --- !u!1001 &7634118425527707601
 PrefabInstance:
   m_ObjectHideFlags: 0

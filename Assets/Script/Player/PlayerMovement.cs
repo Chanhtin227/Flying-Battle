@@ -1,15 +1,16 @@
-using UnityEngine;
 using Fusion;
+using UnityEngine;
 
 public struct NetworkInputData : INetworkInput
 {
     public Vector3 moveDirection;
-    public bool isRunning;
-    public bool isJumping;
+    public Vector3 lookDirection;
+    public NetworkBool isRunning;
+    public NetworkBool isJumping;
 }
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerMovement : NetworkBehaviour 
+public class PlayerMovement : NetworkBehaviour
 {
     public static PlayerMovement LocalPlayer;
 
@@ -17,60 +18,53 @@ public class PlayerMovement : NetworkBehaviour
     public float runSpeed = 5f;
     public float gravity = -20f;
     public float jumpHeight = 2f;
-
     public Transform cameraRoot;
 
-    CharacterController cc;
-    PlayerAnimation playerAnim;
-    Vector3 velocity;
+    private CharacterController characterController;
+    private PlayerAnimation playerAnim;
+    private Vector3 velocity;
 
-    [Networked] private Vector3 NetworkedPosition { get; set; }
-    [Networked] private Quaternion NetworkedRotation { get; set; }
-    [Networked] private NetworkBool HasNetworkedTransform { get; set; }
-    
-    // [THÊM MỚI] Biến đồng bộ tốc độ di chuyển để chạy Animation cho các máy khác (Proxy)
+    // Position and rotation are replicated by NetworkTransform on the Player prefab.
     [Networked] private float NetworkedAnimSpeed { get; set; }
 
     public override void Spawned()
     {
-        cc = GetComponent<CharacterController>();
+        characterController = GetComponent<CharacterController>();
         playerAnim = GetComponent<PlayerAnimation>();
 
         if (HasInputAuthority)
-        {
             LocalPlayer = this;
-        }
 
-        // [THÊM MỚI - SỬA LỖI LƠ LỬNG] 
-        // Tắt CharacterController trên bản sao (Proxy) của người chơi khác.
-        // Điều này cho phép transform.position được gán tự do trong hàm Render() mà không bị chặn.
-        if (Object.IsProxy)
-        {
-            cc.enabled = false;
-        }
+        // Only the state authority may simulate the CharacterController. Every
+        // client replica (including its locally controlled player) is driven by
+        // NetworkTransform, so it cannot accumulate a second local simulation.
+        if (!HasStateAuthority)
+            characterController.enabled = false;
+    }
 
-        if (HasStateAuthority)
-        {
-            SyncNetworkedTransform();
-        }
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (LocalPlayer == this)
+            LocalPlayer = null;
     }
 
     public NetworkInputData GetLocalInput()
     {
-        NetworkInputData data = new NetworkInputData();
-
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        var data = new NetworkInputData();
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
 
         if (cameraRoot != null)
         {
             Vector3 forward = cameraRoot.forward;
             Vector3 right = cameraRoot.right;
+            forward.y = 0f;
+            right.y = 0f;
+            forward.Normalize();
+            right.Normalize();
 
-            forward.y = 0; right.y = 0;
-            forward.Normalize(); right.Normalize();
-
-            data.moveDirection = forward * v + right * h;
+            data.moveDirection = Vector3.ClampMagnitude(forward * vertical + right * horizontal, 1f);
+            data.lookDirection = forward;
         }
 
         data.isRunning = Input.GetKey(KeyCode.LeftShift);
@@ -80,80 +74,46 @@ public class PlayerMovement : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (GetInput(out NetworkInputData data))
+        // The host is the single simulation authority. Simulating the same
+        // CharacterController on the input-authority client creates a second,
+        // unsynchronised controller state and makes client movement drift or run
+        // faster than the host.
+        if (!HasStateAuthority)
+            return;
+
+        if (!GetInput(out NetworkInputData data))
+            return;
+
+        if (data.lookDirection.sqrMagnitude > 0.001f)
+            transform.rotation = Quaternion.LookRotation(data.lookDirection, Vector3.up);
+
+        float speed = data.isRunning ? runSpeed : walkSpeed;
+        characterController.Move(data.moveDirection * speed * Runner.DeltaTime);
+
+        float animationSpeed = data.moveDirection.magnitude * (data.isRunning ? 1f : 0.5f);
+        if (playerAnim != null)
+            playerAnim.Move(animationSpeed);
+
+        if (characterController.isGrounded)
         {
-            float speed = data.isRunning ? runSpeed : walkSpeed;
-
-            cc.Move(data.moveDirection * speed * Runner.DeltaTime);
-
-            if (data.moveDirection.magnitude > 0.1f)
-                transform.forward = data.moveDirection;
-
-            // Tính toán tốc độ animation hiện tại
-            float currentAnimSpeed = data.moveDirection.magnitude * (data.isRunning ? 1f : 0.5f);
-            
-            if (playerAnim != null)
-                playerAnim.Move(currentAnimSpeed);
-
-            if (cc.isGrounded)
+            velocity.y = -2f;
+            if (data.isJumping)
             {
-                velocity.y = -2;
-
-                if (data.isJumping)
-                {
-                    velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity);
-                    if (playerAnim != null) playerAnim.Jump();
-                }
-            }
-            velocity.y += gravity * Runner.DeltaTime;
-            cc.Move(velocity * Runner.DeltaTime);
-
-            if (HasStateAuthority)
-            {
-                SyncNetworkedTransform();
-                // [THÊM MỚI] Lưu lại tốc độ Animation vào biến Networked để gửi cho Client
-                NetworkedAnimSpeed = currentAnimSpeed;
+                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+                if (playerAnim != null)
+                    playerAnim.Jump();
             }
         }
+
+        velocity.y += gravity * Runner.DeltaTime;
+        characterController.Move(velocity * Runner.DeltaTime);
+
+        NetworkedAnimSpeed = animationSpeed;
     }
 
     public override void Render()
     {
-        // [THÊM MỚI - SỬA LỖI KHÔNG CHẠY ANIMATION]
-        // Nếu đây là nhân vật của người khác (Proxy), ép nó chạy Animation dựa trên dữ liệu mạng nhận được
-        if (Object.IsProxy && playerAnim != null)
-        {
+        if (!HasStateAuthority && playerAnim != null)
             playerAnim.Move(NetworkedAnimSpeed);
-        }
-
-        if (HasStateAuthority || HasInputAuthority || !HasNetworkedTransform)
-            return;
-
-        const float lerpSpeed = 15f;
-
-        if (Vector3.Distance(transform.position, NetworkedPosition) > 2f)
-        {
-            transform.SetPositionAndRotation(NetworkedPosition, NetworkedRotation);
-            return;
-        }
-
-        transform.position = Vector3.Lerp(
-            transform.position,
-            NetworkedPosition,
-            Time.deltaTime * lerpSpeed
-        );
-
-        transform.rotation = Quaternion.Slerp(
-            transform.rotation,
-            NetworkedRotation,
-            Time.deltaTime * lerpSpeed
-        );
-    }
-
-    private void SyncNetworkedTransform()
-    {
-        NetworkedPosition = transform.position;
-        NetworkedRotation = transform.rotation;
-        HasNetworkedTransform = true;
     }
 }

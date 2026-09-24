@@ -110,8 +110,7 @@ public class NetworkWeaponUI : MonoBehaviour
 
         PlayerWeapon[] players =
             FindObjectsByType<PlayerWeapon>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None
+                FindObjectsInactive.Exclude
             );
 
 

@@ -327,8 +327,7 @@ public class ThirdPersonCamera : MonoBehaviour
             );
 
 
-        target.rotation =
-            playerRotation;
+        target.rotation = playerRotation;
 
 
         // =====================================================
