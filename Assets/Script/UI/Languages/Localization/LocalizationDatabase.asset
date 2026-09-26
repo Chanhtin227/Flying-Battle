@@ -16,103 +16,182 @@ MonoBehaviour:
   - Key: chung1
     Vietnamese: Chung
     English: Common
+    Japanese: "\u30C1\u30E5\u30F3"
+    Chinese: "\u949F"
   - Key: sound1
     Vietnamese: "\xC2m thanh"
     English: Sound
+    Japanese: "\u97F3"
+    Chinese: "\u58F0\u97F3"
   - Key: control1
     Vietnamese: "\u0110i\u1EC1u khi\u1EC3n"
     English: Control
+    Japanese: "\u30B3\u30F3\u30C8\u30ED\u30FC\u30EB"
+    Chinese: "\u63A7\u5236"
   - Key: language1
     Vietnamese: "Ng\xF4n ng\u1EEF"
     English: Language
+    Japanese: "\u8A00\u8A9E"
+    Chinese: "\u8BED\u8A00"
   - Key: sound2
     Vietnamese: "T\u1ED5ng th\u1EC3"
     English: Overall
+    Japanese: "\u5168\u4F53"
+    Chinese: "\u6574\u4F53"
   - Key: sound3
     Vietnamese: "Nh\u1EA1c n\u1EC1n"
     English: Background music
+    Japanese: "\u30D0\u30C3\u30AF\u30DF\u30E5\u30FC\u30B8\u30C3\u30AF"
+    Chinese: "\u80CC\u666F\u97F3\u4E50"
   - Key: sound4
     Vietnamese: "Hi\u1EC7u \u1EE9ng"
     English: Effect
+    Japanese: "\u30A8\u30D5\u30A7\u30AF\u30C8"
+    Chinese: "\u6548\u679C"
   - Key: sound5
     Vietnamese: "\xC2m thanh"
     English: Sound
+    Japanese: "\u97F3"
+    Chinese: "\u58F0\u97F3"
   - Key: sound6
     Vietnamese: "\u0110i\u1EC1u ch\u1EC9nh m\u1EE9c \xE2m l\u01B0\u1EE3ng cho t\u1EEBng
       k\xEAnh"
     English: Adjust the volume for each channel
+    Japanese: "\u5404\u30C1\u30E3\u30F3\u30CD\u30EB\u306E\u97F3\u91CF\u3092\u8ABF\u6574\u3059\u308B"
+    Chinese: "\u8C03\u6574\u6BCF\u4E2A\u9891\u9053\u7684\u97F3\u91CF"
   - Key: control2
     Vietnamese: "Ti\u1EBFn v\u1EC1 ph\xEDa tr\u01B0\u1EDBc "
     English: Move forward
+    Japanese: "\u524D\u306B\u9032\u3080"
+    Chinese: "\u5411\u524D\u8FDB"
   - Key: control3
     Vietnamese: "L\xF9i v\u1EC1 ph\xEDa sau"
     English: Step back
+    Japanese: "\u5F8C\u308D\u306B\u4E0B\u304C\u308B"
+    Chinese: "\u5F80\u540E\u9000"
   - Key: control4
     Vietnamese: "Sang tr\xE1i"
     English: Move to the left
+    Japanese: "\u5DE6\u306B\u884C\u3063\u3066"
+    Chinese: "\u5411\u5DE6"
   - Key: control5
     Vietnamese: "Ti\u1EBFn v\u1EC1 ph\xEDa tr\u01B0\u1EDBc"
     English: Move forward
+    Japanese: "\u524D\u306B\u9032\u3080"
+    Chinese: "\u5411\u524D\u8FDB"
   - Key: control6
     Vietnamese: "L\xF9i v\u1EC1 ph\xEDa sau"
     English: Backwards
+    Japanese: "\u5F8C\u308D\u306B\u4E0B\u304C\u308B"
+    Chinese: "\u5F80\u540E\u9000"
   - Key: control7
     Vietnamese: "Sang tr\xE1i"
     English: Move left
+    Japanese: "\u5DE6\u306B\u884C\u3063\u3066"
+    Chinese: "\u5411\u5DE6"
   - Key: control8
     Vietnamese: "Sang ph\u1EA3i"
     English: Move right
+    Japanese: "\u53F3\u306B\u884C\u3063\u3066"
+    Chinese: "\u5411\u53F3"
   - Key: control9
     Vietnamese: "Nh\u1EA3y"
     English: Jump
+    Japanese: "\u30B8\u30E3\u30F3\u30D7"
+    Chinese: "\u8DF3"
   - Key: control10
     Vietnamese: Bay
     English: Fly
+    Japanese: "\u98DB\u3076"
+    Chinese: "\u98DE"
   - Key: control11
     Vietnamese: Xoay camera
     English: Rotate the camera
+    Japanese: "\u30AB\u30E1\u30E9\u3092\u56DE\u3059"
+    Chinese: "\u65CB\u8F6C\u6444\u50CF\u5934"
   - Key: control12
     Vietnamese: "B\u1EAFn / \u0111\xE1nh"
     English: Shoot / hit
+    Japanese: "\u6483\u3064 / \u6253\u3064"
+    Chinese: "\u5C04 / \u6253"
   - Key: control13
     Vietnamese: "Ng\u1EAFm aim / ADS"
     English: Look at aim / ADS
+    Japanese: "\u30A8\u30A4\u30E0\u3092\u898B\u308B / ADS"
+    Chinese: "\u7784\u51C6 / \u5F00\u955C"
   - Key: control14
     Vietnamese: "N\u1EA1p \u0111\u1EA1n "
     English: Load ammo
+    Japanese: "\u5F3E\u3092\u8FBC\u3081\u308B"
+    Chinese: "\u88C5\u5F39"
   - Key: control15
     Vietnamese: "Nh\u1EB7t \u0111\u1ED3 / \u0111\u1ED5i v\u0169 kh\xED"
     English: Pick up items / change weapons
+    Japanese: "\u30A2\u30A4\u30C6\u30E0\u3092\u62FE\u3046 / \u6B66\u5668\u3092\u4EA4\u63DB\u3059\u308B"
+    Chinese: "\u6361\u4E1C\u897F / \u6362\u6B66\u5668"
   - Key: control16
     Vietnamese: "M\u1EDF R\u01B0\u01A1ng"
     English: Open Chest
+    Japanese: "\u5B9D\u7BB1\u3092\u958B\u3051\u308B"
+    Chinese: "\u6253\u5F00\u7BB1\u5B50"
   - Key: control17
     Vietnamese: "M\u1EDF kho \u0111\u1ED3"
     English: Open the inventory
+    Japanese: "\u5009\u5EAB\u3092\u958B\u3051\u308B"
+    Chinese: "\u6253\u5F00\u7269\u54C1\u680F"
   - Key: control18
     Vietnamese: "V\u0169 kh\xED ch\xEDnh / ph\u1EE5 / c\u1EADn chi\u1EBFn"
     English: Primary / Secondary / Melee weapon
+    Japanese: "\u30E1\u30A4\u30F3\u6B66\u5668 / \u30B5\u30D6\u6B66\u5668 / \u8FD1\u63A5\u6B66\u5668"
+    Chinese: "\u4E3B\u6B66\u5668 / \u526F\u6B66\u5668 / \u8FD1\u6218\u6B66\u5668"
   - Key: control19
     Vietnamese: "Th\u1EA3 v\u1EADt ph\u1EA9m"
     English: Drop item
+    Japanese: "\u30A2\u30A4\u30C6\u30E0\u3092\u843D\u3068\u3059"
+    Chinese: "\u4E22\u6389\u7269\u54C1"
   - Key: control20
     Vietnamese: Menu/Pause
     English: Menu/Pause
+    Japanese: Menu/Pause
+    Chinese: Menu/Pause
   - Key: control21
     Vietnamese: "H\u01B0\u1EDBng d\u1EABn \u0111i\u1EC1u khi\u1EC3n"
     English: Control guide
+    Japanese: "\u64CD\u4F5C\u30AC\u30A4\u30C9"
+    Chinese: "\u64CD\u4F5C\u6307\u5357"
   - Key: more1
     Vietnamese: "Kh\xE1c"
     English: different
+    Japanese: "\u305D\u306E\u4ED6"
+    Chinese: "\u5176\u4ED6"
   - Key: more2
     Vietnamese: "Li\xEAn k\u1EBFtv\xE0 th\xF4ng tin th\xEAm"
     English: Links and more info
+    Japanese: "\u30EA\u30F3\u30AF\u3068\u8FFD\u52A0\u60C5\u5831"
+    Chinese: "\u94FE\u63A5\u548C\u66F4\u591A\u4FE1\u606F"
   - Key: more3
     Vietnamese: "Kh\xE1c"
     English: different
+    Japanese: "\u305D\u306E\u4ED6"
+    Chinese: "\u5176\u4ED6"
   - Key: language2
     Vietnamese: "Ng\xF4n ng\u1EEF"
     English: Language
+    Japanese: "\u8A00\u8A9E"
+    Chinese: "\u8BED\u8A00"
   - Key: language3
     Vietnamese: "Ch\u1ECDn ng\xF4n ng\u1EEF hi\u1EC3n th\u1ECB trong game"
     English: Choose the language displayed in the game
+    Japanese: "\u30B2\u30FC\u30E0\u3067\u8868\u793A\u3059\u308B\u8A00\u8A9E\u3092\u9078\u3076"
+    Chinese: "\u9009\u62E9\u6E38\u620F\u663E\u793A\u8BED\u8A00"
+  - Key: language4
+    Vietnamese: "Thay \u0111\u1ED5i \u0111\u01B0\u1EE3c \xE1p d\u1EE5ng ngay v\xE0
+      l\u01B0u tr\xEAn thi\u1EBFt b\u1ECB n\xE0y"
+    English: Changes are applied immediately and saved on this device
+    Japanese: "\u5909\u66F4\u306F\u3059\u3050\u306B\u9069\u7528\u3055\u308C\u3001\u3053\u306E\u30C7\u30D0\u30A4\u30B9\u306B\u4FDD\u5B58\u3055\u308C\u307E\u3059"
+    Chinese: "\u66F4\u6539\u5DF2\u7ACB\u5373\u5E94\u7528\u5E76\u4FDD\u5B58\u5728\u6B64\u8BBE\u5907\u4E0A"
+  - Key: id1
+    Vietnamese: "ID ph\xF2ng kh\xF4ng \u0111\xFAng. Vui l\xF2ng nh\u1EADp l\u1EA1i"
+    English: Room ID is incorrect. Please enter it again.
+    Japanese: "\u90E8\u5C4B\u306EID\u304C\u6B63\u3057\u304F\u3042\u308A\u307E\u305B\u3093\u3002\u3082\u3046\u4E00\u5EA6\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044"
+    Chinese: "\u623F\u95F4ID\u4E0D\u6B63\u786E\u3002\u8BF7\u91CD\u65B0\u8F93\u5165"

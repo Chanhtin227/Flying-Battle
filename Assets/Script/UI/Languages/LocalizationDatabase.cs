@@ -4,7 +4,10 @@ using UnityEngine;
 
 namespace Localization
 {
- 
+    /// <summary>
+    /// 1 dòng dữ liệu dịch: 1 Key ứng với bản dịch ở mỗi ngôn ngữ.
+    /// Ví dụ: Key = "settings_language_title", Vietnamese = "Ngôn ngữ", English = "Language"
+    /// </summary>
     [Serializable]
     public class LocalizationEntry
     {
@@ -12,6 +15,8 @@ namespace Localization
 
         [TextArea(1, 3)] public string Vietnamese;
         [TextArea(1, 3)] public string English;
+        [TextArea(1, 3)] public string Japanese;
+        [TextArea(1, 3)] public string Chinese;
 
         public string GetText(LanguageCode language)
         {
@@ -19,12 +24,17 @@ namespace Localization
             {
                 LanguageCode.Vietnamese => Vietnamese,
                 LanguageCode.English => English,
+                LanguageCode.Japanese => Japanese,
+                LanguageCode.Chinese => Chinese,
                 _ => English
             };
         }
     }
 
-  
+    /// <summary>
+    /// Database chứa toàn bộ chuỗi dịch trong game.
+    /// Tạo asset: chuột phải trong Project -> Create -> Localization -> Database
+    /// </summary>
     [CreateAssetMenu(fileName = "LocalizationDatabase", menuName = "Localization/Database")]
     public class LocalizationDatabase : ScriptableObject
     {
@@ -47,6 +57,7 @@ namespace Localization
             }
         }
 
+        /// <summary>Lấy chuỗi dịch theo Key và ngôn ngữ. Trả về "[key]" nếu không tìm thấy.</summary>
         public string GetText(string key, LanguageCode language)
         {
             if (_lookup == null) BuildLookup();
