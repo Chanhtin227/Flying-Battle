@@ -18,12 +18,15 @@ public class InventoryUI : MonoBehaviour
 
     [Header("Medkit UI")]
     public GameObject smallMedkitUI;
+    public GameObject mediumMedkitUI;
     public GameObject largeMedkitUI;
 
     [Header("Amount Text")]
     public TMP_Text rifleAmmoText;
     public TMP_Text pistolAmmoText;
+
     public TMP_Text smallMedkitText;
+    public TMP_Text mediumMedkitText;
     public TMP_Text largeMedkitText;
 
     [Header("Key")]
@@ -31,103 +34,273 @@ public class InventoryUI : MonoBehaviour
 
     private bool isOpen = false;
 
-    void Start()
-    {
-        inventoryPanel.SetActive(false);
+    private PlayerWeapon playerWeapon;
+    private PlayerHealth playerHealth;
 
-        UpdateInventoryUI();
+
+    // =========================================================
+    // START
+    // =========================================================
+
+    private void Start()
+    {
+        Debug.Log("[InventoryUI] START");
+
+        if (inventoryPanel == null)
+        {
+            Debug.LogError(
+                "[InventoryUI] INVENTORY PANEL CHƯA ĐƯỢC GÁN!"
+            );
+
+            return;
+        }
+
+        inventoryPanel.SetActive(false);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    void Update()
+
+    // =========================================================
+    // UPDATE
+    // =========================================================
+
+    private void Update()
     {
-        // Mở / đóng balo
+        FindLocalPlayer();
+
+        // =====================================================
+        // TAB
+        // =====================================================
+
         if (Input.GetKeyDown(inventoryKey))
         {
+            Debug.Log(
+                "[InventoryUI] ĐÃ NHẤN TAB"
+            );
+
             ToggleInventory();
         }
 
-        // Cập nhật UI
-        UpdateInventoryUI();
+        // =====================================================
+        // UPDATE UI
+        // =====================================================
+
+        if (isOpen)
+        {
+            UpdateInventoryUI();
+        }
     }
 
-    void ToggleInventory()
+
+    // =========================================================
+    // FIND LOCAL PLAYER
+    // =========================================================
+
+    private void FindLocalPlayer()
+    {
+        if (PlayerMovement.LocalPlayer == null)
+            return;
+
+        if (playerWeapon == null)
+        {
+            playerWeapon =
+                PlayerMovement.LocalPlayer
+                .GetComponent<PlayerWeapon>();
+        }
+
+        if (playerHealth == null)
+        {
+            playerHealth =
+                PlayerMovement.LocalPlayer
+                .GetComponent<PlayerHealth>();
+        }
+    }
+
+
+    // =========================================================
+    // TOGGLE INVENTORY
+    // =========================================================
+
+    private void ToggleInventory()
     {
         isOpen = !isOpen;
+
+        Debug.Log(
+            "[InventoryUI] Inventory: " +
+            (isOpen ? "OPEN" : "CLOSE")
+        );
+
+        if (inventoryPanel == null)
+        {
+            Debug.LogError(
+                "[InventoryUI] inventoryPanel = NULL!"
+            );
+
+            return;
+        }
 
         inventoryPanel.SetActive(isOpen);
 
         if (isOpen)
         {
-            Cursor.lockState = CursorLockMode.None;
+            Cursor.lockState =
+                CursorLockMode.None;
+
             Cursor.visible = true;
+
+            UpdateInventoryUI();
         }
         else
         {
-            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.lockState =
+                CursorLockMode.Locked;
+
             Cursor.visible = false;
         }
     }
 
+
+    // =========================================================
+    // UPDATE INVENTORY UI
+    // =========================================================
+
     public void UpdateInventoryUI()
     {
-        if (InventoryManager.Instance == null)
+        if (playerWeapon == null ||
+            playerHealth == null)
+        {
             return;
+        }
 
-        InventoryManager inventory = InventoryManager.Instance;
 
-        // =========================
+        // =====================================================
         // WEAPONS
-        // =========================
+        // =====================================================
 
-        rifleUI.SetActive(inventory.hasRifle);
+        if (rifleUI != null)
+        {
+            rifleUI.SetActive(
+                playerWeapon.HasRifle
+            );
+        }
 
-        pistolUI.SetActive(inventory.hasPistol);
+        if (pistolUI != null)
+        {
+            pistolUI.SetActive(
+                playerWeapon.HasPistol
+            );
+        }
 
-        batUI.SetActive(inventory.hasBat);
+        if (batUI != null)
+        {
+            batUI.SetActive(
+                playerWeapon.HasBat
+            );
+        }
 
-        shovelUI.SetActive(inventory.hasShovel);
+        if (shovelUI != null)
+        {
+            shovelUI.SetActive(
+                playerWeapon.HasShovel
+            );
+        }
 
-        // =========================
+
+        // =====================================================
         // AMMO
-        // =========================
+        // =====================================================
 
-        rifleAmmoUI.SetActive(inventory.rifleAmmo > 0);
+        int rifleAmmo =
+            playerWeapon.RifleReserveAmmo;
 
-        pistolAmmoUI.SetActive(inventory.pistolAmmo > 0);
+        int pistolAmmo =
+            playerWeapon.PistolReserveAmmo;
 
-        // =========================
-        // MEDKIT
-        // =========================
+        if (rifleAmmoUI != null)
+        {
+            rifleAmmoUI.SetActive(
+                rifleAmmo > 0
+            );
+        }
 
-        smallMedkitUI.SetActive(inventory.smallMedkitCount > 0);
-
-        largeMedkitUI.SetActive(inventory.largeMedkitCount > 0);
-
-        // =========================
-        // AMOUNT
-        // =========================
+        if (pistolAmmoUI != null)
+        {
+            pistolAmmoUI.SetActive(
+                pistolAmmo > 0
+            );
+        }
 
         if (rifleAmmoText != null)
         {
-            rifleAmmoText.text = "x" + inventory.rifleAmmo;
+            rifleAmmoText.text =
+                "x" + rifleAmmo;
         }
 
         if (pistolAmmoText != null)
         {
-            pistolAmmoText.text = "x" + inventory.pistolAmmo;
+            pistolAmmoText.text =
+                "x" + pistolAmmo;
         }
+
+
+        // =====================================================
+        // MEDKIT
+        // =====================================================
+
+        int small =
+            playerHealth.SmallMedkitCount;
+
+        int medium =
+            playerHealth.MediumMedkitCount;
+
+        int large =
+            playerHealth.LargeMedkitCount;
+
+
+        if (smallMedkitUI != null)
+        {
+            smallMedkitUI.SetActive(
+                small > 0
+            );
+        }
+
+        if (mediumMedkitUI != null)
+        {
+            mediumMedkitUI.SetActive(
+                medium > 0
+            );
+        }
+
+        if (largeMedkitUI != null)
+        {
+            largeMedkitUI.SetActive(
+                large > 0
+            );
+        }
+
+
+        // =====================================================
+        // TEXT
+        // =====================================================
 
         if (smallMedkitText != null)
         {
-            smallMedkitText.text = "x" + inventory.smallMedkitCount;
+            smallMedkitText.text =
+                "x" + small;
+        }
+
+        if (mediumMedkitText != null)
+        {
+            mediumMedkitText.text =
+                "x" + medium;
         }
 
         if (largeMedkitText != null)
         {
-            largeMedkitText.text = "x" + inventory.largeMedkitCount;
+            largeMedkitText.text =
+                "x" + large;
         }
     }
 }

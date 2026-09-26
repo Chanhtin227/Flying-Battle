@@ -1,80 +1,563 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Fusion;
 
 public class SpawnPlayer : NetworkBehaviour, IPlayerJoined
 {
+    // =========================================================
+    // PLAYER SETTINGS
+    // =========================================================
+
     [Header("Player Settings")]
+
     public NetworkPrefabRef playerPrefab;
 
-    [Tooltip("Raise the player a little to avoid clipping through the terrain on spawn.")]
+    [Tooltip("Nâng Player lên khỏi mặt đất")]
     public float yOffset = 1.5f;
 
-    [Tooltip("Desired distance between each pair of spawned players.")]
-    public float spawnDistance = 10f;
+    [Tooltip("Khoảng cách tối thiểu giữa các Player")]
+    public float minSpawnDistance = 40f;
+
+    [Tooltip("Khoảng cách tránh mép Terrain")]
+    public float edgePadding = 20f;
+
+    [Tooltip("Số lần thử tìm vị trí")]
+    public int maxSpawnAttempts = 100;
+
+
+    // =========================================================
+    // MAP SETTINGS
+    // =========================================================
 
     [Header("Map Settings")]
+
     public Terrain mapTerrain;
 
-    private int spawnedPlayerCount;
-    private Vector3 spawnPairCenter;
-    private Vector3 spawnPairDirection = Vector3.forward;
+
+    // =========================================================
+    // SPAWNED PLAYERS
+    // =========================================================
+
+    // Lưu PlayerRef đã được spawn
+    private readonly HashSet<PlayerRef> spawnedPlayers =
+        new HashSet<PlayerRef>();
+
+
+    // =========================================================
+    // USED SPAWN POSITIONS
+    // =========================================================
+
+    // Lưu vị trí đã spawn
+    private readonly List<Vector3> usedSpawnPositions =
+        new List<Vector3>();
+
+
+    // =========================================================
+    // SPAWNED
+    // =========================================================
 
     public override void Spawned()
     {
-        if (Runner.IsServer)
-        {
-            spawnedPlayerCount = 0;
+        // Chỉ Host / Server spawn Player
+        if (!Runner.IsServer)
+            return;
 
-            Debug.Log("[TerrainSpawner] Map loaded. Spawning active players...");
-            foreach (var player in Runner.ActivePlayers)
-            {
-                SpawnPlayerOnTerrain(player);
-            }
+
+        // =====================================================
+        // TÌM TERRAIN
+        // =====================================================
+
+        FindTerrain();
+
+
+        if (mapTerrain == null)
+        {
+            Debug.LogError(
+                "[SpawnPlayer] KHÔNG TÌM THẤY TERRAIN!"
+            );
+
+            return;
         }
-    }
 
-    public void PlayerJoined(PlayerRef player)
-    {
-        if (Runner.IsServer)
+
+        Debug.Log(
+            "[SpawnPlayer] Terrain = " +
+            mapTerrain.name
+        );
+
+
+        // =====================================================
+        // SPAWN NHỮNG PLAYER ĐÃ CÓ
+        // =====================================================
+
+        foreach (
+            PlayerRef player
+            in Runner.ActivePlayers
+        )
         {
-            Debug.Log($"[TerrainSpawner] Player {player} joined. Spawning...");
             SpawnPlayerOnTerrain(player);
         }
     }
 
-    private void SpawnPlayerOnTerrain(PlayerRef player)
-    {
-        if (mapTerrain == null)
-            mapTerrain = Terrain.activeTerrain;
 
-        Vector3 spawnPos = GetRandomPosition();
-        Runner.Spawn(playerPrefab, spawnPos, Quaternion.identity, player);
+    // =========================================================
+    // FIND TERRAIN
+    // =========================================================
+
+    private void FindTerrain()
+    {
+        if (mapTerrain != null)
+            return;
+
+
+        mapTerrain =
+            Terrain.activeTerrain;
+
+
+        if (mapTerrain == null)
+        {
+            mapTerrain =
+                FindFirstObjectByType<Terrain>();
+        }
     }
 
-    private Vector3 GetRandomPosition()
+
+    // =========================================================
+    // PLAYER JOINED
+    // =========================================================
+
+    public void PlayerJoined(PlayerRef player)
     {
-        float width = mapTerrain.terrainData.size.x;
-        float length = mapTerrain.terrainData.size.z;
-        Vector3 terrainPos = mapTerrain.transform.position;
+        if (!Runner.IsServer)
+            return;
 
-        if (spawnedPlayerCount % 2 == 0)
+
+        Debug.Log(
+            "[SpawnPlayer] PlayerJoined = " +
+            player
+        );
+
+
+        SpawnPlayerOnTerrain(player);
+    }
+
+
+    // =========================================================
+    // SPAWN PLAYER
+    // =========================================================
+
+    private void SpawnPlayerOnTerrain(
+        PlayerRef player
+    )
+    {
+        if (!Runner.IsServer)
+            return;
+
+
+        // =====================================================
+        // CHỐNG SPAWN TRÙNG
+        // =====================================================
+
+        if (spawnedPlayers.Contains(player))
         {
-            float margin = 10f + spawnDistance * 0.5f;
+            Debug.Log(
+                "[SpawnPlayer] Player " +
+                player +
+                " đã spawn rồi."
+            );
 
-            float randomX = Random.Range(terrainPos.x + margin, terrainPos.x + width - margin);
-            float randomZ = Random.Range(terrainPos.z + margin, terrainPos.z + length - margin);
-
-            float randomAngle = Random.Range(0f, Mathf.PI * 2f);
-            spawnPairCenter = new Vector3(randomX, 0f, randomZ);
-            spawnPairDirection = new Vector3(Mathf.Cos(randomAngle), 0f, Mathf.Sin(randomAngle)).normalized;
+            return;
         }
 
-        float side = spawnedPlayerCount % 2 == 0 ? -1f : 1f;
-        Vector3 checkPos = spawnPairCenter + spawnPairDirection * (spawnDistance * 0.5f * side);
-        float terrainHeightY = mapTerrain.SampleHeight(checkPos) + terrainPos.y;
 
-        spawnedPlayerCount++;
+        // =====================================================
+        // KIỂM TRA PREFAB
+        // =====================================================
 
-        return new Vector3(checkPos.x, terrainHeightY + yOffset, checkPos.z);
+        if (!playerPrefab.IsValid)
+        {
+            Debug.LogError(
+                "[SpawnPlayer] Player Prefab chưa được gán!"
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // TÌM TERRAIN
+        // =====================================================
+
+        FindTerrain();
+
+
+        if (mapTerrain == null)
+        {
+            Debug.LogError(
+                "[SpawnPlayer] Terrain = NULL!"
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // LẤY VỊ TRÍ RANDOM
+        // =====================================================
+
+        Vector3 spawnPosition;
+
+
+        bool found =
+            TryGetRandomSpawnPosition(
+                out spawnPosition
+            );
+
+
+        if (!found)
+        {
+            Debug.LogWarning(
+                "[SpawnPlayer] Không tìm được vị trí an toàn!"
+            );
+
+
+            spawnPosition =
+                GetRandomFallbackPosition();
+        }
+
+
+        // =====================================================
+        // SPAWN
+        // =====================================================
+
+        NetworkObject playerObject =
+            Runner.Spawn(
+                playerPrefab,
+                spawnPosition,
+                Quaternion.identity,
+                player
+            );
+
+
+        if (playerObject == null)
+        {
+            Debug.LogError(
+                "[SpawnPlayer] Spawn Player thất bại!"
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // LƯU TRẠNG THÁI
+        // =====================================================
+
+        spawnedPlayers.Add(player);
+
+        usedSpawnPositions.Add(
+            spawnPosition
+        );
+
+
+        Debug.Log(
+            "====================================\n" +
+            "PLAYER SPAWN\n" +
+            "Player: " +
+            player +
+            "\nPosition: " +
+            spawnPosition +
+            "\n===================================="
+        );
+    }
+
+
+    // =========================================================
+    // RANDOM SPAWN POSITION
+    // =========================================================
+
+    private bool TryGetRandomSpawnPosition(
+        out Vector3 spawnPosition
+    )
+    {
+        spawnPosition =
+            Vector3.zero;
+
+
+        if (mapTerrain == null)
+            return false;
+
+
+        TerrainData terrainData =
+            mapTerrain.terrainData;
+
+
+        if (terrainData == null)
+            return false;
+
+
+        // =====================================================
+        // TERRAIN
+        // =====================================================
+
+        Vector3 terrainPosition =
+            mapTerrain.transform.position;
+
+
+        Vector3 terrainSize =
+            terrainData.size;
+
+
+        // =====================================================
+        // RANGE
+        // =====================================================
+
+        float minX =
+            terrainPosition.x +
+            edgePadding;
+
+
+        float maxX =
+            terrainPosition.x +
+            terrainSize.x -
+            edgePadding;
+
+
+        float minZ =
+            terrainPosition.z +
+            edgePadding;
+
+
+        float maxZ =
+            terrainPosition.z +
+            terrainSize.z -
+            edgePadding;
+
+
+        if (
+            minX >= maxX ||
+            minZ >= maxZ
+        )
+        {
+            Debug.LogError(
+                "[SpawnPlayer] Terrain quá nhỏ " +
+                "hoặc Edge Padding quá lớn!"
+            );
+
+            return false;
+        }
+
+
+        // =====================================================
+        // RANDOM
+        // =====================================================
+
+        for (
+            int attempt = 0;
+            attempt < maxSpawnAttempts;
+            attempt++
+        )
+        {
+            float randomX =
+                Random.Range(
+                    minX,
+                    maxX
+                );
+
+
+            float randomZ =
+                Random.Range(
+                    minZ,
+                    maxZ
+                );
+
+
+            Vector3 candidate =
+                new Vector3(
+                    randomX,
+                    0f,
+                    randomZ
+                );
+
+
+            // =================================================
+            // TERRAIN HEIGHT
+            // =================================================
+
+            float height =
+                mapTerrain.SampleHeight(
+                    candidate
+                );
+
+
+            candidate.y =
+                height +
+                terrainPosition.y +
+                yOffset;
+
+
+            // =================================================
+            // CHECK SPAWN
+            // =================================================
+
+            if (
+                IsSpawnPositionSafe(
+                    candidate
+                )
+            )
+            {
+                spawnPosition =
+                    candidate;
+
+                return true;
+            }
+        }
+
+
+        return false;
+    }
+
+
+    // =========================================================
+    // CHECK POSITION SAFE
+    // =========================================================
+
+    private bool IsSpawnPositionSafe(
+        Vector3 position
+    )
+    {
+        // =====================================================
+        // CHECK VỚI VỊ TRÍ ĐÃ DÙNG
+        // =====================================================
+
+        foreach (
+            Vector3 usedPosition
+            in usedSpawnPositions
+        )
+        {
+            float distance =
+                Vector3.Distance(
+                    position,
+                    usedPosition
+                );
+
+
+            if (
+                distance <
+                minSpawnDistance
+            )
+            {
+                return false;
+            }
+        }
+
+
+        // =====================================================
+        // CHECK VỚI PLAYER ĐANG CÓ
+        // =====================================================
+
+        PlayerHealth[] players =
+            FindObjectsByType<PlayerHealth>(
+                FindObjectsInactive.Exclude
+            );
+
+
+        foreach (
+            PlayerHealth player
+            in players
+        )
+        {
+            if (
+                player == null ||
+                player.Object == null ||
+                !player.Object.IsValid
+            )
+            {
+                continue;
+            }
+
+
+            float distance =
+                Vector3.Distance(
+                    position,
+                    player.transform.position
+                );
+
+
+            if (
+                distance <
+                minSpawnDistance
+            )
+            {
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+
+    // =========================================================
+    // FALLBACK
+    // =========================================================
+
+    private Vector3 GetRandomFallbackPosition()
+    {
+        if (mapTerrain == null)
+            return Vector3.zero;
+
+
+        TerrainData terrainData =
+            mapTerrain.terrainData;
+
+
+        Vector3 terrainPosition =
+            mapTerrain.transform.position;
+
+
+        Vector3 terrainSize =
+            terrainData.size;
+
+
+        float randomX =
+            Random.Range(
+                terrainPosition.x + edgePadding,
+                terrainPosition.x +
+                terrainSize.x -
+                edgePadding
+            );
+
+
+        float randomZ =
+            Random.Range(
+                terrainPosition.z + edgePadding,
+                terrainPosition.z +
+                terrainSize.z -
+                edgePadding
+            );
+
+
+        Vector3 position =
+            new Vector3(
+                randomX,
+                0f,
+                randomZ
+            );
+
+
+        float height =
+            mapTerrain.SampleHeight(
+                position
+            );
+
+
+        position.y =
+            height +
+            terrainPosition.y +
+            yOffset;
+
+
+        return position;
     }
 }

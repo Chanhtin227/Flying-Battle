@@ -1635,10 +1635,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0d3c8d2026969f47aa878e0f92ca6f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  walkSpeed: 2
-  runSpeed: 5
+  walkSpeed: 3
+  runSpeed: 7
   gravity: -20
   jumpHeight: 2
+  smallMedkitSpeed: 1
+  mediumMedkitSpeed: 1
+  largeMedkitSpeed: 1
   cameraRoot: {fileID: 6453958068249345380}
 --- !u!114 &7572080613702007642
 MonoBehaviour:
@@ -1666,17 +1669,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fec75ef21edc6d47afbe40c67aedc68, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWeapon
+  interactionRadius: 3
   shootRotateSpeed: 10
   rifleMagazineSize: 30
   pistolMagazineSize: 12
   rifleStartAmmo: 30
   pistolStartAmmo: 12
-  rifleStartReserveAmmo: 90
-  pistolStartReserveAmmo: 36
+  rifleStartReserveAmmo: 0
+  pistolStartReserveAmmo: 0
   _RifleAmmo: 0
   _PistolAmmo: 0
   _RifleReserveAmmo: 0
   _PistolReserveAmmo: 0
+  _HasPickedRifleAmmo:
+    RawValue: 0
+  _HasPickedPistolAmmo:
+    RawValue: 0
   _IsReloading:
     RawValue: 0
   rifleReloadTime: 2
@@ -1685,6 +1693,12 @@ MonoBehaviour:
   pistol: {fileID: 1621556315030243548}
   bat: {fileID: 1580805019639322907}
   shovel: {fileID: 459484594032373187}
+  rifleDropPrefab: {fileID: 4031068980329519561, guid: 019c3fd29c7e31c45837c8375036d0f4, type: 3}
+  pistolDropPrefab: {fileID: -7654561805207130772, guid: 0117b8222c7b85941a9ed069bc8d470b, type: 3}
+  batDropPrefab: {fileID: 9073074160740678669, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
+  shovelDropPrefab: {fileID: -2677815843141767284, guid: a497c7e2553f8024d87cdb293e6da087, type: 3}
+  dropDistance: 1.2
+  dropHeight: 0.5
   _CurrentWeapon: 0
   _HasRifle:
     RawValue: 0
@@ -1711,6 +1725,9 @@ MonoBehaviour:
   shovelDamage: 40
   shovelRange: 2.5
   meleeCooldown: 0.5
+  meleeRange: 3
+  meleeAOEAngle: 50
+  meleeHeight: 1
   rifleMuzzleFlash: {fileID: 8303531603554854164}
   pistolMuzzleFlash: {fileID: 576082499617546316}
   audioSource: {fileID: 2614666991485716670}
@@ -1738,7 +1755,23 @@ MonoBehaviour:
   _CurrentHealth: 0
   _IsDead:
     RawValue: 0
-  gameOverUI: {fileID: 0}
+  _SmallMedkitCount: 0
+  _MediumMedkitCount: 0
+  _LargeMedkitCount: 0
+  smallHealAmount: 50
+  mediumHealAmount: 75
+  largeHealAmount: 100
+  smallUseTime: 2
+  mediumUseTime: 3
+  largeUseTime: 4
+  useMedkitKey: 101
+  _UsingMedkitType: 0
+  respawnDelay: 5
+  respawnEdgePadding: 5
+  minRespawnDistance: 5
+  respawnTryCount: 30
+  respawnHeightOffset: 1
+  playerCameraController: {fileID: 8953495007843940927}
 --- !u!82 &2614666991485716670
 AudioSource:
   m_ObjectHideFlags: 0

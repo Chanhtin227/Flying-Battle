@@ -1,0 +1,176 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &3265512137501060264
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 138.96887
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 6.8641706
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 130.46494
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+    - target: {fileID: 919132149155446097, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      propertyPath: m_Name
+      value: BaseBallBat
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3378981541776171426}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -28835235985527179}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9073074160740678669}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8710429954681522297}
+  m_SourcePrefab: {fileID: 100100000, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+--- !u!1 &2418437592047882745 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f6982061a4f159744a2699f5e851e791, type: 3}
+  m_PrefabInstance: {fileID: 3265512137501060264}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &3378981541776171426
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2418437592047882745}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.20985168, y: 1.3284929, z: 0.20984787}
+  m_Center: {x: 0.0005814731, y: 0.483832, z: -0.00411354}
+--- !u!114 &-28835235985527179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2418437592047882745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d1b1e0c8a6050242b1fba655c09e64a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponPickup
+  weaponType: 3
+  pickupDistance: 2
+--- !u!114 &9073074160740678669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2418437592047882745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 3070252961
+  SendPriority: 1
+  EnableInterpolation: 1
+  Flags: 262402
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 8710429954681522297}
+  - {fileID: -28835235985527179}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &8710429954681522297
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2418437592047882745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  ConfigFlags: 0
+  PhysicsSettings:
+    ForecastEnabled: 1
+    DebugPhysics: 0
+    GravityForecast: 2
+    MaxExtrapolationTime: 0.15
+    MinLinearDetectedError: 0.02
+    MinAngularDetectedError: 3
+    MaxLinearError: 0
+    MaxAngularError: 0
+    LowCorrectionProgressThreshold: 0.015
+    HighErrorSimilarityThreshold: 1
+    MaxErrorTotalTime: 0.5
+    MaxRemoteSleepIgnoreTime: 0.5
+    ErrorCorrectionType: 0
+    LinearVelCorrectionMul: 1
+    AngularVelCorrectionMul: 1
+    PositionCorrectionLerp: 0.15
+    RotationCorrectionLerp: 0.15
+    Spring: 75
+    Damper: 2
+    MinImpactfulCollisionAlignment: 0.3
+    ImpactStartCorrectionTime: 0.1
+    ImpactCorrectionTimeComplete: 0.3

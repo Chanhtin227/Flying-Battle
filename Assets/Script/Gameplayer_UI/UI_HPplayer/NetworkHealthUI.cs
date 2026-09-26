@@ -12,16 +12,8 @@ public class NetworkHealthUI : MonoBehaviour
     [Header("Health UI")]
 
     public Slider healthSlider;
+
     public TMP_Text hpText;
-
-
-    // =========================================================
-    // GAME OVER
-    // =========================================================
-
-    [Header("Game Over")]
-
-    public GameObject gameOverUI;
 
 
     // =========================================================
@@ -37,12 +29,6 @@ public class NetworkHealthUI : MonoBehaviour
 
     private void Start()
     {
-        if (gameOverUI != null)
-        {
-            gameOverUI.SetActive(false);
-        }
-
-
         InvokeRepeating(
             nameof(FindLocalPlayer),
             0.2f,
@@ -80,13 +66,6 @@ public class NetworkHealthUI : MonoBehaviour
                 );
 
 
-                if (gameOverUI != null)
-                {
-                    player.gameOverUI =
-                        gameOverUI;
-                }
-
-
                 CancelInvoke(
                     nameof(FindLocalPlayer)
                 );
@@ -118,6 +97,10 @@ public class NetworkHealthUI : MonoBehaviour
 
     private void UpdateHealthUI()
     {
+        // =====================================================
+        // HEALTH SLIDER
+        // =====================================================
+
         if (healthSlider != null)
         {
             healthSlider.maxValue =
@@ -128,6 +111,10 @@ public class NetworkHealthUI : MonoBehaviour
                 localPlayerHealth.CurrentHealth;
         }
 
+
+        // =====================================================
+        // HP TEXT
+        // =====================================================
 
         if (hpText != null)
         {

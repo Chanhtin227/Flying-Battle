@@ -8,14 +8,16 @@ public class ThirdPersonCamera : MonoBehaviour
     // =========================================================
 
     [Header("Target")]
+
     public Transform target;
 
 
     // =========================================================
-    // CAMERA REFERENCE
+    // CAMERA
     // =========================================================
 
     [Header("References")]
+
     public Camera cam;
 
 
@@ -24,6 +26,7 @@ public class ThirdPersonCamera : MonoBehaviour
     // =========================================================
 
     [Header("Mouse")]
+
     public float mouseSensitivity = 150f;
 
 
@@ -66,7 +69,6 @@ public class ThirdPersonCamera : MonoBehaviour
     [Header("Camera Angle")]
 
     public float minPitch = -30f;
-
     public float maxPitch = 60f;
 
 
@@ -114,14 +116,12 @@ public class ThirdPersonCamera : MonoBehaviour
     // =========================================================
 
     private float yaw;
-
     private float pitch;
-
     private float bobTimer;
-
     private float distance;
 
     private PlayerWeapon playerWeapon;
+    private PlayerHealth playerHealth;
 
     private NetworkObject networkObject;
 
@@ -138,12 +138,15 @@ public class ThirdPersonCamera : MonoBehaviour
 
         if (cam == null)
         {
-            cam = GetComponentInChildren<Camera>();
+            cam =
+                GetComponentInChildren<Camera>(
+                    true
+                );
         }
 
 
         // =====================================================
-        // NETWORK OBJECT
+        // REFERENCES
         // =====================================================
 
         if (target != null)
@@ -151,32 +154,48 @@ public class ThirdPersonCamera : MonoBehaviour
             networkObject =
                 target.GetComponent<NetworkObject>();
 
+
             playerWeapon =
                 target.GetComponent<PlayerWeapon>();
 
 
-            // Nếu PlayerWeapon không nằm ở root
+            playerHealth =
+                target.GetComponent<PlayerHealth>();
+
+
             if (playerWeapon == null)
             {
                 playerWeapon =
                     target.GetComponentInParent<PlayerWeapon>();
             }
+
+
+            if (playerHealth == null)
+            {
+                playerHealth =
+                    target.GetComponentInParent<PlayerHealth>();
+            }
         }
 
 
         // =====================================================
-        // CHỈ PLAYER LOCAL ĐƯỢC DÙNG CAMERA
+        // REMOTE PLAYER
         // =====================================================
 
-        if (networkObject != null &&
-            !networkObject.HasInputAuthority)
+        if (
+            networkObject != null &&
+            !networkObject.HasInputAuthority
+        )
         {
             if (cam != null)
             {
                 cam.gameObject.SetActive(false);
             }
 
-            enabled = false;
+
+            enabled =
+                false;
+
 
             return;
         }
@@ -189,7 +208,8 @@ public class ThirdPersonCamera : MonoBehaviour
         Cursor.lockState =
             CursorLockMode.Locked;
 
-        Cursor.visible = false;
+        Cursor.visible =
+            false;
 
 
         // =====================================================
@@ -198,7 +218,8 @@ public class ThirdPersonCamera : MonoBehaviour
 
         if (cam != null)
         {
-            cam.fieldOfView = normalFOV;
+            cam.fieldOfView =
+                normalFOV;
         }
 
 
@@ -206,7 +227,8 @@ public class ThirdPersonCamera : MonoBehaviour
         // DISTANCE
         // =====================================================
 
-        distance = normalDistance;
+        distance =
+            normalDistance;
 
 
         // =====================================================
@@ -215,11 +237,13 @@ public class ThirdPersonCamera : MonoBehaviour
 
         if (target != null)
         {
-            yaw = target.eulerAngles.y;
+            yaw =
+                target.eulerAngles.y;
         }
         else
         {
-            yaw = transform.eulerAngles.y;
+            yaw =
+                transform.eulerAngles.y;
         }
 
 
@@ -227,18 +251,22 @@ public class ThirdPersonCamera : MonoBehaviour
         // PITCH
         // =====================================================
 
-        pitch = transform.eulerAngles.x;
+        pitch =
+            transform.eulerAngles.x;
+
 
         if (pitch > 180f)
         {
             pitch -= 360f;
         }
 
-        pitch = Mathf.Clamp(
-            pitch,
-            minPitch,
-            maxPitch
-        );
+
+        pitch =
+            Mathf.Clamp(
+                pitch,
+                minPitch,
+                maxPitch
+            );
     }
 
 
@@ -248,24 +276,55 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (target == null ||
-            cam == null)
+        if (
+            target == null ||
+            cam == null
+        )
         {
             return;
         }
 
 
         // =====================================================
-        // AIM
+        // TÌM PLAYER HEALTH NẾU CHƯA CÓ
         // =====================================================
 
-        bool canAim = false;
+        if (playerHealth == null)
+        {
+            playerHealth =
+                target.GetComponent<PlayerHealth>();
 
+
+            if (playerHealth == null)
+            {
+                playerHealth =
+                    target.GetComponentInParent<PlayerHealth>();
+            }
+        }
+
+
+        // =====================================================
+        // DEAD = CAMERA ĐỨNG IM
+        // =====================================================
+
+        if (
+            playerHealth != null &&
+            playerHealth.IsDead
+        )
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // FIND WEAPON
+        // =====================================================
 
         if (playerWeapon == null)
         {
             playerWeapon =
                 target.GetComponent<PlayerWeapon>();
+
 
             if (playerWeapon == null)
             {
@@ -275,15 +334,20 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // =====================================================
+        // AIM
+        // =====================================================
+
+        bool canAim =
+            false;
+
+
         if (playerWeapon != null)
         {
-            // ĐÃ SỬA:
-            // currentWeapon -> CurrentWeapon
-
             canAim =
                 playerWeapon.CurrentWeapon ==
-                PlayerWeapon.WeaponType.Rifle ||
-
+                PlayerWeapon.WeaponType.Rifle
+                ||
                 playerWeapon.CurrentWeapon ==
                 PlayerWeapon.WeaponType.Pistol;
         }
@@ -300,6 +364,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
         float mouseX =
             Input.GetAxis("Mouse X");
+
 
         float mouseY =
             Input.GetAxis("Mouse Y");
@@ -327,7 +392,8 @@ public class ThirdPersonCamera : MonoBehaviour
             );
 
 
-        target.rotation = playerRotation;
+        target.rotation =
+            playerRotation;
 
 
         // =====================================================
@@ -361,7 +427,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // =====================================================
-        // CAMERA DISTANCE
+        // DISTANCE
         // =====================================================
 
         float targetDistance =
@@ -374,12 +440,13 @@ public class ThirdPersonCamera : MonoBehaviour
             Mathf.Lerp(
                 distance,
                 targetDistance,
-                Time.deltaTime * aimSpeed
+                Time.deltaTime *
+                aimSpeed
             );
 
 
         // =====================================================
-        // CAMERA FOV
+        // FOV
         // =====================================================
 
         float targetFOV =
@@ -392,12 +459,13 @@ public class ThirdPersonCamera : MonoBehaviour
             Mathf.Lerp(
                 cam.fieldOfView,
                 targetFOV,
-                Time.deltaTime * aimSpeed
+                Time.deltaTime *
+                aimSpeed
             );
 
 
         // =====================================================
-        // SHOULDER OFFSET
+        // OFFSET
         // =====================================================
 
         Vector3 wantedOffset =
@@ -410,7 +478,8 @@ public class ThirdPersonCamera : MonoBehaviour
             Vector3.Lerp(
                 shoulderOffset,
                 wantedOffset,
-                Time.deltaTime * aimSpeed
+                Time.deltaTime *
+                aimSpeed
             );
 
 
@@ -430,6 +499,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
         float horizontal =
             Input.GetAxis("Horizontal");
+
 
         float vertical =
             Input.GetAxis("Vertical");
@@ -497,7 +567,8 @@ public class ThirdPersonCamera : MonoBehaviour
                 Mathf.Lerp(
                     bobTimer,
                     0f,
-                    Time.deltaTime * 8f
+                    Time.deltaTime *
+                    8f
                 );
         }
 
@@ -507,12 +578,16 @@ public class ThirdPersonCamera : MonoBehaviour
         // =====================================================
 
         float bobX =
-            Mathf.Sin(bobTimer) *
+            Mathf.Sin(
+                bobTimer
+            ) *
             bobAmount;
 
 
         float bobY =
-            Mathf.Cos(bobTimer * 2f) *
+            Mathf.Cos(
+                bobTimer * 2f
+            ) *
             bobAmount;
 
 
@@ -549,16 +624,22 @@ public class ThirdPersonCamera : MonoBehaviour
             direction.magnitude;
 
 
-        if (desiredDistance > 0.01f)
+        if (
+            desiredDistance >
+            0.01f
+        )
         {
-            if (Physics.SphereCast(
-                targetPos,
-                cameraRadius,
-                direction.normalized,
-                out RaycastHit hit,
-                desiredDistance,
-                wallLayer,
-                QueryTriggerInteraction.Ignore))
+            if (
+                Physics.SphereCast(
+                    targetPos,
+                    cameraRadius,
+                    direction.normalized,
+                    out RaycastHit hit,
+                    desiredDistance,
+                    wallLayer,
+                    QueryTriggerInteraction.Ignore
+                )
+            )
             {
                 float safeDistance =
                     hit.distance -
@@ -595,7 +676,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // =====================================================
-        // CAMERA OBJECT FOLLOW PLAYER
+        // FOLLOW PLAYER
         // =====================================================
 
         transform.position =
