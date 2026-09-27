@@ -64,7 +64,7 @@ public class WeaponSpawner : NetworkBehaviour
     [Header("Spawn Settings")]
 
     [Tooltip(
-        "Khoảng cách tối thiểu giữa các rương."
+        "Khoảng cách tối thiểu giữa các rương đang tồn tại."
     )]
     public float minSpawnDistance = 30f;
 
@@ -88,13 +88,13 @@ public class WeaponSpawner : NetworkBehaviour
 
 
     // =========================================================
-    // SPAWN DELAY
+    // CONTINUOUS SPAWN
     // =========================================================
 
-    [Header("Spawn Delay")]
+    [Header("Continuous Spawn")]
 
     [Tooltip(
-        "Sau bao nhiêu giây sẽ tạo một đợt rương."
+        "Bao nhiêu giây sẽ spawn một wave rương."
     )]
     public float spawnDelay = 5f;
 
@@ -105,22 +105,48 @@ public class WeaponSpawner : NetworkBehaviour
 
     [Header("Chest Count")]
 
-    // 1v1
+    [Tooltip(
+        "Số rương tối thiểu mỗi wave khi 1v1."
+    )]
     public int minChestFor1v1 = 1;
+
+
+    [Tooltip(
+        "Số rương tối đa mỗi wave khi 1v1."
+    )]
     public int maxChestFor1v1 = 2;
 
 
-    // 2v2
+    [Tooltip(
+        "Số rương tối thiểu mỗi wave khi 2v2."
+    )]
     public int minChestFor2v2 = 2;
+
+
+    [Tooltip(
+        "Số rương tối đa mỗi wave khi 2v2."
+    )]
     public int maxChestFor2v2 = 3;
 
 
     // =========================================================
-    // SPAWN POSITIONS
+    // ACTIVE CHESTS
     // =========================================================
 
-    private List<Vector3> spawnedPositions =
-        new List<Vector3>();
+    [Header("Runtime")]
+
+    [SerializeField]
+    private List<NetworkObject> activeChests =
+        new List<NetworkObject>();
+
+
+    // =========================================================
+    // SPAWN CONTROL
+    // =========================================================
+
+    private Coroutine spawnRoutine;
+
+    private bool isSpawning = false;
 
 
     // =========================================================
@@ -132,12 +158,17 @@ public class WeaponSpawner : NetworkBehaviour
         base.Spawned();
 
 
-        // Chỉ State Authority spawn
+        // Chỉ State Authority được phép spawn
         if (!HasStateAuthority)
+        {
             return;
+        }
 
 
-        // Tự tìm Terrain nếu chưa gán
+        // =====================================================
+        // FIND TERRAIN
+        // =====================================================
+
         if (terrain == null)
         {
             terrain =
@@ -163,8 +194,22 @@ public class WeaponSpawner : NetworkBehaviour
         }
 
 
-        StartCoroutine(
-            SpawnChestRoutine()
+        // =====================================================
+        // START SPAWNING
+        // =====================================================
+
+        isSpawning = true;
+
+
+        spawnRoutine =
+            StartCoroutine(
+                SpawnChestRoutine()
+            );
+
+
+        Debug.Log(
+            "[WeaponSpawner] " +
+            "Spawner bắt đầu hoạt động."
         );
     }
 
@@ -175,20 +220,217 @@ public class WeaponSpawner : NetworkBehaviour
 
     private IEnumerator SpawnChestRoutine()
     {
-        // Chờ trước khi spawn wave đầu tiên
+        // =====================================================
+        // WAIT FIRST WAVE
+        // =====================================================
+
         yield return new WaitForSeconds(
-            spawnDelay
+            Mathf.Max(
+                0.1f,
+                spawnDelay
+            )
         );
 
 
-        while (true)
+        // =====================================================
+        // CONTINUOUS SPAWN
+        // =====================================================
+
+        while (
+            isSpawning &&
+            Runner != null &&
+            Runner.IsRunning
+        )
         {
+            // =================================================
+            // CLEAN CHESTS
+            // =================================================
+
+            CleanupInactiveChests();
+
+
+            // =================================================
+            // SPAWN WAVE
+            // =================================================
+
             SpawnChestWave();
 
 
+            // =================================================
+            // WAIT NEXT WAVE
+            // =================================================
+
             yield return new WaitForSeconds(
-                spawnDelay
+                Mathf.Max(
+                    0.1f,
+                    spawnDelay
+                )
             );
+        }
+
+
+        spawnRoutine = null;
+
+
+        Debug.Log(
+            "[WeaponSpawner] " +
+            "Đã dừng spawn rương."
+        );
+    }
+
+
+    // =========================================================
+    // STOP SPAWNING
+    // =========================================================
+
+    public void StopSpawning()
+    {
+        // Chỉ State Authority điều khiển
+        if (!HasStateAuthority)
+        {
+            return;
+        }
+
+
+        isSpawning = false;
+
+
+        if (spawnRoutine != null)
+        {
+            StopCoroutine(
+                spawnRoutine
+            );
+
+            spawnRoutine = null;
+        }
+
+
+        Debug.Log(
+            "[WeaponSpawner] " +
+            "Đã STOP spawn rương."
+        );
+    }
+
+
+    // =========================================================
+    // DESPAWN ALL CHESTS
+    // =========================================================
+
+    public void DespawnAllChests()
+    {
+        // Chỉ State Authority được despawn
+        if (!HasStateAuthority)
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // STOP SPAWNING
+        // =====================================================
+
+        StopSpawning();
+
+
+        // =====================================================
+        // CLEAN LIST
+        // =====================================================
+
+        CleanupInactiveChests();
+
+
+        // =====================================================
+        // DESPAWN ALL
+        // =====================================================
+
+        for (
+            int i = activeChests.Count - 1;
+            i >= 0;
+            i--
+        )
+        {
+            NetworkObject chest =
+                activeChests[i];
+
+
+            if (chest != null)
+            {
+                Runner.Despawn(
+                    chest
+                );
+            }
+        }
+
+
+        // =====================================================
+        // CLEAR
+        // =====================================================
+
+        activeChests.Clear();
+
+
+        Debug.Log(
+            "[WeaponSpawner] " +
+            "Đã xóa toàn bộ chest."
+        );
+    }
+
+
+    // =========================================================
+    // DESPAWNED
+    // =========================================================
+
+    public override void Despawned(
+        NetworkRunner runner,
+        bool hasState)
+    {
+        isSpawning = false;
+
+
+        if (spawnRoutine != null)
+        {
+            StopCoroutine(
+                spawnRoutine
+            );
+
+            spawnRoutine = null;
+        }
+
+
+        activeChests.Clear();
+
+
+        base.Despawned(
+            runner,
+            hasState
+        );
+    }
+
+
+    // =========================================================
+    // CLEANUP INACTIVE CHESTS
+    // =========================================================
+
+    private void CleanupInactiveChests()
+    {
+        for (
+            int i = activeChests.Count - 1;
+            i >= 0;
+            i--
+        )
+        {
+            NetworkObject chest =
+                activeChests[i];
+
+
+            // =================================================
+            // OBJECT ĐÃ BỊ DESTROY / DESPAWN
+            // =================================================
+
+            if (chest == null)
+            {
+                activeChests.RemoveAt(i);
+            }
         }
     }
 
@@ -208,16 +450,16 @@ public class WeaponSpawner : NetworkBehaviour
 
 
         // =====================================================
-        // CHEST COUNT
+        // DEFAULT
         // =====================================================
 
         int minChest = 1;
         int maxChest = 2;
 
 
-        // -----------------------------------------------------
+        // =====================================================
         // 1V1
-        // -----------------------------------------------------
+        // =====================================================
 
         if (playerCount <= 2)
         {
@@ -229,9 +471,9 @@ public class WeaponSpawner : NetworkBehaviour
         }
 
 
-        // -----------------------------------------------------
+        // =====================================================
         // 2V2
-        // -----------------------------------------------------
+        // =====================================================
 
         else if (playerCount <= 4)
         {
@@ -243,9 +485,9 @@ public class WeaponSpawner : NetworkBehaviour
         }
 
 
-        // -----------------------------------------------------
-        // NHIỀU PLAYER
-        // -----------------------------------------------------
+        // =====================================================
+        // MORE PLAYERS
+        // =====================================================
 
         else
         {
@@ -255,7 +497,25 @@ public class WeaponSpawner : NetworkBehaviour
 
 
         // =====================================================
-        // RANDOM CHEST COUNT
+        // SAFETY
+        // =====================================================
+
+        minChest =
+            Mathf.Max(
+                0,
+                minChest
+            );
+
+
+        maxChest =
+            Mathf.Max(
+                minChest,
+                maxChest
+            );
+
+
+        // =====================================================
+        // RANDOM COUNT
         // =====================================================
 
         int chestCount =
@@ -270,10 +530,15 @@ public class WeaponSpawner : NetworkBehaviour
             "[WeaponSpawner]\n" +
             "Players: " +
             playerCount +
-            "\nChest Wave: " +
+            "\n" +
+            "Chest Wave: " +
             chestCount +
-            "\nSpawn Area: Central Map" +
-            "\n===================================="
+            "\n" +
+            "Active Chests: " +
+            activeChests.Count +
+            "\n" +
+            "Spawn Area: Central Map\n" +
+            "===================================="
         );
 
 
@@ -313,6 +578,15 @@ public class WeaponSpawner : NetworkBehaviour
 
     private int GetPlayerCount()
     {
+        if (
+            Runner == null ||
+            !Runner.IsRunning
+        )
+        {
+            return 0;
+        }
+
+
         int count = 0;
 
 
@@ -336,7 +610,7 @@ public class WeaponSpawner : NetworkBehaviour
     private bool SpawnChest()
     {
         // =====================================================
-        // CHECK TERRAIN
+        // TERRAIN CHECK
         // =====================================================
 
         if (terrain == null)
@@ -351,7 +625,7 @@ public class WeaponSpawner : NetworkBehaviour
 
 
         // =====================================================
-        // CHECK PREFAB
+        // PREFAB CHECK
         // =====================================================
 
         if (!chestPrefab.IsValid)
@@ -361,6 +635,19 @@ public class WeaponSpawner : NetworkBehaviour
                 "Chưa gán Chest Prefab!"
             );
 
+            return false;
+        }
+
+
+        // =====================================================
+        // RUNNER CHECK
+        // =====================================================
+
+        if (
+            Runner == null ||
+            !Runner.IsRunning
+        )
+        {
             return false;
         }
 
@@ -404,7 +691,6 @@ public class WeaponSpawner : NetworkBehaviour
             );
 
 
-        // Phần bị cắt ở mỗi cạnh
         float sideMarginPercent =
             (1f - areaPercent) * 0.5f;
 
@@ -434,7 +720,7 @@ public class WeaponSpawner : NetworkBehaviour
 
 
         // =====================================================
-        // PADDING
+        // CENTER PADDING
         // =====================================================
 
         minX += centerAreaPadding;
@@ -444,7 +730,10 @@ public class WeaponSpawner : NetworkBehaviour
         maxZ -= centerAreaPadding;
 
 
-        // Đảm bảo vẫn nằm trong Terrain
+        // =====================================================
+        // TERRAIN EDGE PADDING
+        // =====================================================
+
         minX =
             Mathf.Max(
                 minX,
@@ -498,7 +787,7 @@ public class WeaponSpawner : NetworkBehaviour
 
 
         // =====================================================
-        // RANDOM SEARCH
+        // FIND RANDOM POSITION
         // =====================================================
 
         Vector3 spawnPosition =
@@ -509,7 +798,6 @@ public class WeaponSpawner : NetworkBehaviour
             false;
 
 
-        // Tăng số lần thử để tìm được địa hình tốt
         for (
             int attempt = 0;
             attempt < 150;
@@ -539,7 +827,7 @@ public class WeaponSpawner : NetworkBehaviour
 
 
             // =================================================
-            // WORLD POSITION
+            // TEST POSITION
             // =================================================
 
             Vector3 testPosition =
@@ -581,7 +869,7 @@ public class WeaponSpawner : NetworkBehaviour
 
 
             // =================================================
-            // CHECK CHEST DISTANCE
+            // CHECK DISTANCE
             // =================================================
 
             if (
@@ -618,21 +906,11 @@ public class WeaponSpawner : NetworkBehaviour
         {
             Debug.LogWarning(
                 "[WeaponSpawner] " +
-                "Không tìm được vị trí spawn tốt " +
-                "ở khu vực giữa map!"
+                "Không tìm được vị trí spawn hợp lệ."
             );
 
             return false;
         }
-
-
-        // =====================================================
-        // SAVE POSITION
-        // =====================================================
-
-        spawnedPositions.Add(
-            spawnPosition
-        );
 
 
         // =====================================================
@@ -648,7 +926,7 @@ public class WeaponSpawner : NetworkBehaviour
 
 
         // =====================================================
-        // CHECK
+        // SPAWN FAILED
         // =====================================================
 
         if (chest == null)
@@ -660,6 +938,15 @@ public class WeaponSpawner : NetworkBehaviour
 
             return false;
         }
+
+
+        // =====================================================
+        // ADD ACTIVE CHEST
+        // =====================================================
+
+        activeChests.Add(
+            chest
+        );
 
 
         // =====================================================
@@ -685,11 +972,19 @@ public class WeaponSpawner : NetworkBehaviour
         Vector3 worldPosition)
     {
         if (terrain == null)
+        {
             return false;
+        }
 
 
         TerrainData terrainData =
             terrain.terrainData;
+
+
+        if (terrainData == null)
+        {
+            return false;
+        }
 
 
         Vector3 terrainPosition =
@@ -701,7 +996,7 @@ public class WeaponSpawner : NetworkBehaviour
 
 
         // =====================================================
-        // WORLD -> NORMALIZED TERRAIN POSITION
+        // WORLD -> NORMALIZED
         // =====================================================
 
         float normalizedX =
@@ -760,11 +1055,45 @@ public class WeaponSpawner : NetworkBehaviour
     private bool IsPositionValid(
         Vector3 position)
     {
-        foreach (
-            Vector3 oldPosition
-            in spawnedPositions
+        // =====================================================
+        // CLEAN INACTIVE CHESTS
+        // =====================================================
+
+        CleanupInactiveChests();
+
+
+        // =====================================================
+        // CHECK ACTIVE CHESTS
+        // =====================================================
+
+        for (
+            int i = 0;
+            i < activeChests.Count;
+            i++
         )
         {
+            NetworkObject oldChest =
+                activeChests[i];
+
+
+            // =================================================
+            // CHEST KHÔNG CÒN
+            // =================================================
+
+            if (oldChest == null)
+            {
+                continue;
+            }
+
+
+            // =================================================
+            // OLD POSITION
+            // =================================================
+
+            Vector3 oldPosition =
+                oldChest.transform.position;
+
+
             Vector2 newPos =
                 new Vector2(
                     position.x,
@@ -778,6 +1107,10 @@ public class WeaponSpawner : NetworkBehaviour
                     oldPosition.z
                 );
 
+
+            // =================================================
+            // DISTANCE
+            // =================================================
 
             float distance =
                 Vector2.Distance(

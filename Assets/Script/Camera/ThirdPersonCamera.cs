@@ -50,16 +50,26 @@ public class ThirdPersonCamera : MonoBehaviour
 
     public bool isAiming = false;
 
+
+    [Tooltip("Vị trí vai khi Aim")]
     public Vector3 aimShoulderOffset =
         new Vector3(0.75f, 1.55f, 0f);
 
-    public float aimDistance = 2f;
 
+    [Tooltip("Khoảng cách camera khi Aim")]
+    public float aimDistance = 2.2f;
+
+
+    [Tooltip("FOV bình thường")]
     public float normalFOV = 60f;
 
-    public float aimFOV = 40f;
 
-    public float aimSpeed = 8f;
+    [Tooltip("FOV khi Aim")]
+    public float aimFOV = 45f;
+
+
+    [Tooltip("Tốc độ chuyển vào/ra Aim")]
+    public float aimSpeed = 25f;
 
 
     // =========================================================
@@ -69,6 +79,7 @@ public class ThirdPersonCamera : MonoBehaviour
     [Header("Camera Angle")]
 
     public float minPitch = -30f;
+
     public float maxPitch = 60f;
 
 
@@ -116,11 +127,17 @@ public class ThirdPersonCamera : MonoBehaviour
     // =========================================================
 
     private float yaw;
+
     private float pitch;
+
     private float bobTimer;
+
     private float distance;
 
+    private Vector3 currentShoulderOffset;
+
     private PlayerWeapon playerWeapon;
+
     private PlayerHealth playerHealth;
 
     private NetworkObject networkObject;
@@ -193,9 +210,7 @@ public class ThirdPersonCamera : MonoBehaviour
             }
 
 
-            enabled =
-                false;
-
+            enabled = false;
 
             return;
         }
@@ -208,8 +223,7 @@ public class ThirdPersonCamera : MonoBehaviour
         Cursor.lockState =
             CursorLockMode.Locked;
 
-        Cursor.visible =
-            false;
+        Cursor.visible = false;
 
 
         // =====================================================
@@ -229,6 +243,14 @@ public class ThirdPersonCamera : MonoBehaviour
 
         distance =
             normalDistance;
+
+
+        // =====================================================
+        // SHOULDER OFFSET
+        // =====================================================
+
+        currentShoulderOffset =
+            shoulderOffset;
 
 
         // =====================================================
@@ -276,6 +298,10 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private void LateUpdate()
     {
+        // =====================================================
+        // BASIC CHECK
+        // =====================================================
+
         if (
             target == null ||
             cam == null
@@ -286,7 +312,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // =====================================================
-        // TÌM PLAYER HEALTH NẾU CHƯA CÓ
+        // FIND PLAYER HEALTH
         // =====================================================
 
         if (playerHealth == null)
@@ -304,7 +330,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // =====================================================
-        // DEAD = CAMERA ĐỨNG IM
+        // DEAD
         // =====================================================
 
         if (
@@ -335,7 +361,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // =====================================================
-        // AIM
+        // CAN AIM
         // =====================================================
 
         bool canAim =
@@ -353,13 +379,17 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // =====================================================
+        // AIM INPUT
+        // =====================================================
+
         isAiming =
             canAim &&
             Input.GetMouseButton(1);
 
 
         // =====================================================
-        // MOUSE
+        // MOUSE INPUT
         // =====================================================
 
         float mouseX =
@@ -427,7 +457,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // =====================================================
-        // DISTANCE
+        // AIM DISTANCE
         // =====================================================
 
         float targetDistance =
@@ -436,12 +466,21 @@ public class ThirdPersonCamera : MonoBehaviour
             : normalDistance;
 
 
+        // Dùng SmoothDamp để chuyển mượt nhưng nhanh
+        float distanceSmoothTime =
+            1f /
+            Mathf.Max(
+                aimSpeed,
+                0.01f
+            );
+
+
         distance =
-            Mathf.Lerp(
+            Mathf.SmoothDamp(
                 distance,
                 targetDistance,
-                Time.deltaTime *
-                aimSpeed
+                ref distanceVelocity,
+                distanceSmoothTime
             );
 
 
@@ -455,17 +494,24 @@ public class ThirdPersonCamera : MonoBehaviour
             : normalFOV;
 
 
+        float fovLerp =
+            1f -
+            Mathf.Exp(
+                -aimSpeed *
+                Time.deltaTime
+            );
+
+
         cam.fieldOfView =
             Mathf.Lerp(
                 cam.fieldOfView,
                 targetFOV,
-                Time.deltaTime *
-                aimSpeed
+                fovLerp
             );
 
 
         // =====================================================
-        // OFFSET
+        // SHOULDER OFFSET
         // =====================================================
 
         Vector3 wantedOffset =
@@ -474,12 +520,23 @@ public class ThirdPersonCamera : MonoBehaviour
             : shoulderOffset;
 
 
-        Vector3 currentOffset =
+        // =====================================================
+        // CHUYỂN OFFSET NHANH
+        // =====================================================
+
+        float offsetLerp =
+            1f -
+            Mathf.Exp(
+                -aimSpeed *
+                Time.deltaTime
+            );
+
+
+        currentShoulderOffset =
             Vector3.Lerp(
-                shoulderOffset,
+                currentShoulderOffset,
                 wantedOffset,
-                Time.deltaTime *
-                aimSpeed
+                offsetLerp
             );
 
 
@@ -490,7 +547,7 @@ public class ThirdPersonCamera : MonoBehaviour
         Vector3 targetPos =
             target.position +
             rotation *
-            currentOffset;
+            currentShoulderOffset;
 
 
         // =====================================================
@@ -522,13 +579,19 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         float bobAmount;
+
         float bobSpeed;
 
 
+        // =====================================================
+        // AIM = GIẢM BOB RẤT MẠNH
+        // =====================================================
+
         if (isAiming)
         {
+            // Gần như không bob khi aim
             bobAmount =
-                walkBobAmount * 0.2f;
+                0.0015f;
 
             bobSpeed =
                 walkBobSpeed;
@@ -682,4 +745,11 @@ public class ThirdPersonCamera : MonoBehaviour
         transform.position =
             target.position;
     }
+
+
+    // =========================================================
+    // DISTANCE VELOCITY
+    // =========================================================
+
+    private float distanceVelocity;
 }

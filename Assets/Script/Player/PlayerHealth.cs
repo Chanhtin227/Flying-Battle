@@ -855,11 +855,26 @@ public class PlayerHealth : NetworkBehaviour
 
 
     // =========================================================
-    // TAKE DAMAGE
+    // TAKE DAMAGE - COMPATIBILITY
     // =========================================================
 
     public void TakeDamage(
         float damage)
+    {
+        TakeDamage(
+            damage,
+            transform.position
+        );
+    }
+
+
+    // =========================================================
+    // TAKE DAMAGE - WITH ATTACKER POSITION
+    // =========================================================
+
+    public void TakeDamage(
+        float damage,
+        Vector3 attackerPosition)
     {
         if (!HasStateAuthority)
             return;
@@ -911,7 +926,9 @@ public class PlayerHealth : NetworkBehaviour
 
         if (CurrentHealth > 0f)
         {
-            Rpc_PlayHit();
+            Rpc_PlayHit(
+                attackerPosition
+            );
         }
 
 
@@ -934,8 +951,13 @@ public class PlayerHealth : NetworkBehaviour
         RpcSources.StateAuthority,
         RpcTargets.All
     )]
-    private void Rpc_PlayHit()
+    private void Rpc_PlayHit(
+        Vector3 attackerPosition)
     {
+        // =====================================================
+        // ANIMATION
+        // =====================================================
+
         PlayerAnimation playerAnim =
             GetComponent<PlayerAnimation>();
 
@@ -943,6 +965,26 @@ public class PlayerHealth : NetworkBehaviour
         if (playerAnim != null)
         {
             playerAnim.Hit();
+        }
+
+
+        // =====================================================
+        // CHỈ LOCAL PLAYER HIỂN THỊ DAMAGE INDICATOR
+        // =====================================================
+
+        if (!HasInputAuthority)
+            return;
+
+
+        DamageDirectionUI damageUI =
+            FindFirstObjectByType<DamageDirectionUI>();
+
+
+        if (damageUI != null)
+        {
+            damageUI.ShowDamage(
+                attackerPosition
+            );
         }
     }
 

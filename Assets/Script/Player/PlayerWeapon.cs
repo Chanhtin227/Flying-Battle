@@ -210,7 +210,6 @@ public class PlayerWeapon : NetworkBehaviour
 
     public float batDamage = 30f;
 
-    // Giữ field cũ để không làm mất dữ liệu Inspector
     public float batRange = 4f;
 
 
@@ -222,7 +221,6 @@ public class PlayerWeapon : NetworkBehaviour
 
     public float shovelDamage = 40f;
 
-    // Giữ field cũ để không làm mất dữ liệu Inspector
     public float shovelRange = 4f;
 
 
@@ -236,21 +234,16 @@ public class PlayerWeapon : NetworkBehaviour
     public float meleeCooldown = 0.5f;
 
 
-    [Tooltip("Bán kính đánh melee")]
+    [Tooltip("Tầm đánh melee")]
     public float meleeRange = 4f;
 
 
-    [Tooltip(
-        "Góc tổng của vùng đánh.\n" +
-        "50 = từ -25 đến +25 độ."
-    )]
+    [Tooltip("Góc tổng của AOE")]
     [Range(1f, 180f)]
     public float meleeAOEAngle = 50f;
 
 
-    [Tooltip(
-        "Độ cao điểm trung tâm của vùng đánh."
-    )]
+    [Tooltip("Độ cao tâm kiểm tra melee")]
     public float meleeHeight = 1f;
 
 
@@ -292,6 +285,7 @@ public class PlayerWeapon : NetworkBehaviour
     [Header("Bullet")]
 
     public GameObject tracerPrefab;
+
     public Transform firePoint;
 
 
@@ -302,12 +296,15 @@ public class PlayerWeapon : NetworkBehaviour
     private float nextFireTime;
 
     private PlayerAnimation playerAnim;
+
     private PlayerHealth playerHealth;
 
     private bool canShoot = false;
 
     private int lastShootSoundTick = -1;
+
     private int lastMeleeSoundTick = -1;
+
     private int lastReloadSoundTick = -1;
 
 
@@ -332,12 +329,15 @@ public class PlayerWeapon : NetworkBehaviour
         if (HasStateAuthority)
         {
             RifleAmmo = 0;
+
             PistolAmmo = 0;
 
             RifleReserveAmmo = 0;
+
             PistolReserveAmmo = 0;
 
             HasPickedRifleAmmo = false;
+
             HasPickedPistolAmmo = false;
 
             IsReloading = false;
@@ -358,8 +358,11 @@ public class PlayerWeapon : NetworkBehaviour
                 WeaponType.None;
 
             HasRifle = false;
+
             HasPistol = false;
+
             HasBat = false;
+
             HasShovel = false;
         }
 
@@ -415,7 +418,11 @@ public class PlayerWeapon : NetworkBehaviour
         // DROP - Q
         // =====================================================
 
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (
+            Input.GetKeyDown(
+                KeyCode.Q
+            )
+        )
         {
             if (!IsReloading)
             {
@@ -428,7 +435,11 @@ public class PlayerWeapon : NetworkBehaviour
         // RELOAD - R
         // =====================================================
 
-        if (Input.GetKeyDown(KeyCode.R))
+        if (
+            Input.GetKeyDown(
+                KeyCode.R
+            )
+        )
         {
             if (!IsReloading)
             {
@@ -456,8 +467,13 @@ public class PlayerWeapon : NetworkBehaviour
             return;
 
 
-        if (CurrentWeapon == WeaponType.None)
+        if (
+            CurrentWeapon ==
+            WeaponType.None
+        )
+        {
             return;
+        }
 
 
         RequestDropWeaponRpc(
@@ -490,8 +506,13 @@ public class PlayerWeapon : NetworkBehaviour
             return;
 
 
-        if (weaponToDrop == WeaponType.None)
+        if (
+            weaponToDrop ==
+            WeaponType.None
+        )
+        {
             return;
+        }
 
 
         if (!HasWeapon(weaponToDrop))
@@ -517,9 +538,11 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         int droppedRifleAmmo = -1;
+
         int droppedRifleReserveAmmo = -1;
 
         int droppedPistolAmmo = -1;
+
         int droppedPistolReserveAmmo = -1;
 
 
@@ -584,10 +607,8 @@ public class PlayerWeapon : NetworkBehaviour
         {
             pickup.SetupDroppedWeapon(
                 weaponToDrop,
-
                 droppedRifleAmmo,
                 droppedRifleReserveAmmo,
-
                 droppedPistolAmmo,
                 droppedPistolReserveAmmo
             );
@@ -669,19 +690,30 @@ public class PlayerWeapon : NetworkBehaviour
         switch (weapon)
         {
             case WeaponType.Rifle:
+
                 HasRifle = false;
+
                 break;
+
 
             case WeaponType.Pistol:
+
                 HasPistol = false;
+
                 break;
+
 
             case WeaponType.Bat:
+
                 HasBat = false;
+
                 break;
 
+
             case WeaponType.Shovel:
+
                 HasShovel = false;
+
                 break;
         }
     }
@@ -753,11 +785,14 @@ public class PlayerWeapon : NetworkBehaviour
         RifleAmmo =
             0;
 
+
         PistolAmmo =
             0;
 
+
         RifleReserveAmmo =
             0;
+
 
         PistolReserveAmmo =
             0;
@@ -766,6 +801,7 @@ public class PlayerWeapon : NetworkBehaviour
         HasPickedRifleAmmo =
             false;
 
+
         HasPickedPistolAmmo =
             false;
 
@@ -773,11 +809,14 @@ public class PlayerWeapon : NetworkBehaviour
         Slot1 =
             WeaponType.None;
 
+
         Slot2 =
             WeaponType.None;
 
+
         Slot3 =
             WeaponType.None;
+
 
         Slot4 =
             WeaponType.None;
@@ -786,11 +825,14 @@ public class PlayerWeapon : NetworkBehaviour
         HasRifle =
             false;
 
+
         HasPistol =
             false;
 
+
         HasBat =
             false;
+
 
         HasShovel =
             false;
@@ -878,8 +920,14 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
-        if (!Input.GetKeyDown(KeyCode.F))
+        if (
+            !Input.GetKeyDown(
+                KeyCode.F
+            )
+        )
+        {
             return;
+        }
 
 
         Collider[] colliders =
@@ -894,10 +942,14 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         WeaponChest closestChest = null;
+
         WeaponPickup closestPickup = null;
 
 
-        foreach (var hit in colliders)
+        foreach (
+            Collider hit
+            in colliders
+        )
         {
             WeaponChest chest =
                 hit.GetComponentInParent<WeaponChest>();
@@ -1100,20 +1152,44 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (
+            Input.GetKeyDown(
+                KeyCode.Alpha1
+            )
+        )
+        {
             EquipSlot(Slot1);
+        }
 
 
-        if (Input.GetKeyDown(KeyCode.Alpha2))
+        if (
+            Input.GetKeyDown(
+                KeyCode.Alpha2
+            )
+        )
+        {
             EquipSlot(Slot2);
+        }
 
 
-        if (Input.GetKeyDown(KeyCode.Alpha3))
+        if (
+            Input.GetKeyDown(
+                KeyCode.Alpha3
+            )
+        )
+        {
             EquipSlot(Slot3);
+        }
 
 
-        if (Input.GetKeyDown(KeyCode.Alpha4))
+        if (
+            Input.GetKeyDown(
+                KeyCode.Alpha4
+            )
+        )
+        {
             EquipSlot(Slot4);
+        }
     }
 
 
@@ -1208,7 +1284,9 @@ public class PlayerWeapon : NetworkBehaviour
             RifleAmmo <= 0
         )
         {
-            if (RifleReserveAmmo > 0)
+            if (
+                RifleReserveAmmo > 0
+            )
             {
                 RequestReloadRpc();
             }
@@ -1228,7 +1306,9 @@ public class PlayerWeapon : NetworkBehaviour
             PistolAmmo <= 0
         )
         {
-            if (PistolReserveAmmo > 0)
+            if (
+                PistolReserveAmmo > 0
+            )
             {
                 RequestReloadRpc();
             }
@@ -1239,12 +1319,14 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // PREVENT INSTANT SHOOT AFTER SWITCH
+        // PREVENT INSTANT SHOOT
         // =====================================================
 
         if (!canShoot)
         {
-            if (Input.GetMouseButtonUp(0))
+            if (
+                Input.GetMouseButtonUp(0)
+            )
             {
                 canShoot =
                     true;
@@ -1255,8 +1337,12 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
-        if (!Input.GetMouseButton(0))
+        if (
+            !Input.GetMouseButton(0)
+        )
+        {
             return;
+        }
 
 
         float rate =
@@ -1266,8 +1352,13 @@ public class PlayerWeapon : NetworkBehaviour
             : pistolFireRate;
 
 
-        if (Time.time < nextFireTime)
+        if (
+            Time.time <
+            nextFireTime
+        )
+        {
             return;
+        }
 
 
         nextFireTime =
@@ -1276,7 +1367,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // SCREEN CENTER
+        // CROSSHAIR
         // =====================================================
 
         Vector3 screenCenter =
@@ -1300,7 +1391,9 @@ public class PlayerWeapon : NetworkBehaviour
             Physics.Raycast(
                 cameraRay,
                 out RaycastHit hit,
-                1000f
+                1000f,
+                ~0,
+                QueryTriggerInteraction.Ignore
             )
         )
         {
@@ -1453,7 +1546,9 @@ public class PlayerWeapon : NetworkBehaviour
             Physics.Raycast(
                 ray,
                 out RaycastHit hit,
-                range
+                range,
+                ~0,
+                QueryTriggerInteraction.Ignore
             )
         )
         {
@@ -1476,8 +1571,13 @@ public class PlayerWeapon : NetworkBehaviour
                     !target.IsDead
                 )
                 {
+                    // =================================================
+                    // TRUYỀN VỊ TRÍ NGƯỜI BẮN
+                    // =================================================
+
                     target.TakeDamage(
-                        damage
+                        damage,
+                        origin
                     );
                 }
             }
@@ -1516,7 +1616,9 @@ public class PlayerWeapon : NetworkBehaviour
             WeaponType.Rifle
         )
         {
-            if (rifleMuzzleFlash != null)
+            if (
+                rifleMuzzleFlash != null
+            )
             {
                 rifleMuzzleFlash.Stop(
                     true,
@@ -1533,7 +1635,9 @@ public class PlayerWeapon : NetworkBehaviour
             WeaponType.Pistol
         )
         {
-            if (pistolMuzzleFlash != null)
+            if (
+                pistolMuzzleFlash != null
+            )
             {
                 pistolMuzzleFlash.Stop(
                     true,
@@ -1551,6 +1655,10 @@ public class PlayerWeapon : NetworkBehaviour
             weapon
         );
 
+
+        // =====================================================
+        // TRACER
+        // =====================================================
 
         if (tracerPrefab != null)
         {
@@ -1673,11 +1781,15 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // CLICK
+        // LEFT MOUSE
         // =====================================================
 
-        if (!Input.GetMouseButtonDown(0))
+        if (
+            !Input.GetMouseButtonDown(0)
+        )
+        {
             return;
+        }
 
 
         // =====================================================
@@ -1692,10 +1804,6 @@ public class PlayerWeapon : NetworkBehaviour
             return;
         }
 
-
-        // =====================================================
-        // CAMERA
-        // =====================================================
 
         if (fpsCamera == null)
             return;
@@ -1742,7 +1850,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
     // =========================================================
-    // MELEE RPC - AOE 50° / RANGE 4
+    // MELEE RPC - AOE
     // =========================================================
 
     [Rpc(
@@ -1752,10 +1860,6 @@ public class PlayerWeapon : NetworkBehaviour
     private void RequestMeleeRpc(
         Vector3 attackDirection)
     {
-        // =====================================================
-        // CHECK
-        // =====================================================
-
         if (
             !HasStateAuthority ||
             IsReloading ||
@@ -1767,7 +1871,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // WEAPON CHECK
+        // DAMAGE
         // =====================================================
 
         float damage;
@@ -1796,7 +1900,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // FORCE RANGE = 4
+        // RANGE
         // =====================================================
 
         float range =
@@ -1804,7 +1908,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // CLEAN DIRECTION
+        // CLEAN ATTACK DIRECTION
         // =====================================================
 
         attackDirection.y =
@@ -1825,14 +1929,11 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // ATTACK POINT
+        // ATTACK ORIGIN
         // =====================================================
 
         Vector3 attackOrigin =
-            transform.position;
-
-
-        attackOrigin +=
+            transform.position +
             Vector3.up *
             meleeHeight;
 
@@ -1851,7 +1952,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // AVOID MULTIPLE HITS
+        // AVOID MULTIPLE DAMAGE
         // =====================================================
 
         HashSet<PlayerHealth> damagedPlayers =
@@ -1859,7 +1960,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // CHECK ALL PLAYERS
+        // LOOP
         // =====================================================
 
         foreach (
@@ -1888,7 +1989,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
             // =================================================
-            // PLAYER ĐÃ CHẾT
+            // TARGET DEAD
             // =================================================
 
             if (target.IsDead)
@@ -1896,7 +1997,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
             // =================================================
-            // TRÁNH ĐÁNH 1 PLAYER NHIỀU LẦN
+            // TRÁNH DAMAGE NHIỀU LẦN
             // =================================================
 
             if (
@@ -1910,7 +2011,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
             // =================================================
-            // DIRECTION TO TARGET
+            // TARGET DIRECTION
             // =================================================
 
             Vector3 targetDirection =
@@ -1962,10 +2063,6 @@ public class PlayerWeapon : NetworkBehaviour
                 );
 
 
-            // =================================================
-            // 50° TOTAL
-            // =================================================
-
             float halfAngle =
                 meleeAOEAngle *
                 0.5f;
@@ -1985,7 +2082,8 @@ public class PlayerWeapon : NetworkBehaviour
             // =================================================
 
             target.TakeDamage(
-                damage
+                damage,
+                transform.position
             );
 
 
@@ -2011,7 +2109,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // ANIMATION / SOUND
+        // EFFECT
         // =====================================================
 
         Rpc_PlayMeleeEffects(
@@ -2252,10 +2350,6 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
-        // =====================================================
-        // START RELOAD
-        // =====================================================
-
         IsReloading =
             true;
 
@@ -2296,10 +2390,6 @@ public class PlayerWeapon : NetworkBehaviour
         );
 
 
-        // =====================================================
-        // DEAD DURING RELOAD
-        // =====================================================
-
         if (
             !HasStateAuthority ||
             IsPlayerDead()
@@ -2307,6 +2397,7 @@ public class PlayerWeapon : NetworkBehaviour
         {
             IsReloading =
                 false;
+
 
             yield break;
         }
@@ -2743,7 +2834,9 @@ public class PlayerWeapon : NetworkBehaviour
 
     private void StopAllMuzzleFlash()
     {
-        if (rifleMuzzleFlash != null)
+        if (
+            rifleMuzzleFlash != null
+        )
         {
             var main =
                 rifleMuzzleFlash.main;
@@ -2761,7 +2854,9 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
-        if (pistolMuzzleFlash != null)
+        if (
+            pistolMuzzleFlash != null
+        )
         {
             var main =
                 pistolMuzzleFlash.main;
@@ -2838,19 +2933,11 @@ public class PlayerWeapon : NetworkBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        // =====================================================
-        // ORIGIN
-        // =====================================================
-
         Vector3 origin =
             transform.position +
             Vector3.up *
             meleeHeight;
 
-
-        // =====================================================
-        // FORWARD
-        // =====================================================
 
         Vector3 forward =
             transform.forward;
@@ -2873,7 +2960,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // RANGE CIRCLE
+        // RANGE
         // =====================================================
 
         Gizmos.DrawWireSphere(
@@ -2883,17 +2970,13 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // HALF ANGLE
+        // ANGLE
         // =====================================================
 
         float halfAngle =
             meleeAOEAngle *
             0.5f;
 
-
-        // =====================================================
-        // LEFT
-        // =====================================================
 
         Vector3 leftDirection =
             Quaternion.Euler(
@@ -2903,10 +2986,6 @@ public class PlayerWeapon : NetworkBehaviour
             ) *
             forward;
 
-
-        // =====================================================
-        // RIGHT
-        // =====================================================
 
         Vector3 rightDirection =
             Quaternion.Euler(
@@ -2918,7 +2997,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // DRAW AOE LINES
+        // AOE LINES
         // =====================================================
 
         Gizmos.DrawLine(
