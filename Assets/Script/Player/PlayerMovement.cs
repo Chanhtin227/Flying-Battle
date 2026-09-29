@@ -6,7 +6,8 @@ public struct NetworkInputData : INetworkInput
     public Vector3 moveDirection;
     public Vector3 lookDirection;
     public NetworkBool isRunning;
-    public NetworkBool isJumping;
+    public NetworkBool isJumping;    // giữ Space (dùng để bay lên sau khi đã nhảy)
+    public NetworkBool jumpPressed;  // chỉ true đúng 1 lần khi bấm Space xuống (để nhảy)
 }
 
 [RequireComponent(typeof(CharacterController))]
@@ -24,6 +25,18 @@ public class PlayerMovement : NetworkBehaviour
     public float runSpeed = 5f;
     public float gravity = -20f;
     public float jumpHeight = 2f;
+
+    // MỚI: nhảy xong giữ Space để bay lên có giới hạn
+    [Header("Jump Boost (giữ Space sau khi nhảy)")]
+
+    // Tốc độ bay lên khi giữ Space
+    public float boostSpeed = 4f;
+
+    // Độ cao tối đa so với điểm bắt đầu nhảy (tính cả cú nhảy)
+    public float maxBoostHeight = 4f;
+
+    // Thời gian tối đa được bay lên tính từ lúc nhảy (giây)
+    public float maxBoostTime = 1.5f;
 
 
     // =========================================================
@@ -55,6 +68,14 @@ public class PlayerMovement : NetworkBehaviour
     private PlayerHealth playerHealth;
 
     private Vector3 velocity;
+
+    // Ghi nhận bấm Space 1 lần để nhảy trên mặt đất (tiêu thụ 1 lần trong GetLocalInput)
+    private bool jumpQueued;
+
+    // Trạng thái "bay lên có giới hạn" sau khi nhảy (chỉ State Authority dùng)
+    private bool boostArmed;
+    private float boostTimer;
+    private float boostStartY;
 
 
     // =========================================================
@@ -118,6 +139,26 @@ public class PlayerMovement : NetworkBehaviour
 
 
     // =========================================================
+    // UPDATE (MỚI THÊM - chỉ để bắt phím bật/tắt bay cho đúng khung hình bấm xuống)
+    // =========================================================
+
+    private void Update()
+    {
+        // Chỉ người chơi đang điều khiển nhân vật này mới được bấm phím nhảy
+        if (!HasInputAuthority)
+            return;
+
+
+        // Chỉ ghi nhận đúng khung hình vừa bấm Space xuống (không tính giữ phím),
+        // để 1 lần bấm chỉ tính là 1 lần nhảy, không nhảy lặp lại khi giữ.
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpQueued = true;
+        }
+    }
+
+
+    // =========================================================
     // GET LOCAL INPUT
     // =========================================================
 
@@ -136,6 +177,9 @@ public class PlayerMovement : NetworkBehaviour
             playerHealth.IsDead
         )
         {
+            // Xóa cờ đã queue để không tự nhảy ngay khi vừa hồi sinh
+            jumpQueued = false;
+
             return data;
         }
 
@@ -194,7 +238,13 @@ public class PlayerMovement : NetworkBehaviour
         // =====================================================
 
         data.isJumping =
-            Input.GetKey(KeyCode.Space);
+            Input.GetKey(KeyCode.Space); // giữ để bay lên
+
+
+        data.jumpPressed =
+            jumpQueued;                  // bấm 1 lần để nhảy
+
+        jumpQueued = false;
 
 
         return data;
@@ -226,6 +276,8 @@ public class PlayerMovement : NetworkBehaviour
         {
             velocity =
                 Vector3.zero;
+
+            boostArmed = false;
 
 
             NetworkedAnimSpeed =
@@ -268,7 +320,6 @@ public class PlayerMovement : NetworkBehaviour
                     Vector3.up
                 );
         }
-
 
         // =====================================================
         // SPEED
@@ -359,8 +410,10 @@ public class PlayerMovement : NetworkBehaviour
         {
             velocity.y = -2f;
 
+            boostArmed = false;
 
-            if (data.isJumping)
+
+            if (data.jumpPressed) // đổi từ data.isJumping
             {
                 velocity.y =
                     Mathf.Sqrt(
@@ -369,11 +422,54 @@ public class PlayerMovement : NetworkBehaviour
                         gravity
                     );
 
+                // MỚI: bắt đầu cho phép giữ Space để bay lên
+                boostArmed = true;
+                boostTimer = 0f;
+                boostStartY = transform.position.y;
+
 
                 if (playerAnim != null)
                 {
                     playerAnim.Jump();
                 }
+            }
+        }
+
+
+        // =====================================================
+        // JUMP BOOST (MỚI): nhảy rồi giữ Space để bay lên có giới hạn
+        // =====================================================
+
+        if (boostArmed)
+        {
+            bool heldSpace =
+                data.isJumping;
+
+            bool underTime =
+                boostTimer < maxBoostTime;
+
+            bool underHeight =
+                transform.position.y - boostStartY <
+                maxBoostHeight;
+
+
+            if (heldSpace && underTime && underHeight)
+            {
+                // Giữ vận tốc đi lên tối thiểu bằng boostSpeed
+                velocity.y =
+                    Mathf.Max(
+                        velocity.y,
+                        boostSpeed
+                    );
+
+                boostTimer +=
+                    Runner.DeltaTime;
+            }
+            else
+            {
+                // Thả Space hoặc hết giới hạn: tắt boost, rớt xuống
+                // (phải nhảy lại mới có boost tiếp)
+                boostArmed = false;
             }
         }
 
@@ -416,6 +512,8 @@ public class PlayerMovement : NetworkBehaviour
     {
         velocity =
             Vector3.zero;
+
+        boostArmed = false;
 
 
         if (HasStateAuthority)
