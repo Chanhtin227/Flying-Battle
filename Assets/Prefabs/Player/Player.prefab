@@ -1767,9 +1767,9 @@ MonoBehaviour:
   useMedkitKey: 101
   _UsingMedkitType: 0
   respawnDelay: 5
-  respawnEdgePadding: 5
-  minRespawnDistance: 5
-  respawnTryCount: 30
+  respawnEdgePadding: 25
+  minRespawnDistance: 150
+  respawnTryCount: 100
   respawnHeightOffset: 1
   playerCameraController: {fileID: 8953495007843940927}
 --- !u!82 &2614666991485716670

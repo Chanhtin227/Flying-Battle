@@ -3,143 +3,53 @@ using Fusion;
 
 public class PlayerHealth : NetworkBehaviour
 {
-    // =========================================================
-    // HEALTH
-    // =========================================================
-
     [Header("Health")]
-
     public float maxHealth = 100f;
 
+    [Networked] public float CurrentHealth { get; set; }
+    [Networked] public NetworkBool IsDead { get; set; }
 
-    // =========================================================
-    // NETWORK HEALTH
-    // =========================================================
-
-    [Header("Network Health")]
-
-    [Networked]
-    public float CurrentHealth { get; set; }
-
-    [Networked]
-    public NetworkBool IsDead { get; set; }
-
-
-    // =========================================================
-    // MEDKIT INVENTORY
-    // =========================================================
 
     [Header("Medkit Inventory")]
+    [Networked] public int SmallMedkitCount { get; set; }
+    [Networked] public int MediumMedkitCount { get; set; }
+    [Networked] public int LargeMedkitCount { get; set; }
 
-    [Networked]
-    public int SmallMedkitCount { get; set; }
-
-    [Networked]
-    public int MediumMedkitCount { get; set; }
-
-    [Networked]
-    public int LargeMedkitCount { get; set; }
-
-
-    // =========================================================
-    // MEDKIT HEAL
-    // =========================================================
 
     [Header("Medkit Heal Amount")]
-
     public float smallHealAmount = 50f;
     public float mediumHealAmount = 75f;
     public float largeHealAmount = 100f;
 
 
-    // =========================================================
-    // MEDKIT USE TIME
-    // =========================================================
-
     [Header("Medkit Use Time")]
-
     public float smallUseTime = 2f;
     public float mediumUseTime = 3f;
     public float largeUseTime = 4f;
 
 
-    // =========================================================
-    // MEDKIT INPUT
-    // =========================================================
-
     [Header("Medkit Input")]
-
     public KeyCode useMedkitKey = KeyCode.E;
 
+    [Networked] public int UsingMedkitType { get; set; }
+    [Networked] public TickTimer MedkitTimer { get; set; }
 
-    // =========================================================
-    // MEDKIT USING
-    // =========================================================
-
-    [Header("Medkit Using")]
-
-    // 0 = Không dùng
-    // 1 = Small
-    // 2 = Medium
-    // 3 = Large
-
-    [Networked]
-    public int UsingMedkitType { get; set; }
-
-
-    // =========================================================
-    // MEDKIT TIMER
-    // =========================================================
-
-    [Networked]
-    public TickTimer MedkitTimer { get; set; }
-
-
-    // =========================================================
-    // RANDOM RESPAWN
-    // =========================================================
 
     [Header("Random Respawn")]
-
-    [Tooltip("Thời gian chờ trước khi hồi sinh")]
     public float respawnDelay = 5f;
-
-    [Tooltip("Khoảng cách tối thiểu cách mép Terrain")]
     public float respawnEdgePadding = 5f;
-
-    [Tooltip("Khoảng cách tối thiểu với Player khác")]
     public float minRespawnDistance = 5f;
-
-    [Tooltip("Số lần thử tìm vị trí")]
     public int respawnTryCount = 50;
-
-    [Tooltip("Độ cao cộng thêm khi đặt Player")]
     public float respawnHeightOffset = 1f;
 
-    [Networked]
-    public TickTimer RespawnTimer { get; set; }
+    [Networked] public TickTimer RespawnTimer { get; set; }
 
-
-    // =========================================================
-    // RESPAWN LOCK
-    // =========================================================
 
     [Header("Respawn Lock")]
-
-    [Tooltip("Camera script của Player")]
+    [Tooltip("Kéo script điều khiển camera của Player vào đây. Có thể để trống nếu script tên ThirdPersonCamera.")]
     public MonoBehaviour playerCameraController;
 
-
-    // =========================================================
-    // TERRAIN
-    // =========================================================
-
     private Terrain respawnTerrain;
-
-
-    // =========================================================
-    // PRIVATE
-    // =========================================================
 
     private bool localRespawnLocked = true;
 
@@ -153,38 +63,16 @@ public class PlayerHealth : NetworkBehaviour
         if (!HasInputAuthority)
             return;
 
-
-        // =====================================================
-        // DEAD
-        // =====================================================
-
         if (IsDead)
         {
             SetLocalRespawnLock(true);
             return;
         }
 
-
-        // =====================================================
-        // ALIVE
-        // =====================================================
-
         SetLocalRespawnLock(false);
 
-
-        // =====================================================
-        // ĐANG DÙNG MEDKIT
-        // =====================================================
-
-        if (UsingMedkitType != 0)
-            return;
-
-
-        // =====================================================
-        // NHẤN E DÙNG MEDKIT
-        // =====================================================
-
-        if (Input.GetKeyDown(useMedkitKey))
+        if (UsingMedkitType == 0 &&
+            Input.GetKeyDown(useMedkitKey))
         {
             RequestUseMedkitRpc();
         }
@@ -200,40 +88,18 @@ public class PlayerHealth : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
-
-        // =====================================================
-        // DEAD / RESPAWN
-        // =====================================================
-
         if (IsDead)
         {
-            if (
-                RespawnTimer.Expired(
-                    Runner
-                )
-            )
+            if (RespawnTimer.Expired(Runner))
             {
                 RespawnPlayer();
             }
 
-
             return;
         }
 
-
-        // =====================================================
-        // MEDKIT
-        // =====================================================
-
-        if (UsingMedkitType == 0)
-            return;
-
-
-        if (
-            MedkitTimer.Expired(
-                Runner
-            )
-        )
+        if (UsingMedkitType != 0 &&
+            MedkitTimer.Expired(Runner))
         {
             FinishUseMedkit();
         }
@@ -244,83 +110,40 @@ public class PlayerHealth : NetworkBehaviour
     // LOCAL RESPAWN LOCK
     // =========================================================
 
-    private void SetLocalRespawnLock(
-        bool locked)
+    private void SetLocalRespawnLock(bool locked)
     {
         if (!HasInputAuthority)
             return;
 
+        if (localRespawnLocked == locked)
+            return;
 
-        // =====================================================
-        // TÌM CAMERA
-        // =====================================================
+        localRespawnLocked = locked;
 
+
+        // Tìm camera controller nếu chưa được kéo vào Inspector
         if (playerCameraController == null)
         {
-            ThirdPersonCamera cameraController =
-                GetComponentInChildren<ThirdPersonCamera>(
-                    true
-                );
-
-
-            if (cameraController != null)
-            {
-                playerCameraController =
-                    cameraController;
-            }
+            FindCameraController();
         }
 
 
-        // =====================================================
-        // KHÔNG LẶP
-        // =====================================================
-
-        if (
-            localRespawnLocked ==
-            locked
-        )
-        {
-            return;
-        }
-
-
-        localRespawnLocked =
-            locked;
-
-
-        // =====================================================
-        // MOVEMENT
-        // =====================================================
-
-        PlayerMovement movement =
-            GetComponent<PlayerMovement>();
-
-
-        if (movement != null)
+        // Lock / Unlock movement
+        if (TryGetComponent(out PlayerMovement movement))
         {
             if (!locked)
             {
                 movement.ResetMovementState();
             }
 
-            movement.enabled =
-                !locked;
+            movement.enabled = !locked;
         }
 
 
-        // =====================================================
-        // WEAPON
-        // =====================================================
-
-        PlayerWeapon weapon =
-            GetComponent<PlayerWeapon>();
-
-
-        if (weapon != null)
+        // Lock / Unlock weapon
+        if (TryGetComponent(out PlayerWeapon weapon))
         {
-            weapon.enabled =
-                !locked;
-
+            weapon.enabled = !locked;
 
             if (!locked)
             {
@@ -329,132 +152,98 @@ public class PlayerHealth : NetworkBehaviour
         }
 
 
-        // =====================================================
-        // CHARACTER CONTROLLER
-        // =====================================================
-
-        CharacterController controller =
-            GetComponent<CharacterController>();
-
-
-        // Chỉ State Authority điều khiển CharacterController
-        if (
-            controller != null &&
-            HasStateAuthority
-        )
+        // CharacterController chỉ được StateAuthority điều khiển
+        if (HasStateAuthority &&
+            TryGetComponent(out CharacterController controller))
         {
-            controller.enabled =
-                !locked;
+            controller.enabled = !locked;
         }
 
 
-        // =====================================================
-        // CAMERA
-        // =====================================================
-
-        if (
-            playerCameraController != null
-        )
+        // Lock / Unlock camera controller
+        if (playerCameraController != null)
         {
-            playerCameraController.enabled =
-                !locked;
+            playerCameraController.enabled = !locked;
         }
 
 
-        // =====================================================
-        // CURSOR
-        // =====================================================
-
-        // Giữ chuột LOCK kể cả khi chết,
-        // tránh cho người chơi tương tác ngoài game.
-        Cursor.lockState =
-            CursorLockMode.Locked;
-
-        Cursor.visible =
-            false;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
 
 
-        Debug.Log(
-            "[PlayerHealth] " +
-            "Respawn Lock = " +
-            locked
-        );
+    /// <summary>
+    /// Tìm script camera mà không cần reference trực tiếp tới
+    /// ThirdPersonCamera, tránh lỗi compile nếu đổi tên class.
+    /// </summary>
+    private void FindCameraController()
+    {
+        MonoBehaviour[] behaviours =
+            GetComponentsInChildren<MonoBehaviour>(true);
+
+        foreach (MonoBehaviour behaviour in behaviours)
+        {
+            if (behaviour == null || behaviour == this)
+                continue;
+
+            string typeName = behaviour.GetType().Name;
+
+            if (typeName == "ThirdPersonCamera" ||
+                typeName == "PlayerCameraController" ||
+                typeName == "CameraController")
+            {
+                playerCameraController = behaviour;
+                return;
+            }
+        }
     }
 
 
     // =========================================================
-    // GET BEST MEDKIT
+    // MEDKIT
     // =========================================================
 
     public int GetBestMedkitType()
     {
-        if (CurrentHealth >= maxHealth)
+        if (CurrentHealth >= maxHealth ||
+            UsingMedkitType != 0 ||
+            IsDead)
+        {
             return 0;
+        }
 
 
-        if (UsingMedkitType != 0)
-            return 0;
+        float missingHealth = maxHealth - CurrentHealth;
 
 
-        if (IsDead)
-            return 0;
-
-
-        float missingHealth =
-            maxHealth -
-            CurrentHealth;
-
-
-        // =====================================================
-        // SMALL
-        // =====================================================
-
-        if (
-            SmallMedkitCount > 0 &&
-            missingHealth <= smallHealAmount
-        )
+        if (SmallMedkitCount > 0 &&
+            missingHealth <= smallHealAmount)
         {
             return 1;
         }
 
 
-        // =====================================================
-        // MEDIUM
-        // =====================================================
-
-        if (
-            MediumMedkitCount > 0 &&
-            missingHealth <= mediumHealAmount
-        )
+        if (MediumMedkitCount > 0 &&
+            missingHealth <= mediumHealAmount)
         {
             return 2;
         }
 
 
-        // =====================================================
-        // LARGE
-        // =====================================================
-
-        if (
-            LargeMedkitCount > 0 &&
-            missingHealth <= largeHealAmount
-        )
+        if (LargeMedkitCount > 0 &&
+            missingHealth <= largeHealAmount)
         {
             return 3;
         }
 
 
-        // =====================================================
-        // FALLBACK
-        // =====================================================
-
+        // Nếu lượng máu thiếu lớn hơn khả năng hồi
+        // ưu tiên medkit lớn nhất đang có
         if (LargeMedkitCount > 0)
             return 3;
 
-
         if (MediumMedkitCount > 0)
             return 2;
-
 
         if (SmallMedkitCount > 0)
             return 1;
@@ -464,51 +253,39 @@ public class PlayerHealth : NetworkBehaviour
     }
 
 
-    // =========================================================
-    // GET HEAL AMOUNT
-    // =========================================================
-
-    private float GetHealAmount(
-        int medkitType)
+    private float GetHealAmount(int medkitType)
     {
-        switch (medkitType)
+        return medkitType switch
         {
-            case 1:
-                return smallHealAmount;
-
-            case 2:
-                return mediumHealAmount;
-
-            case 3:
-                return largeHealAmount;
-        }
-
-
-        return 0f;
+            1 => smallHealAmount,
+            2 => mediumHealAmount,
+            3 => largeHealAmount,
+            _ => 0f
+        };
     }
 
 
-    // =========================================================
-    // GET MEDKIT USE TIME
-    // =========================================================
-
-    public float GetMedkitUseTime(
-        int medkitType)
+    public float GetMedkitUseTime(int medkitType)
     {
-        switch (medkitType)
+        return medkitType switch
         {
-            case 1:
-                return smallUseTime;
-
-            case 2:
-                return mediumUseTime;
-
-            case 3:
-                return largeUseTime;
-        }
+            1 => smallUseTime,
+            2 => mediumUseTime,
+            3 => largeUseTime,
+            _ => 0f
+        };
+    }
 
 
-        return 0f;
+    private bool HasMedkit(int medkitType)
+    {
+        return medkitType switch
+        {
+            1 => SmallMedkitCount > 0,
+            2 => MediumMedkitCount > 0,
+            3 => LargeMedkitCount > 0,
+            _ => false
+        };
     }
 
 
@@ -516,87 +293,38 @@ public class PlayerHealth : NetworkBehaviour
     // REQUEST USE MEDKIT
     // =========================================================
 
-    [Rpc(
-        RpcSources.InputAuthority,
-        RpcTargets.StateAuthority
-    )]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RequestUseMedkitRpc()
     {
         if (!HasStateAuthority)
             return;
 
-
         if (IsDead)
             return;
 
-
         if (UsingMedkitType != 0)
             return;
-
 
         if (CurrentHealth >= maxHealth)
             return;
 
 
-        int medkitType =
-            GetBestMedkitType();
+        int medkitType = GetBestMedkitType();
 
 
         if (medkitType == 0)
-        {
-            Debug.Log(
-                "PLAYER " +
-                Object.InputAuthority +
-                " KHÔNG CÓ MEDKIT!"
-            );
-
             return;
-        }
-
 
         if (!HasMedkit(medkitType))
             return;
 
 
-        float useTime =
-            GetMedkitUseTime(
-                medkitType
-            );
+        UsingMedkitType = medkitType;
 
-
-        UsingMedkitType =
-            medkitType;
-
-
-        MedkitTimer =
-            TickTimer.CreateFromSeconds(
-                Runner,
-                useTime
-            );
-    }
-
-
-    // =========================================================
-    // CHECK MEDKIT
-    // =========================================================
-
-    private bool HasMedkit(
-        int medkitType)
-    {
-        switch (medkitType)
-        {
-            case 1:
-                return SmallMedkitCount > 0;
-
-            case 2:
-                return MediumMedkitCount > 0;
-
-            case 3:
-                return LargeMedkitCount > 0;
-        }
-
-
-        return false;
+        MedkitTimer = TickTimer.CreateFromSeconds(
+            Runner,
+            GetMedkitUseTime(medkitType)
+        );
     }
 
 
@@ -610,31 +338,22 @@ public class PlayerHealth : NetworkBehaviour
             return;
 
 
-        if (IsDead)
+        if (IsDead ||
+            !HasMedkit(UsingMedkitType))
         {
             CancelMedkit();
             return;
         }
 
 
-        int medkitType =
-            UsingMedkitType;
+        CurrentHealth = Mathf.Clamp(
+            CurrentHealth + GetHealAmount(UsingMedkitType),
+            0f,
+            maxHealth
+        );
 
 
-        if (!HasMedkit(medkitType))
-        {
-            CancelMedkit();
-            return;
-        }
-
-
-        float healAmount =
-            GetHealAmount(
-                medkitType
-            );
-
-
-        switch (medkitType)
+        switch (UsingMedkitType)
         {
             case 1:
                 SmallMedkitCount--;
@@ -650,60 +369,23 @@ public class PlayerHealth : NetworkBehaviour
         }
 
 
-        CurrentHealth +=
-            healAmount;
-
-
-        CurrentHealth =
-            Mathf.Clamp(
-                CurrentHealth,
-                0f,
-                maxHealth
-            );
-
-
         Rpc_PlayHeal();
 
-
-        UsingMedkitType =
-            0;
-
-
-        MedkitTimer =
-            TickTimer.None;
+        CancelMedkit();
     }
 
-
-    // =========================================================
-    // CANCEL MEDKIT
-    // =========================================================
 
     private void CancelMedkit()
     {
-        UsingMedkitType =
-            0;
-
-
-        MedkitTimer =
-            TickTimer.None;
+        UsingMedkitType = 0;
+        MedkitTimer = TickTimer.None;
     }
 
 
-    // =========================================================
-    // HEAL RPC
-    // =========================================================
-
-    [Rpc(
-        RpcSources.StateAuthority,
-        RpcTargets.All
-    )]
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void Rpc_PlayHeal()
     {
-        Debug.Log(
-            "Player " +
-            Object.InputAuthority +
-            " đang hồi máu"
-        );
+        // Có thể thêm animation / sound heal ở đây
     }
 
 
@@ -722,35 +404,25 @@ public class PlayerHealth : NetworkBehaviour
         switch (type)
         {
             case MedkitPickup.MedkitType.Small:
-
                 SmallMedkitCount++;
                 break;
 
-
             case MedkitPickup.MedkitType.Medium:
-
                 MediumMedkitCount++;
                 break;
 
-
             case MedkitPickup.MedkitType.Large:
-
                 LargeMedkitCount++;
                 break;
         }
     }
 
 
-    // =========================================================
-    // TOTAL MEDKIT
-    // =========================================================
-
     public int GetTotalMedkitCount()
     {
-        return
-            SmallMedkitCount +
-            MediumMedkitCount +
-            LargeMedkitCount;
+        return SmallMedkitCount
+             + MediumMedkitCount
+             + LargeMedkitCount;
     }
 
 
@@ -763,54 +435,26 @@ public class PlayerHealth : NetworkBehaviour
         FindRespawnTerrain();
 
 
-        // =====================================================
-        // INITIAL STATE
-        // =====================================================
-
         if (HasStateAuthority)
         {
-            CurrentHealth =
-                maxHealth;
+            CurrentHealth = maxHealth;
 
+            IsDead = false;
 
-            IsDead =
-                false;
+            SmallMedkitCount = 0;
+            MediumMedkitCount = 0;
+            LargeMedkitCount = 0;
 
+            UsingMedkitType = 0;
 
-            SmallMedkitCount =
-                0;
-
-
-            MediumMedkitCount =
-                0;
-
-
-            LargeMedkitCount =
-                0;
-
-
-            UsingMedkitType =
-                0;
-
-
-            MedkitTimer =
-                TickTimer.None;
-
-
-            RespawnTimer =
-                TickTimer.None;
+            MedkitTimer = TickTimer.None;
+            RespawnTimer = TickTimer.None;
         }
 
 
-        // =====================================================
-        // LOCAL PLAYER
-        // =====================================================
-
         if (HasInputAuthority)
         {
-            localRespawnLocked =
-                true;
-
+            localRespawnLocked = true;
 
             SetLocalRespawnLock(false);
         }
@@ -827,39 +471,24 @@ public class PlayerHealth : NetworkBehaviour
             return;
 
 
-        respawnTerrain =
-            Terrain.activeTerrain;
+        respawnTerrain = Terrain.activeTerrain;
 
 
+        // FIX:
+        // FindAnyObjectByType() phải có generic type
         if (respawnTerrain == null)
         {
             respawnTerrain =
-                FindFirstObjectByType<Terrain>();
-        }
-
-
-        if (respawnTerrain != null)
-        {
-            Debug.Log(
-                "PLAYER HEALTH → TERRAIN: " +
-                respawnTerrain.name
-            );
-        }
-        else
-        {
-            Debug.LogError(
-                "PLAYER HEALTH → KHÔNG TÌM THẤY TERRAIN!"
-            );
+                FindAnyObjectByType<Terrain>();
         }
     }
 
 
     // =========================================================
-    // TAKE DAMAGE - COMPATIBILITY
+    // DAMAGE
     // =========================================================
 
-    public void TakeDamage(
-        float damage)
+    public void TakeDamage(float damage)
     {
         TakeDamage(
             damage,
@@ -868,10 +497,6 @@ public class PlayerHealth : NetworkBehaviour
     }
 
 
-    // =========================================================
-    // TAKE DAMAGE - WITH ATTACKER POSITION
-    // =========================================================
-
     public void TakeDamage(
         float damage,
         Vector3 attackerPosition)
@@ -879,30 +504,19 @@ public class PlayerHealth : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
-
         if (IsDead)
             return;
 
 
-        if (damage < 0f)
-            damage = 0f;
+        damage = Mathf.Max(damage, 0f);
 
 
-        CurrentHealth -=
-            damage;
+        CurrentHealth = Mathf.Clamp(
+            CurrentHealth - damage,
+            0f,
+            maxHealth
+        );
 
-
-        CurrentHealth =
-            Mathf.Clamp(
-                CurrentHealth,
-                0f,
-                maxHealth
-            );
-
-
-        // =====================================================
-        // CANCEL MEDKIT
-        // =====================================================
 
         if (UsingMedkitType != 0)
         {
@@ -910,33 +524,11 @@ public class PlayerHealth : NetworkBehaviour
         }
 
 
-        Debug.Log(
-            "PLAYER " +
-            Object.InputAuthority +
-            " HP: " +
-            CurrentHealth +
-            " / " +
-            maxHealth
-        );
-
-
-        // =====================================================
-        // HIT
-        // =====================================================
-
         if (CurrentHealth > 0f)
         {
-            Rpc_PlayHit(
-                attackerPosition
-            );
+            Rpc_PlayHit(attackerPosition);
         }
-
-
-        // =====================================================
-        // DEAD
-        // =====================================================
-
-        if (CurrentHealth <= 0f)
+        else
         {
             Die();
         }
@@ -947,44 +539,28 @@ public class PlayerHealth : NetworkBehaviour
     // HIT RPC
     // =========================================================
 
-    [Rpc(
-        RpcSources.StateAuthority,
-        RpcTargets.All
-    )]
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void Rpc_PlayHit(
         Vector3 attackerPosition)
     {
-        // =====================================================
-        // ANIMATION
-        // =====================================================
-
-        PlayerAnimation playerAnim =
-            GetComponent<PlayerAnimation>();
-
-
-        if (playerAnim != null)
+        if (TryGetComponent(out PlayerAnimation playerAnim))
         {
             playerAnim.Hit();
         }
 
 
-        // =====================================================
-        // CHỈ LOCAL PLAYER HIỂN THỊ DAMAGE INDICATOR
-        // =====================================================
-
-        if (!HasInputAuthority)
-            return;
-
-
-        DamageDirectionUI damageUI =
-            FindFirstObjectByType<DamageDirectionUI>();
-
-
-        if (damageUI != null)
+        if (HasInputAuthority)
         {
-            damageUI.ShowDamage(
-                attackerPosition
-            );
+            // FIX:
+            // phải chỉ rõ DamageDirectionUI
+            DamageDirectionUI damageUI =
+                FindAnyObjectByType<DamageDirectionUI>();
+
+
+            if (damageUI != null)
+            {
+                damageUI.ShowDamage(attackerPosition);
+            }
         }
     }
 
@@ -998,47 +574,23 @@ public class PlayerHealth : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
-
         if (IsDead)
             return;
 
 
-        // =====================================================
-        // CANCEL MEDKIT
-        // =====================================================
-
         CancelMedkit();
 
 
-        // =====================================================
-        // CANCEL RELOAD
-        // =====================================================
-
-        PlayerWeapon playerWeapon =
-            GetComponent<PlayerWeapon>();
-
-
-        if (playerWeapon != null)
+        if (TryGetComponent(out PlayerWeapon playerWeapon))
         {
             playerWeapon.CancelReloadOnDeath();
         }
 
 
-        // =====================================================
-        // DEAD
-        // =====================================================
+        IsDead = true;
 
-        IsDead =
-            true;
+        CurrentHealth = 0f;
 
-
-        CurrentHealth =
-            0f;
-
-
-        // =====================================================
-        // RESPAWN TIMER
-        // =====================================================
 
         RespawnTimer =
             TickTimer.CreateFromSeconds(
@@ -1047,38 +599,18 @@ public class PlayerHealth : NetworkBehaviour
             );
 
 
-        Debug.Log(
-            "====================================\n" +
-            "PLAYER DEAD\n" +
-            "Player: " +
-            Object.InputAuthority +
-            "\nRespawn sau: " +
-            respawnDelay +
-            " giây\n" +
-            "===================================="
-        );
-
-
-        // =====================================================
-        // LOCAL LOCK
-        // =====================================================
-
         if (HasInputAuthority)
         {
             SetLocalRespawnLock(true);
         }
 
 
-        // =====================================================
-        // DEATH ANIMATION
-        // =====================================================
-
         Rpc_PlayDeath();
     }
 
 
     // =========================================================
-    // RESPAWN PLAYER
+    // RESPAWN
     // =========================================================
 
     private void RespawnPlayer()
@@ -1087,186 +619,103 @@ public class PlayerHealth : NetworkBehaviour
             return;
 
 
-        Debug.Log(
-            "====================================\n" +
-            "PLAYER RESPAWN\n" +
-            "Player: " +
-            Object.InputAuthority +
-            "\n===================================="
-        );
+        CurrentHealth = maxHealth;
+
+        IsDead = false;
 
 
-        // =====================================================
-        // RESET HP
-        // =====================================================
-
-        CurrentHealth =
-            maxHealth;
+        RespawnTimer = TickTimer.None;
+        MedkitTimer = TickTimer.None;
 
 
-        IsDead =
-            false;
+        SmallMedkitCount = 0;
+        MediumMedkitCount = 0;
+        LargeMedkitCount = 0;
+
+        UsingMedkitType = 0;
 
 
-        // =====================================================
-        // RESET TIMERS
-        // =====================================================
-
-        RespawnTimer =
-            TickTimer.None;
-
-
-        UsingMedkitType =
-            0;
-
-
-        MedkitTimer =
-            TickTimer.None;
-
-
-        // =====================================================
-        // RESET MEDKIT
-        // =====================================================
-
-        SmallMedkitCount =
-            0;
-
-
-        MediumMedkitCount =
-            0;
-
-
-        LargeMedkitCount =
-            0;
-
-
-        // =====================================================
-        // RESET WEAPON
-        // =====================================================
-
-        PlayerWeapon playerWeapon =
-            GetComponent<PlayerWeapon>();
-
-
-        if (playerWeapon != null)
+        if (TryGetComponent(out PlayerWeapon playerWeapon))
         {
             playerWeapon.ResetAllInventoryOnRespawn();
         }
 
 
-        // =====================================================
-        // RANDOM POSITION
-        // =====================================================
+        CharacterController characterController = null;
 
-        Vector3 randomSpawnPosition;
+        TryGetComponent(out characterController);
 
 
-        bool foundSpawnPosition =
-            TryGetRandomRespawnPosition(
-                out randomSpawnPosition
-            );
-
-
-        // =====================================================
-        // TELEPORT
-        // =====================================================
-
-        CharacterController characterController =
-            GetComponent<CharacterController>();
-
-
+        // Tắt CharacterController trước khi teleport
         if (characterController != null)
         {
-            characterController.enabled =
-                false;
+            characterController.enabled = false;
         }
 
 
-        if (foundSpawnPosition)
+        if (TryGetRandomRespawnPosition(
+            out Vector3 randomSpawnPosition))
         {
-            transform.position =
-                randomSpawnPosition;
+            // Đặt vị trí trực tiếp trên StateAuthority
+            transform.position = randomSpawnPosition;
 
 
-            Debug.Log(
-                "RESPAWN RANDOM TẠI: " +
-                randomSpawnPosition
-            );
+            /*
+             * FIX QUAN TRỌNG:
+             *
+             * NetworkCharacterControllerPrototype
+             * không tồn tại trong Fusion version hiện tại.
+             *
+             * Player hiện tại nếu có NetworkTransform
+             * thì dùng NetworkTransform.Teleport().
+             */
+
+            if (TryGetComponent(
+                out NetworkTransform netTransform))
+            {
+                netTransform.Teleport(
+                    randomSpawnPosition
+                );
+            }
         }
-        else
-        {
-            Debug.LogWarning(
-                "KHÔNG TÌM ĐƯỢC VỊ TRÍ RESPAWN!"
-            );
-        }
 
 
+        // Bật lại CharacterController
         if (characterController != null)
         {
-            characterController.enabled =
-                true;
+            characterController.enabled = true;
         }
 
 
-        // =====================================================
-        // RESET MOVEMENT
-        // =====================================================
-
-        PlayerMovement movement =
-            GetComponent<PlayerMovement>();
-
-
-        if (movement != null)
+        // Reset movement
+        if (TryGetComponent(out PlayerMovement movement))
         {
             movement.ResetMovementState();
 
-            movement.enabled =
-                true;
+            movement.enabled = true;
         }
 
-
-        // =====================================================
-        // RESPawn RPC
-        // =====================================================
 
         Rpc_PlayRespawn();
     }
 
 
     // =========================================================
-    // FIND RANDOM TERRAIN POSITION
+    // RANDOM RESPAWN POSITION
     // =========================================================
 
     private bool TryGetRandomRespawnPosition(
         out Vector3 spawnPosition)
     {
-        spawnPosition =
-            transform.position;
+        spawnPosition = transform.position;
 
 
         FindRespawnTerrain();
 
 
-        if (respawnTerrain == null)
+        if (respawnTerrain == null ||
+            respawnTerrain.terrainData == null)
         {
-            Debug.LogError(
-                "KHÔNG TÌM THẤY TERRAIN!"
-            );
-
-            return false;
-        }
-
-
-        TerrainData terrainData =
-            respawnTerrain.terrainData;
-
-
-        if (terrainData == null)
-        {
-            Debug.LogError(
-                "TERRAIN DATA KHÔNG HỢP LỆ!"
-            );
-
             return false;
         }
 
@@ -1274,98 +723,60 @@ public class PlayerHealth : NetworkBehaviour
         Vector3 terrainPosition =
             respawnTerrain.transform.position;
 
-
         Vector3 terrainSize =
-            terrainData.size;
+            respawnTerrain.terrainData.size;
+
+
+        float padX = Mathf.Min(
+            respawnEdgePadding,
+            terrainSize.x / 3f
+        );
+
+        float padZ = Mathf.Min(
+            respawnEdgePadding,
+            terrainSize.z / 3f
+        );
 
 
         float minX =
-            terrainPosition.x +
-            respawnEdgePadding;
-
+            terrainPosition.x + padX;
 
         float maxX =
-            terrainPosition.x +
-            terrainSize.x -
-            respawnEdgePadding;
+            terrainPosition.x
+            + terrainSize.x
+            - padX;
 
 
         float minZ =
-            terrainPosition.z +
-            respawnEdgePadding;
-
+            terrainPosition.z + padZ;
 
         float maxZ =
-            terrainPosition.z +
-            terrainSize.z -
-            respawnEdgePadding;
+            terrainPosition.z
+            + terrainSize.z
+            - padZ;
 
 
-        if (
-            minX >= maxX ||
-            minZ >= maxZ
-        )
+        for (int i = 0;
+             i < respawnTryCount;
+             i++)
         {
-            Debug.LogWarning(
-                "RESPAWN EDGE PADDING QUÁ LỚN!"
-            );
-
-            return false;
-        }
-
-
-        // =====================================================
-        // TRY RANDOM POSITION
-        // =====================================================
-
-        for (
-            int i = 0;
-            i < respawnTryCount;
-            i++
-        )
-        {
-            float randomX =
-                Random.Range(
-                    minX,
-                    maxX
-                );
-
-
-            float randomZ =
-                Random.Range(
-                    minZ,
-                    maxZ
-                );
-
-
             Vector3 candidate =
                 new Vector3(
-                    randomX,
+                    Random.Range(minX, maxX),
                     0f,
-                    randomZ
-                );
-
-
-            float terrainHeight =
-                respawnTerrain.SampleHeight(
-                    candidate
+                    Random.Range(minZ, maxZ)
                 );
 
 
             candidate.y =
-                terrainHeight +
-                respawnHeightOffset;
+                respawnTerrain.SampleHeight(candidate)
+                + terrainPosition.y
+                + respawnHeightOffset;
 
 
-            if (
-                IsRespawnPositionSafe(
-                    candidate
-                )
-            )
+            if (IsRespawnPositionSafe(candidate))
             {
-                spawnPosition =
-                    candidate;
-
+                spawnPosition = candidate;
 
                 return true;
             }
@@ -1377,68 +788,53 @@ public class PlayerHealth : NetworkBehaviour
 
 
     // =========================================================
-    // CHECK SAFE RESPAWN
+    // CHECK RESPAWN POSITION
     // =========================================================
 
     private bool IsRespawnPositionSafe(
         Vector3 position)
     {
+        // FIX:
+        // Unity mới không cần FindObjectsSortMode.None
         PlayerHealth[] players =
             FindObjectsByType<PlayerHealth>(
                 FindObjectsInactive.Exclude
             );
 
 
-        foreach (
-            PlayerHealth player
-            in players
-        )
+        foreach (PlayerHealth player in players)
         {
-            // Bỏ qua chính mình
             if (player == this)
                 continue;
 
-
-            // NetworkObject không hợp lệ
-            if (
-                player.Object == null ||
-                !player.Object.IsValid
-            )
-            {
+            if (player.Object == null)
                 continue;
-            }
 
+            if (!player.Object.IsValid)
+                continue;
 
-            // Không tính Player đang chết
             if (player.IsDead)
                 continue;
 
 
-            Vector2 playerPos =
+            Vector2 playerPosition =
                 new Vector2(
                     player.transform.position.x,
                     player.transform.position.z
                 );
 
 
-            Vector2 spawnPos =
+            Vector2 spawnPosition =
                 new Vector2(
                     position.x,
                     position.z
                 );
 
 
-            float distance =
-                Vector2.Distance(
-                    playerPos,
-                    spawnPos
-                );
-
-
-            if (
-                distance <
-                minRespawnDistance
-            )
+            if (Vector2.Distance(
+                    playerPosition,
+                    spawnPosition)
+                < minRespawnDistance)
             {
                 return false;
             }
@@ -1453,17 +849,11 @@ public class PlayerHealth : NetworkBehaviour
     // DEATH RPC
     // =========================================================
 
-    [Rpc(
-        RpcSources.StateAuthority,
-        RpcTargets.All
-    )]
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void Rpc_PlayDeath()
     {
-        PlayerAnimation playerAnim =
-            GetComponent<PlayerAnimation>();
-
-
-        if (playerAnim != null)
+        if (TryGetComponent(
+            out PlayerAnimation playerAnim))
         {
             playerAnim.Die();
         }
@@ -1474,20 +864,13 @@ public class PlayerHealth : NetworkBehaviour
     // RESPAWN RPC
     // =========================================================
 
-    [Rpc(
-        RpcSources.StateAuthority,
-        RpcTargets.All
-    )]
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void Rpc_PlayRespawn()
     {
-        // =====================================================
-        // RESET ANIMATION
-        // =====================================================
-
+        // FIX:
+        // GetComponentInChildren(true) thiếu generic type
         Animator animator =
-            GetComponentInChildren<Animator>(
-                true
-            );
+            GetComponentInChildren<Animator>(true);
 
 
         if (animator != null)
@@ -1496,26 +879,18 @@ public class PlayerHealth : NetworkBehaviour
 
             animator.Update(0f);
 
-            animator.speed =
-                1f;
+            animator.speed = 1f;
         }
 
 
-        PlayerAnimation playerAnim =
-            GetComponent<PlayerAnimation>();
-
-
-        if (playerAnim != null)
+        if (TryGetComponent(
+            out PlayerAnimation playerAnim))
         {
             playerAnim.Move(0f);
 
             playerAnim.SetMelee(false);
         }
 
-
-        // =====================================================
-        // UNLOCK LOCAL PLAYER
-        // =====================================================
 
         if (HasInputAuthority)
         {

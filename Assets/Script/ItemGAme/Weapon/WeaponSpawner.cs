@@ -179,7 +179,7 @@ public class WeaponSpawner : NetworkBehaviour
         if (terrain == null)
         {
             terrain =
-                FindFirstObjectByType<Terrain>();
+                FindAnyObjectByType<Terrain>();
         }
 
 
