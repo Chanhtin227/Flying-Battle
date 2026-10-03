@@ -29,13 +29,24 @@ public class ButtonGroupSelector : MonoBehaviour
 
         RefreshUI();
     }
-    
+
     void OnSelect(int index)
     {
         currentIndex = index;
         RefreshUI();
 
         // TODO: xử lý logic khi chọn button (đổi ngôn ngữ, đổi tab, v.v...)
+    }
+
+    // [MỚI THÊM] Cho phép script khác (VD: đồng bộ với ngôn ngữ đã lưu) đặt lại
+    // trạng thái đang chọn mà KHÔNG trigger thêm logic gì (không gây gọi lại
+    // SetLanguage hay bất kỳ xử lý nào khác đang gắn ở nơi khác ngoài việc tô sáng).
+    public void SelectWithoutNotify(int index)
+    {
+        if (index < 0 || index >= buttons.Count) return;
+
+        currentIndex = index;
+        RefreshUI();
     }
     IEnumerator FadeColor(Image img, Color target, float duration = 0.15f)
     {

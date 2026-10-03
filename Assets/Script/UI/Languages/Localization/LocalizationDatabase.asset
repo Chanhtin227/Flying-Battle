@@ -195,3 +195,43 @@ MonoBehaviour:
     English: Room ID is incorrect. Please enter it again.
     Japanese: "\u90E8\u5C4B\u306EID\u304C\u6B63\u3057\u304F\u3042\u308A\u307E\u305B\u3093\u3002\u3082\u3046\u4E00\u5EA6\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044"
     Chinese: "\u623F\u95F4ID\u4E0D\u6B63\u786E\u3002\u8BF7\u91CD\u65B0\u8F93\u5165"
+  - Key: gamemode1
+    Vietnamese: "Ch\u1EBF \u0111\u1ED9 ch\u01A1i"
+    English: Game mode
+    Japanese: "\u30B2\u30FC\u30E0\u30E2\u30FC\u30C9"
+    Chinese: "\u6E38\u620F\u6A21\u5F0F"
+  - Key: setting1
+    Vietnamese: "C\xE0i \u0111\u1EB7t"
+    English: Settings
+    Japanese: "\u8A2D\u5B9A"
+    Chinese: "\u8BBE\u7F6E"
+  - Key: title1
+    Vietnamese: "T\xEAn nh\xE2n v\u1EADt"
+    English: Character name
+    Japanese: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u306E\u540D\u524D"
+    Chinese: "\u89D2\u8272\u540D"
+  - Key: title2
+    Vietnamese: "T\u1ED1i \u0111a 12 k\xFD t\u1EF1"
+    English: Maximum 12 characters
+    Japanese: "\u6700\u592712\u6587\u5B57"
+    Chinese: "\u6700\u591A12\u4E2A\u5B57\u7B26"
+  - Key: title3
+    Vietnamese: "H\xE3y \u0111\u1EB7t t\xEAn..."
+    English: Let's name...
+    Japanese: "\u540D\u524D\u3092\u4ED8\u3051\u3066\u2026"
+    Chinese: "\u8BF7\u8D77\u4E2A\u540D\u5B57..."
+  - Key: title4
+    Vietnamese: "Nh\u1EADp ID..."
+    English: Enter ID...
+    Japanese: "ID\u3092\u5165\u529B\u2026"
+    Chinese: "\u8F93\u5165ID..."
+  - Key: title5
+    Vietnamese: "\u0110\u1ED9 nh\u1EA1y"
+    English: Sensitivity
+    Japanese: "\u611F\u5EA6"
+    Chinese: "\u7075\u654F\u5EA6"
+  - Key: title6
+    Vietnamese: "Ch\u1ECDn t\xE2m ng\u1EAFm"
+    English: Choose the aiming point
+    Japanese: "\u7167\u6E96\u3092\u9078\u3076"
+    Chinese: "\u9009\u62E9\u7784\u51C6\u70B9"
