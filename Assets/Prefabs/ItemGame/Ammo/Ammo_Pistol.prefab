@@ -109,6 +109,8 @@ MonoBehaviour:
   ammoAmount: 30
   pickupKey: 102
   pickupDistance: 2
+  _NetworkAmmoType: 1
+  _NetworkAmmoAmount: 0
 --- !u!114 &4715295223174157682
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -8,8 +8,24 @@ public class WeaponPickup : NetworkBehaviour
     // =========================================================
 
     [Header("Weapon")]
-
     public PlayerWeapon.WeaponType weaponType;
+
+
+    // =========================================================
+    // WORLD PICKUP
+    // =========================================================
+
+    [Header("World Pickup")]
+
+    [Tooltip(
+        "Bật nếu đây là prefab vũ khí nằm ngoài map / dưới đất " +
+        "và Player được phép nhặt bằng F."
+    )]
+    public bool startAsWorldPickup = true;
+
+
+    [Networked]
+    public NetworkBool IsWorldPickup { get; set; }
 
 
     // =========================================================
@@ -56,20 +72,125 @@ public class WeaponPickup : NetworkBehaviour
         pickupConsumed = false;
 
 
-        // Nếu là weapon spawn từ Chest / prefab bình thường
-        // thì ammo mặc định sẽ là -1.
-        //
-        // Nếu là weapon được Drop từ Player,
-        // PlayerWeapon sẽ gọi SetupDroppedWeapon()
-        // ngay sau khi Spawn.
-        if (HasStateAuthority)
-        {
-            DroppedRifleAmmo = -1;
-            DroppedRifleReserveAmmo = -1;
+        if (!HasStateAuthority)
+            return;
 
-            DroppedPistolAmmo = -1;
-            DroppedPistolReserveAmmo = -1;
+
+        // =====================================================
+        // KIỂM TRA CÓ ĐANG NẰM TRONG PLAYER KHÔNG
+        // =====================================================
+
+        PlayerWeapon ownerPlayer =
+            GetComponentInParent<PlayerWeapon>();
+
+
+        if (ownerPlayer != null)
+        {
+            // Weapon này đang nằm trong hierarchy của Player.
+            // Ví dụ:
+            //
+            // Player
+            // └── Rifle
+            //     └── WeaponPickup
+            //
+            // => TUYỆT ĐỐI KHÔNG CHO NHẶT.
+
+            IsWorldPickup = false;
+
+
+            Debug.Log(
+                "[WeaponPickup] Weapon nằm trên Player -> " +
+                "WorldPickup = FALSE | Weapon = " +
+                weaponType
+            );
         }
+        else
+        {
+            // Weapon nằm ngoài map.
+            IsWorldPickup = startAsWorldPickup;
+
+
+            Debug.Log(
+                "[WeaponPickup] World Weapon Spawned | Weapon = " +
+                weaponType +
+                " | WorldPickup = " +
+                IsWorldPickup
+            );
+        }
+
+
+        // =====================================================
+        // DEFAULT AMMO
+        // =====================================================
+
+        DroppedRifleAmmo = -1;
+        DroppedRifleReserveAmmo = -1;
+
+        DroppedPistolAmmo = -1;
+        DroppedPistolReserveAmmo = -1;
+    }
+
+
+    // =========================================================
+    // ENABLE WORLD PICKUP
+    // =========================================================
+
+    public void EnableWorldPickup()
+    {
+        if (!HasStateAuthority)
+            return;
+
+
+        // =====================================================
+        // KHÔNG CHO WEAPON TRÊN PLAYER THÀNH WORLD PICKUP
+        // =====================================================
+
+        PlayerWeapon ownerPlayer =
+            GetComponentInParent<PlayerWeapon>();
+
+
+        if (ownerPlayer != null)
+        {
+            IsWorldPickup = false;
+
+
+            Debug.LogWarning(
+                "[WeaponPickup] Không thể EnableWorldPickup! " +
+                "Weapon này đang nằm trong Player."
+            );
+
+
+            return;
+        }
+
+
+        IsWorldPickup = true;
+
+
+        Debug.Log(
+            "[WeaponPickup] Enable World Pickup | Weapon = " +
+            weaponType
+        );
+    }
+
+
+    // =========================================================
+    // DISABLE WORLD PICKUP
+    // =========================================================
+
+    public void DisableWorldPickup()
+    {
+        if (!HasStateAuthority)
+            return;
+
+
+        IsWorldPickup = false;
+
+
+        Debug.Log(
+            "[WeaponPickup] Disable World Pickup | Weapon = " +
+            weaponType
+        );
     }
 
 
@@ -85,9 +206,32 @@ public class WeaponPickup : NetworkBehaviour
         int pistolReserveAmmo
     )
     {
-        // Chỉ State Authority được ghi Networked State
         if (!HasStateAuthority)
             return;
+
+
+        // =====================================================
+        // AN TOÀN:
+        // DROP OBJECT KHÔNG ĐƯỢC NẰM TRONG PLAYER
+        // =====================================================
+
+        PlayerWeapon ownerPlayer =
+            GetComponentInParent<PlayerWeapon>();
+
+
+        if (ownerPlayer != null)
+        {
+            IsWorldPickup = false;
+
+
+            Debug.LogError(
+                "[WeaponPickup] SetupDroppedWeapon FAILED! " +
+                "Drop prefab đang nằm trong hierarchy Player."
+            );
+
+
+            return;
+        }
 
 
         // =====================================================
@@ -99,7 +243,7 @@ public class WeaponPickup : NetworkBehaviour
 
 
         // =====================================================
-        // AMMO
+        // SAVE AMMO
         // =====================================================
 
         DroppedRifleAmmo =
@@ -113,6 +257,20 @@ public class WeaponPickup : NetworkBehaviour
 
         DroppedPistolReserveAmmo =
             pistolReserveAmmo;
+
+
+        // =====================================================
+        // ĐÃ VỨT XUỐNG ĐẤT
+        // => CHO PHÉP NHẶT
+        // =====================================================
+
+        IsWorldPickup = true;
+
+
+        Debug.Log(
+            "[WeaponPickup] DROPPED -> WORLD PICKUP | Weapon = " +
+            weaponType
+        );
     }
 
 
@@ -129,51 +287,115 @@ public class WeaponPickup : NetworkBehaviour
         // =====================================================
 
         if (!HasStateAuthority)
+        {
             return;
+        }
 
 
         // =====================================================
-        // VALIDATE
+        // ALREADY PICKED
         // =====================================================
 
         if (pickupConsumed)
-            return;
-
-
-        if (Object == null ||
-            !Object.IsValid)
         {
             return;
         }
 
+
+        // =====================================================
+        // VALIDATE NETWORK OBJECT
+        // =====================================================
+
+        if (
+            Object == null ||
+            !Object.IsValid
+        )
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // VALIDATE PLAYER
+        // =====================================================
 
         if (playerWeapon == null)
+        {
             return;
+        }
 
 
-        if (playerWeapon.Object == null ||
-            !playerWeapon.Object.IsValid)
+        if (
+            playerWeapon.Object == null ||
+            !playerWeapon.Object.IsValid
+        )
         {
             return;
         }
 
 
         // =====================================================
-        // CHECK WEAPON
+        // QUAN TRỌNG NHẤT
+        //
+        // NẾU PICKUP ĐANG NẰM TRONG PLAYER
+        // => KHÔNG BAO GIỜ CHO NHẶT
         // =====================================================
 
-        if (weaponType == PlayerWeapon.WeaponType.None)
+        PlayerWeapon ownerPlayer =
+            GetComponentInParent<PlayerWeapon>();
+
+
+        if (ownerPlayer != null)
         {
             Debug.LogWarning(
-                "[WeaponPickup] Weapon Type = None!"
+                "[WeaponPickup] PICKUP BLOCKED! " +
+                "Không thể lấy vũ khí trực tiếp từ Player khác."
             );
+
 
             return;
         }
 
 
         // =====================================================
-        // CHECK DISTANCE
+        // WORLD PICKUP CHECK
+        // =====================================================
+
+        if (!IsWorldPickup)
+        {
+            Debug.LogWarning(
+                "[WeaponPickup] KHÔNG THỂ NHẶT | " +
+                weaponType +
+                " | IsWorldPickup = FALSE"
+            );
+
+
+            return;
+        }
+
+
+        // =====================================================
+        // WEAPON TYPE CHECK
+        // =====================================================
+
+        if (
+            weaponType ==
+            PlayerWeapon.WeaponType.None
+        )
+        {
+            Debug.LogWarning(
+                "[WeaponPickup] KHÔNG THỂ NHẶT | " +
+                "Weapon Type = None"
+            );
+
+
+            return;
+        }
+
+
+        // =====================================================
+        // DISTANCE CHECK
+        // Chỉ kiểm tra X/Z
         // =====================================================
 
         Vector2 pickupPosition =
@@ -198,46 +420,54 @@ public class WeaponPickup : NetworkBehaviour
 
 
         if (distance > pickupDistance)
-            return;
-
-
-        // =====================================================
-        // TRY ADD TO PLAYER INVENTORY
-        // =====================================================
-
-        bool success =
-            playerWeapon.ServerPickupWeapon(
-                weaponType,
-
-                DroppedRifleAmmo,
-                DroppedRifleReserveAmmo,
-
-                DroppedPistolAmmo,
-                DroppedPistolReserveAmmo
+        {
+            Debug.LogWarning(
+                "[WeaponPickup] QUÁ XA | Distance = " +
+                distance +
+                " | Max = " +
+                pickupDistance
             );
 
 
-        // Không đủ slot / đã có súng / reload...
-        if (!success)
-        {
             return;
         }
 
 
         // =====================================================
-        // CONSUME
+        // ADD WEAPON TO PLAYER
+        // =====================================================
+
+        bool success =
+            playerWeapon.ServerPickupWeapon(
+                weaponType,
+                DroppedRifleAmmo,
+                DroppedRifleReserveAmmo,
+                DroppedPistolAmmo,
+                DroppedPistolReserveAmmo
+            );
+
+
+        // =====================================================
+        // FAILED
+        // =====================================================
+
+        if (!success)
+        {
+            Debug.LogWarning(
+                "[WeaponPickup] ServerPickupWeapon FAILED | " +
+                weaponType
+            );
+
+
+            return;
+        }
+
+
+        // =====================================================
+        // SUCCESS
         // =====================================================
 
         pickupConsumed = true;
-
-
-        // =====================================================
-        // DESPAWN
-        // =====================================================
-
-        Runner.Despawn(
-            Object
-        );
 
 
         Debug.Log(
@@ -245,7 +475,24 @@ public class WeaponPickup : NetworkBehaviour
             "WEAPON PICKUP SUCCESS\n" +
             "Weapon: " +
             weaponType +
+            "\nDistance: " +
+            distance +
             "\n===================================="
         );
+
+
+        // =====================================================
+        // DESPAWN
+        // =====================================================
+
+        if (
+            Object != null &&
+            Object.IsValid
+        )
+        {
+            Runner.Despawn(
+                Object
+            );
+        }
     }
 }

@@ -1639,6 +1639,9 @@ MonoBehaviour:
   runSpeed: 7
   gravity: -20
   jumpHeight: 2
+  boostSpeed: 4
+  maxBoostHeight: 4
+  maxBoostTime: 1.5
   smallMedkitSpeed: 1
   mediumMedkitSpeed: 1
   largeMedkitSpeed: 1
@@ -1671,6 +1674,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWeapon
   interactionRadius: 3
   shootRotateSpeed: 10
+  mouseWheelThreshold: 0.01
   rifleMagazineSize: 30
   pistolMagazineSize: 12
   rifleStartAmmo: 30
@@ -1829,7 +1833,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0

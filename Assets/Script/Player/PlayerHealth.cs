@@ -16,6 +16,27 @@ public class PlayerHealth : NetworkBehaviour
     [Networked] public int LargeMedkitCount { get; set; }
 
 
+    // =========================================================
+    // MEDKIT DROP PREFABS
+    // =========================================================
+
+    [Header("Medkit Drop Prefabs")]
+
+    public NetworkObject smallMedkitDropPrefab;
+    public NetworkObject mediumMedkitDropPrefab;
+    public NetworkObject largeMedkitDropPrefab;
+
+
+    // =========================================================
+    // MEDKIT DROP SETTINGS
+    // =========================================================
+
+    [Header("Medkit Drop Settings")]
+
+    public float medkitDropDistance = 1.2f;
+    public float medkitDropHeight = 0.5f;
+
+
     [Header("Medkit Heal Amount")]
     public float smallHealAmount = 50f;
     public float mediumHealAmount = 75f;
@@ -386,6 +407,175 @@ public class PlayerHealth : NetworkBehaviour
     private void Rpc_PlayHeal()
     {
         // Có thể thêm animation / sound heal ở đây
+    }
+
+
+    // =========================================================
+    // INVENTORY UI - USE SELECTED MEDKIT
+    // =========================================================
+
+    public void UseMedkitFromInventoryUI(int medkitType)
+    {
+        if (!HasInputAuthority)
+            return;
+
+        if (medkitType < 1 || medkitType > 3)
+            return;
+
+        RequestUseSpecificMedkitRpc(medkitType);
+    }
+
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RequestUseSpecificMedkitRpc(int medkitType)
+    {
+        if (!HasStateAuthority || IsDead)
+            return;
+
+        if (UsingMedkitType != 0)
+            return;
+
+        if (CurrentHealth >= maxHealth)
+            return;
+
+        if (!HasMedkit(medkitType))
+            return;
+
+        UsingMedkitType = medkitType;
+
+        MedkitTimer = TickTimer.CreateFromSeconds(
+            Runner,
+            GetMedkitUseTime(medkitType)
+        );
+    }
+
+
+    // =========================================================
+    // INVENTORY UI - THROW 1 MEDKIT
+    // =========================================================
+
+    public void ThrowMedkitFromInventoryUI(int medkitType)
+    {
+        if (!HasInputAuthority)
+            return;
+
+        if (medkitType < 1 || medkitType > 3)
+            return;
+
+        RequestThrowMedkitRpc(medkitType);
+    }
+
+
+    // =========================================================
+    // THROW MEDKIT RPC
+    // =========================================================
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RequestThrowMedkitRpc(int medkitType)
+    {
+        if (!HasStateAuthority || IsDead)
+            return;
+
+        if (UsingMedkitType != 0)
+            return;
+
+        NetworkObject dropPrefab = null;
+        MedkitPickup.MedkitType pickupType;
+
+        switch (medkitType)
+        {
+            case 1:
+                if (SmallMedkitCount <= 0)
+                    return;
+
+                dropPrefab = smallMedkitDropPrefab;
+                pickupType = MedkitPickup.MedkitType.Small;
+                break;
+
+            case 2:
+                if (MediumMedkitCount <= 0)
+                    return;
+
+                dropPrefab = mediumMedkitDropPrefab;
+                pickupType = MedkitPickup.MedkitType.Medium;
+                break;
+
+            case 3:
+                if (LargeMedkitCount <= 0)
+                    return;
+
+                dropPrefab = largeMedkitDropPrefab;
+                pickupType = MedkitPickup.MedkitType.Large;
+                break;
+
+            default:
+                return;
+        }
+
+        if (dropPrefab == null)
+        {
+            Debug.LogError(
+                "[PlayerHealth] CHƯA GÁN MEDKIT DROP PREFAB | Type = " +
+                medkitType
+            );
+            return;
+        }
+
+        Vector3 dropPosition =
+            transform.position +
+            transform.forward * medkitDropDistance +
+            Vector3.up * medkitDropHeight;
+
+        NetworkObject droppedObject =
+            Runner.Spawn(
+                dropPrefab,
+                dropPosition,
+                Quaternion.identity
+            );
+
+        if (droppedObject == null)
+        {
+            Debug.LogError(
+                "[PlayerHealth] KHÔNG SPAWN ĐƯỢC MEDKIT DROP!"
+            );
+            return;
+        }
+
+        MedkitPickup pickup =
+            droppedObject.GetComponent<MedkitPickup>();
+
+        if (pickup == null)
+        {
+            Debug.LogError(
+                "[PlayerHealth] MEDKIT DROP PREFAB KHÔNG CÓ MedkitPickup!"
+            );
+
+            Runner.Despawn(droppedObject);
+            return;
+        }
+
+        pickup.SetupDroppedMedkit(pickupType);
+
+        // Chỉ trừ inventory sau khi spawn thành công.
+        switch (medkitType)
+        {
+            case 1:
+                SmallMedkitCount--;
+                break;
+
+            case 2:
+                MediumMedkitCount--;
+                break;
+
+            case 3:
+                LargeMedkitCount--;
+                break;
+        }
+
+        Debug.Log(
+            "[PlayerHealth] THROW MEDKIT THÀNH CÔNG | " +
+            pickupType
+        );
     }
 
 

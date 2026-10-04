@@ -34,6 +34,16 @@ public class PlayerWeapon : NetworkBehaviour
 
 
     // =========================================================
+    // WEAPON WHEEL
+    // =========================================================
+
+    [Header("Weapon Wheel")]
+
+    [Tooltip("Độ nhạy tối thiểu để nhận con lăn chuột.")]
+    public float mouseWheelThreshold = 0.01f;
+
+
+    // =========================================================
     // AMMO
     // =========================================================
 
@@ -116,6 +126,28 @@ public class PlayerWeapon : NetworkBehaviour
     public NetworkObject pistolDropPrefab;
     public NetworkObject batDropPrefab;
     public NetworkObject shovelDropPrefab;
+
+    // =========================================================
+    // DROP AMMO PREFABS
+    // =========================================================
+
+    [Header("Drop Ammo Prefabs")]
+
+    public NetworkObject rifleAmmoDropPrefab;
+    public NetworkObject pistolAmmoDropPrefab;
+
+
+    // =========================================================
+    // AMMO DROP AMOUNT
+    // =========================================================
+
+    [Header("Ammo Drop Amount")]
+
+    [Tooltip("Số đạn Rifle bị vứt mỗi lần bấm Throw.")]
+    public int rifleAmmoDropAmount = 1;
+
+    [Tooltip("Số đạn Pistol bị vứt mỗi lần bấm Throw.")]
+    public int pistolAmmoDropAmount = 1;
 
 
     // =========================================================
@@ -209,7 +241,6 @@ public class PlayerWeapon : NetworkBehaviour
     [Header("Bat")]
 
     public float batDamage = 30f;
-
     public float batRange = 4f;
 
 
@@ -220,7 +251,6 @@ public class PlayerWeapon : NetworkBehaviour
     [Header("Shovel")]
 
     public float shovelDamage = 40f;
-
     public float shovelRange = 4f;
 
 
@@ -233,19 +263,15 @@ public class PlayerWeapon : NetworkBehaviour
     [Tooltip("Thời gian giữa 2 lần đánh")]
     public float meleeCooldown = 0.5f;
 
-
     [Tooltip("Tầm đánh melee")]
     public float meleeRange = 4f;
-
 
     [Tooltip("Góc tổng của AOE")]
     [Range(1f, 180f)]
     public float meleeAOEAngle = 50f;
 
-
     [Tooltip("Độ cao tâm kiểm tra melee")]
     public float meleeHeight = 1f;
-
 
     private float nextMeleeTime = 0f;
 
@@ -285,7 +311,6 @@ public class PlayerWeapon : NetworkBehaviour
     [Header("Bullet")]
 
     public GameObject tracerPrefab;
-
     public Transform firePoint;
 
 
@@ -391,8 +416,22 @@ public class PlayerWeapon : NetworkBehaviour
 
     private void Update()
     {
+        // =====================================================
+        // ONLY LOCAL PLAYER
+        // =====================================================
+
         if (!HasInputAuthority)
             return;
+
+
+        // =====================================================
+        // INVENTORY OPEN
+        // =====================================================
+
+        if (InventoryUI.IsInventoryOpen)
+        {
+            return;
+        }
 
 
         // =====================================================
@@ -400,16 +439,49 @@ public class PlayerWeapon : NetworkBehaviour
         // =====================================================
 
         if (IsPlayerDead())
+        {
             return;
+        }
 
+
+        // =====================================================
+        // SWITCH WEAPON - NUMBER
+        // =====================================================
 
         SwitchWeapon();
 
+
+        // =====================================================
+        // SWITCH WEAPON - MOUSE WHEEL
+        // =====================================================
+
+        MouseWheelSwitchWeapon();
+
+
+        // =====================================================
+        // ROTATE
+        // =====================================================
+
         SmoothRotateToCamera();
+
+
+        // =====================================================
+        // SHOOT
+        // =====================================================
 
         ShootInput();
 
+
+        // =====================================================
+        // MELEE
+        // =====================================================
+
         MeleeInput();
+
+
+        // =====================================================
+        // INTERACTION
+        // =====================================================
 
         InteractInput();
 
@@ -418,11 +490,7 @@ public class PlayerWeapon : NetworkBehaviour
         // DROP - Q
         // =====================================================
 
-        if (
-            Input.GetKeyDown(
-                KeyCode.Q
-            )
-        )
+        if (Input.GetKeyDown(KeyCode.Q))
         {
             if (!IsReloading)
             {
@@ -435,11 +503,7 @@ public class PlayerWeapon : NetworkBehaviour
         // RELOAD - R
         // =====================================================
 
-        if (
-            Input.GetKeyDown(
-                KeyCode.R
-            )
-        )
+        if (Input.GetKeyDown(KeyCode.R))
         {
             if (!IsReloading)
             {
@@ -478,6 +542,111 @@ public class PlayerWeapon : NetworkBehaviour
 
         RequestDropWeaponRpc(
             CurrentWeapon
+        );
+    }
+
+
+    // =========================================================
+    // USE WEAPON FROM INVENTORY UI
+    // =========================================================
+
+    public void EquipWeaponFromInventoryUI(
+        WeaponType weapon)
+    {
+        // Chỉ local player
+        if (!HasInputAuthority)
+            return;
+
+
+        // Không cho thao tác khi chết
+        if (IsPlayerDead())
+            return;
+
+
+        // Không cho đổi khi đang reload
+        if (IsReloading)
+            return;
+
+
+        // Không có vũ khí
+        if (weapon == WeaponType.None)
+            return;
+
+
+        // Không sở hữu
+        if (!HasWeapon(weapon))
+            return;
+
+
+        Debug.Log(
+            "[PlayerWeapon] " +
+            "Inventory UI trang bị: " +
+            weapon
+        );
+
+
+        // Dùng hệ thống Equip hiện tại
+        EquipSlot(weapon);
+    }
+
+
+    // =========================================================
+    // DROP WEAPON FROM INVENTORY UI
+    // =========================================================
+
+    public void DropWeaponFromInventoryUI(
+        WeaponType weapon)
+    {
+        // Chỉ local player
+        if (!HasInputAuthority)
+            return;
+
+
+        // Không cho thao tác khi chết
+        if (IsPlayerDead())
+            return;
+
+
+        // Không cho thao tác khi reload
+        if (IsReloading)
+            return;
+
+
+        // Không có vũ khí
+        if (weapon == WeaponType.None)
+            return;
+
+
+        // Không sở hữu
+        if (!HasWeapon(weapon))
+            return;
+
+
+        Debug.Log(
+            "[PlayerWeapon] " +
+            "Inventory UI bỏ đi: " +
+            weapon
+        );
+
+
+        // =====================================================
+        // NẾU ĐANG CẦM VŨ KHÍ NÀY
+        // =====================================================
+
+        if (CurrentWeapon == weapon)
+        {
+            DropCurrentWeapon();
+            return;
+        }
+
+
+        // =====================================================
+        // NẾU KHÔNG ĐANG CẦM
+        // VẪN DROP ĐƯỢC VŨ KHÍ ĐÓ
+        // =====================================================
+
+        RequestDropWeaponRpc(
+            weapon
         );
     }
 
@@ -537,6 +706,10 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
+        // =====================================================
+        // SAVE AMMO CỦA VŨ KHÍ ĐƯỢC VỨT
+        // =====================================================
+
         int droppedRifleAmmo = -1;
 
         int droppedRifleReserveAmmo = -1;
@@ -572,6 +745,10 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
+        // =====================================================
+        // DROP POSITION
+        // =====================================================
+
         Vector3 dropPosition =
             transform.position +
             transform.forward *
@@ -579,6 +756,10 @@ public class PlayerWeapon : NetworkBehaviour
             Vector3.up *
             dropHeight;
 
+
+        // =====================================================
+        // SPAWN DROP
+        // =====================================================
 
         NetworkObject droppedObject =
             Runner.Spawn(
@@ -599,6 +780,10 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
+        // =====================================================
+        // SET DROP DATA
+        // =====================================================
+
         WeaponPickup pickup =
             droppedObject.GetComponent<WeaponPickup>();
 
@@ -615,10 +800,18 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
+        // =====================================================
+        // REMOVE INVENTORY
+        // =====================================================
+
         RemoveWeaponFromInventory(
             weaponToDrop
         );
 
+
+        // =====================================================
+        // CHỌN VŨ KHÍ TIẾP THEO
+        // =====================================================
 
         WeaponType nextWeapon =
             GetNextAvailableWeapon();
@@ -920,15 +1113,19 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
-        if (
-            !Input.GetKeyDown(
-                KeyCode.F
-            )
-        )
+        // =====================================================
+        // F
+        // =====================================================
+
+        if (!Input.GetKeyDown(KeyCode.F))
         {
             return;
         }
 
+
+        // =====================================================
+        // TÌM COLLIDER
+        // =====================================================
 
         Collider[] colliders =
             Physics.OverlapSphere(
@@ -946,11 +1143,25 @@ public class PlayerWeapon : NetworkBehaviour
         WeaponPickup closestPickup = null;
 
 
+        // =====================================================
+        // DUYỆT COLLIDER
+        // =====================================================
+
         foreach (
             Collider hit
             in colliders
         )
         {
+            if (hit == null)
+            {
+                continue;
+            }
+
+
+            // =================================================
+            // CHEST
+            // =================================================
+
             WeaponChest chest =
                 hit.GetComponentInParent<WeaponChest>();
 
@@ -978,12 +1189,44 @@ public class PlayerWeapon : NetworkBehaviour
             }
 
 
+            // =================================================
+            // WEAPON PICKUP
+            // =================================================
+
             WeaponPickup pickup =
                 hit.GetComponentInParent<WeaponPickup>();
 
 
             if (pickup != null)
             {
+                // ---------------------------------------------
+                // QUAN TRỌNG:
+                // CHỈ NHẬN WORLD PICKUP
+                // ---------------------------------------------
+
+                if (!pickup.IsWorldPickup)
+                {
+                    continue;
+                }
+
+
+                // ---------------------------------------------
+                // KIỂM TRA NETWORK OBJECT
+                // ---------------------------------------------
+
+                if (
+                    pickup.Object == null ||
+                    !pickup.Object.IsValid
+                )
+                {
+                    continue;
+                }
+
+
+                // ---------------------------------------------
+                // DISTANCE
+                // ---------------------------------------------
+
                 float d =
                     Vector3.Distance(
                         transform.position,
@@ -1033,7 +1276,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         // =====================================================
-        // WEAPON PICKUP
+        // WORLD WEAPON PICKUP
         // =====================================================
 
         if (
@@ -1137,7 +1380,7 @@ public class PlayerWeapon : NetworkBehaviour
 
 
     // =========================================================
-    // SWITCH WEAPON
+    // SWITCH WEAPON - NUMBER KEYS
     // =========================================================
 
     private void SwitchWeapon()
@@ -1152,46 +1395,349 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
-        if (
-            Input.GetKeyDown(
-                KeyCode.Alpha1
-            )
-        )
+        if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             EquipSlot(Slot1);
         }
 
 
-        if (
-            Input.GetKeyDown(
-                KeyCode.Alpha2
-            )
-        )
+        if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             EquipSlot(Slot2);
         }
 
 
-        if (
-            Input.GetKeyDown(
-                KeyCode.Alpha3
-            )
-        )
+        if (Input.GetKeyDown(KeyCode.Alpha3))
         {
             EquipSlot(Slot3);
         }
 
 
-        if (
-            Input.GetKeyDown(
-                KeyCode.Alpha4
-            )
-        )
+        if (Input.GetKeyDown(KeyCode.Alpha4))
         {
             EquipSlot(Slot4);
         }
     }
 
+
+    // =========================================================
+    // SWITCH WEAPON - MOUSE WHEEL
+    // =========================================================
+
+    private void MouseWheelSwitchWeapon()
+    {
+        if (
+            !HasInputAuthority ||
+            IsPlayerDead() ||
+            IsReloading
+        )
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // ĐỌC CON LĂN CHUỘT
+        // =====================================================
+
+        float scroll =
+            Input.GetAxis(
+                "Mouse ScrollWheel"
+            );
+
+
+        // Không lăn
+        if (
+            Mathf.Abs(scroll) <
+            mouseWheelThreshold
+        )
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // XÁC ĐỊNH HƯỚNG
+        // =====================================================
+
+        int direction;
+
+
+        if (scroll > 0f)
+        {
+            // Lăn lên
+            direction = 1;
+        }
+        else
+        {
+            // Lăn xuống
+            direction = -1;
+        }
+
+
+        // =====================================================
+        // TÌM SLOT HIỆN TẠI
+        // =====================================================
+
+        int currentSlot =
+            GetCurrentWeaponSlotIndex();
+
+
+        // =====================================================
+        // NẾU CHƯA CÓ VŨ KHÍ HIỆN TẠI
+        // =====================================================
+
+        if (currentSlot == -1)
+        {
+            WeaponType firstWeapon =
+                GetFirstAvailableWeapon();
+
+
+            if (
+                firstWeapon !=
+                WeaponType.None
+            )
+            {
+                EquipSlot(
+                    firstWeapon
+                );
+            }
+
+
+            return;
+        }
+
+
+        // =====================================================
+        // TÌM VŨ KHÍ TIẾP THEO
+        // =====================================================
+
+        WeaponType nextWeapon =
+            GetNextWeaponByWheel(
+                currentSlot,
+                direction
+            );
+
+
+        // =====================================================
+        // CHỈ ĐỔI NẾU KHÁC VŨ KHÍ HIỆN TẠI
+        // =====================================================
+
+        if (
+            nextWeapon != WeaponType.None &&
+            nextWeapon != CurrentWeapon
+        )
+        {
+            EquipSlot(
+                nextWeapon
+            );
+        }
+    }
+
+
+    // =========================================================
+    // GET CURRENT WEAPON SLOT INDEX
+    // =========================================================
+
+    private int GetCurrentWeaponSlotIndex()
+    {
+        if (
+            Slot1 ==
+                CurrentWeapon &&
+            Slot1 != WeaponType.None
+        )
+        {
+            return 0;
+        }
+
+
+        if (
+            Slot2 ==
+                CurrentWeapon &&
+            Slot2 != WeaponType.None
+        )
+        {
+            return 1;
+        }
+
+
+        if (
+            Slot3 ==
+                CurrentWeapon &&
+            Slot3 != WeaponType.None
+        )
+        {
+            return 2;
+        }
+
+
+        if (
+            Slot4 ==
+                CurrentWeapon &&
+            Slot4 != WeaponType.None
+        )
+        {
+            return 3;
+        }
+
+
+        return -1;
+    }
+
+
+    // =========================================================
+    // GET FIRST AVAILABLE WEAPON
+    // =========================================================
+
+    private WeaponType GetFirstAvailableWeapon()
+    {
+        if (
+            Slot1 != WeaponType.None &&
+            HasWeapon(Slot1)
+        )
+        {
+            return Slot1;
+        }
+
+
+        if (
+            Slot2 != WeaponType.None &&
+            HasWeapon(Slot2)
+        )
+        {
+            return Slot2;
+        }
+
+
+        if (
+            Slot3 != WeaponType.None &&
+            HasWeapon(Slot3)
+        )
+        {
+            return Slot3;
+        }
+
+
+        if (
+            Slot4 != WeaponType.None &&
+            HasWeapon(Slot4)
+        )
+        {
+            return Slot4;
+        }
+
+
+        return WeaponType.None;
+    }
+
+
+    // =========================================================
+    // GET NEXT WEAPON BY WHEEL
+    // =========================================================
+
+    private WeaponType GetNextWeaponByWheel(
+        int currentSlot,
+        int direction)
+    {
+        const int slotCount = 4;
+
+
+        // =====================================================
+        // KIỂM TRA TỐI ĐA 4 SLOT
+        // =====================================================
+
+        for (
+            int i = 1;
+            i <= slotCount;
+            i++
+        )
+        {
+            int nextSlot =
+                currentSlot +
+                direction *
+                i;
+
+
+            // =================================================
+            // LOOP VỀ CUỐI
+            // =================================================
+
+            while (nextSlot < 0)
+            {
+                nextSlot +=
+                    slotCount;
+            }
+
+
+            // =================================================
+            // LOOP VỀ ĐẦU
+            // =================================================
+
+            while (nextSlot >= slotCount)
+            {
+                nextSlot -=
+                    slotCount;
+            }
+
+
+            // =================================================
+            // LẤY VŨ KHÍ
+            // =================================================
+
+            WeaponType weapon =
+                GetWeaponFromSlot(
+                    nextSlot
+                );
+
+
+            // =================================================
+            // SLOT HỢP LỆ
+            // =================================================
+
+            if (
+                weapon != WeaponType.None &&
+                HasWeapon(weapon)
+            )
+            {
+                return weapon;
+            }
+        }
+
+
+        return WeaponType.None;
+    }
+
+
+    // =========================================================
+    // GET WEAPON FROM SLOT
+    // =========================================================
+
+    private WeaponType GetWeaponFromSlot(
+        int slotIndex)
+    {
+        switch (slotIndex)
+        {
+            case 0:
+                return Slot1;
+
+            case 1:
+                return Slot2;
+
+            case 2:
+                return Slot3;
+
+            case 3:
+                return Slot4;
+        }
+
+
+        return WeaponType.None;
+    }
+
+
+    // =========================================================
+    // EQUIP SLOT
+    // =========================================================
 
     private void EquipSlot(
         WeaponType weapon)
@@ -1280,13 +1826,11 @@ public class PlayerWeapon : NetworkBehaviour
 
         if (
             CurrentWeapon ==
-            WeaponType.Rifle &&
+                WeaponType.Rifle &&
             RifleAmmo <= 0
         )
         {
-            if (
-                RifleReserveAmmo > 0
-            )
+            if (RifleReserveAmmo > 0)
             {
                 RequestReloadRpc();
             }
@@ -1302,13 +1846,11 @@ public class PlayerWeapon : NetworkBehaviour
 
         if (
             CurrentWeapon ==
-            WeaponType.Pistol &&
+                WeaponType.Pistol &&
             PistolAmmo <= 0
         )
         {
-            if (
-                PistolReserveAmmo > 0
-            )
+            if (PistolReserveAmmo > 0)
             {
                 RequestReloadRpc();
             }
@@ -1324,9 +1866,7 @@ public class PlayerWeapon : NetworkBehaviour
 
         if (!canShoot)
         {
-            if (
-                Input.GetMouseButtonUp(0)
-            )
+            if (Input.GetMouseButtonUp(0))
             {
                 canShoot =
                     true;
@@ -1337,9 +1877,7 @@ public class PlayerWeapon : NetworkBehaviour
         }
 
 
-        if (
-            !Input.GetMouseButton(0)
-        )
+        if (!Input.GetMouseButton(0))
         {
             return;
         }
@@ -1347,15 +1885,12 @@ public class PlayerWeapon : NetworkBehaviour
 
         float rate =
             CurrentWeapon ==
-            WeaponType.Rifle
+                WeaponType.Rifle
             ? rifleFireRate
             : pistolFireRate;
 
 
-        if (
-            Time.time <
-            nextFireTime
-        )
+        if (Time.time < nextFireTime)
         {
             return;
         }
@@ -1571,10 +2106,6 @@ public class PlayerWeapon : NetworkBehaviour
                     !target.IsDead
                 )
                 {
-                    // =================================================
-                    // TRUYỀN VỊ TRÍ NGƯỜI BẮN
-                    // =================================================
-
                     target.TakeDamage(
                         damage,
                         origin
@@ -1616,9 +2147,7 @@ public class PlayerWeapon : NetworkBehaviour
             WeaponType.Rifle
         )
         {
-            if (
-                rifleMuzzleFlash != null
-            )
+            if (rifleMuzzleFlash != null)
             {
                 rifleMuzzleFlash.Stop(
                     true,
@@ -1635,9 +2164,7 @@ public class PlayerWeapon : NetworkBehaviour
             WeaponType.Pistol
         )
         {
-            if (
-                pistolMuzzleFlash != null
-            )
+            if (pistolMuzzleFlash != null)
             {
                 pistolMuzzleFlash.Stop(
                     true,
@@ -1728,7 +2255,7 @@ public class PlayerWeapon : NetworkBehaviour
 
         if (
             weapon ==
-            WeaponType.Rifle &&
+                WeaponType.Rifle &&
             rifleShotSound != null
         )
         {
@@ -1738,7 +2265,7 @@ public class PlayerWeapon : NetworkBehaviour
         }
         else if (
             weapon ==
-            WeaponType.Pistol &&
+                WeaponType.Pistol &&
             pistolShotSound != null
         )
         {
@@ -1770,10 +2297,8 @@ public class PlayerWeapon : NetworkBehaviour
         // =====================================================
 
         if (
-            CurrentWeapon !=
-            WeaponType.Bat &&
-            CurrentWeapon !=
-            WeaponType.Shovel
+            CurrentWeapon != WeaponType.Bat &&
+            CurrentWeapon != WeaponType.Shovel
         )
         {
             return;
@@ -2031,19 +2556,13 @@ public class PlayerWeapon : NetworkBehaviour
             // RANGE CHECK
             // =================================================
 
-            if (
-                distance >
-                range
-            )
+            if (distance > range)
             {
                 continue;
             }
 
 
-            if (
-                distance <
-                0.01f
-            )
+            if (distance < 0.01f)
             {
                 continue;
             }
@@ -2068,10 +2587,7 @@ public class PlayerWeapon : NetworkBehaviour
                 0.5f;
 
 
-            if (
-                angle >
-                halfAngle
-            )
+            if (angle > halfAngle)
             {
                 continue;
             }
@@ -2171,7 +2687,7 @@ public class PlayerWeapon : NetworkBehaviour
 
         if (
             weapon ==
-            WeaponType.Bat &&
+                WeaponType.Bat &&
             batHitSound != null
         )
         {
@@ -2181,7 +2697,7 @@ public class PlayerWeapon : NetworkBehaviour
         }
         else if (
             weapon ==
-            WeaponType.Shovel &&
+                WeaponType.Shovel &&
             shovelHitSound != null
         )
         {
@@ -2237,10 +2753,8 @@ public class PlayerWeapon : NetworkBehaviour
         if (playerAnim != null)
         {
             playerAnim.SetMelee(
-                CurrentWeapon ==
-                    WeaponType.Bat ||
-                CurrentWeapon ==
-                    WeaponType.Shovel
+                CurrentWeapon == WeaponType.Bat ||
+                CurrentWeapon == WeaponType.Shovel
             );
         }
     }
@@ -2280,6 +2794,204 @@ public class PlayerWeapon : NetworkBehaviour
 
 
     // =========================================================
+    // CHECK ANY MELEE WEAPON
+    // =========================================================
+
+    private bool HasAnyMeleeWeapon()
+    {
+        return
+            HasBat ||
+            HasShovel;
+    }
+
+
+    // =========================================================
+    // INVENTORY UI - USE AMMO
+    // =========================================================
+
+    public void UseAmmoFromInventoryUI(WeaponType weapon)
+    {
+        if (!HasInputAuthority)
+            return;
+
+        if (weapon != WeaponType.Rifle &&
+            weapon != WeaponType.Pistol)
+            return;
+
+        RequestReloadFromInventoryRpc(weapon);
+    }
+
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RequestReloadFromInventoryRpc(WeaponType weapon)
+    {
+        if (!HasStateAuthority || IsReloading || IsPlayerDead())
+            return;
+
+        if (weapon == WeaponType.Rifle)
+        {
+            if (!HasRifle || RifleReserveAmmo <= 0 ||
+                RifleAmmo >= rifleMagazineSize)
+                return;
+        }
+        else if (weapon == WeaponType.Pistol)
+        {
+            if (!HasPistol || PistolReserveAmmo <= 0 ||
+                PistolAmmo >= pistolMagazineSize)
+                return;
+        }
+        else
+        {
+            return;
+        }
+
+        IsReloading = true;
+        Rpc_PlayReloadSound(weapon);
+        StartCoroutine(ReloadStateAuthority(weapon));
+    }
+
+
+    // =========================================================
+    // INVENTORY UI - THROW AMMO
+    // =========================================================
+
+    public void ThrowAmmoFromInventoryUI(WeaponType weapon)
+    {
+        if (!HasInputAuthority)
+            return;
+
+        if (weapon != WeaponType.Rifle &&
+            weapon != WeaponType.Pistol)
+            return;
+
+        RequestThrowAmmoRpc(weapon);
+    }
+
+
+    // =========================================================
+    // THROW AMMO RPC
+    // =========================================================
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RequestThrowAmmoRpc(WeaponType weapon)
+    {
+        if (!HasStateAuthority || IsPlayerDead() || IsReloading)
+            return;
+
+        NetworkObject dropPrefab = null;
+        AmmoPickup.AmmoType ammoType;
+        int dropAmount;
+
+        if (weapon == WeaponType.Rifle)
+        {
+            if (RifleReserveAmmo <= 0)
+                return;
+
+            dropPrefab = rifleAmmoDropPrefab;
+            ammoType = AmmoPickup.AmmoType.Rifle;
+
+            dropAmount = Mathf.Min(
+                Mathf.Max(1, rifleAmmoDropAmount),
+                RifleReserveAmmo
+            );
+        }
+        else if (weapon == WeaponType.Pistol)
+        {
+            if (PistolReserveAmmo <= 0)
+                return;
+
+            dropPrefab = pistolAmmoDropPrefab;
+            ammoType = AmmoPickup.AmmoType.Pistol;
+
+            dropAmount = Mathf.Min(
+                Mathf.Max(1, pistolAmmoDropAmount),
+                PistolReserveAmmo
+            );
+        }
+        else
+        {
+            return;
+        }
+
+        if (dropPrefab == null)
+        {
+            Debug.LogError(
+                "[PlayerWeapon] CHƯA GÁN AMMO DROP PREFAB: " +
+                weapon
+            );
+            return;
+        }
+
+        Vector3 dropPosition =
+            transform.position +
+            transform.forward * dropDistance +
+            Vector3.up * dropHeight;
+
+        NetworkObject droppedObject =
+            Runner.Spawn(
+                dropPrefab,
+                dropPosition,
+                Quaternion.identity
+            );
+
+        if (droppedObject == null)
+        {
+            Debug.LogError(
+                "[PlayerWeapon] KHÔNG SPAWN ĐƯỢC AMMO DROP!"
+            );
+            return;
+        }
+
+        AmmoPickup pickup =
+            droppedObject.GetComponent<AmmoPickup>();
+
+        if (pickup == null)
+        {
+            Debug.LogError(
+                "[PlayerWeapon] AMMO DROP PREFAB KHÔNG CÓ AmmoPickup!"
+            );
+
+            Runner.Despawn(droppedObject);
+            return;
+        }
+
+        pickup.SetupDroppedAmmo(
+            ammoType,
+            dropAmount
+        );
+
+        // Chỉ trừ inventory sau khi spawn thành công.
+        if (weapon == WeaponType.Rifle)
+        {
+            RifleReserveAmmo -= dropAmount;
+
+            if (RifleReserveAmmo <= 0)
+            {
+                RifleReserveAmmo = 0;
+                HasPickedRifleAmmo = false;
+            }
+        }
+        else
+        {
+            PistolReserveAmmo -= dropAmount;
+
+            if (PistolReserveAmmo <= 0)
+            {
+                PistolReserveAmmo = 0;
+                HasPickedPistolAmmo = false;
+            }
+        }
+
+        Debug.Log(
+            "[PlayerWeapon] THROW AMMO THÀNH CÔNG | " +
+            ammoType +
+            " | Amount = " +
+            dropAmount
+        );
+    }
+
+
+    // =========================================================
     // RELOAD RPC
     // =========================================================
 
@@ -2300,10 +3012,8 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         if (
-            CurrentWeapon !=
-            WeaponType.Rifle &&
-            CurrentWeapon !=
-            WeaponType.Pistol
+            CurrentWeapon != WeaponType.Rifle &&
+            CurrentWeapon != WeaponType.Pistol
         )
         {
             return;
@@ -2321,7 +3031,7 @@ public class PlayerWeapon : NetworkBehaviour
         {
             if (
                 RifleAmmo >=
-                rifleMagazineSize ||
+                    rifleMagazineSize ||
                 RifleReserveAmmo <= 0
             )
             {
@@ -2341,7 +3051,7 @@ public class PlayerWeapon : NetworkBehaviour
         {
             if (
                 PistolAmmo >=
-                pistolMagazineSize ||
+                    pistolMagazineSize ||
                 PistolReserveAmmo <= 0
             )
             {
@@ -2380,7 +3090,7 @@ public class PlayerWeapon : NetworkBehaviour
     {
         float reloadTime =
             reloadWeapon ==
-            WeaponType.Rifle
+                WeaponType.Rifle
             ? rifleReloadTime
             : pistolReloadTime;
 
@@ -2511,7 +3221,7 @@ public class PlayerWeapon : NetworkBehaviour
 
         if (
             weapon ==
-            WeaponType.Rifle &&
+                WeaponType.Rifle &&
             rifleReloadSound != null
         )
         {
@@ -2521,7 +3231,7 @@ public class PlayerWeapon : NetworkBehaviour
         }
         else if (
             weapon ==
-            WeaponType.Pistol &&
+                WeaponType.Pistol &&
             pistolReloadSound != null
         )
         {
@@ -2560,8 +3270,40 @@ public class PlayerWeapon : NetworkBehaviour
             return false;
 
 
+        // =====================================================
+        // KHÔNG NHẶT TRÙNG VŨ KHÍ
+        // =====================================================
+
         if (HasWeapon(weapon))
+        {
+            Debug.Log(
+                "[PlayerWeapon] " +
+                "Đã có vũ khí này!"
+            );
+
             return false;
+        }
+
+
+        // =====================================================
+        // CHỈ 1 VŨ KHÍ CẬN CHIẾN
+        // =====================================================
+
+        if (
+            weapon == WeaponType.Bat ||
+            weapon == WeaponType.Shovel
+        )
+        {
+            if (HasAnyMeleeWeapon())
+            {
+                Debug.Log(
+                    "[PlayerWeapon] " +
+                    "Chỉ được mang 1 vũ khí cận chiến!"
+                );
+
+                return false;
+            }
+        }
 
 
         // =====================================================
@@ -2588,7 +3330,14 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         if (slotCount >= maxWeaponSlots)
+        {
+            Debug.Log(
+                "[PlayerWeapon] " +
+                "Đã đầy slot vũ khí!"
+            );
+
             return false;
+        }
 
 
         // =====================================================
@@ -2662,9 +3411,7 @@ public class PlayerWeapon : NetworkBehaviour
                 HasPickedRifleAmmo =
                     true;
             }
-            else if (
-                !HasPickedRifleAmmo
-            )
+            else if (!HasPickedRifleAmmo)
             {
                 RifleAmmo =
                     rifleStartAmmo;
@@ -2708,9 +3455,7 @@ public class PlayerWeapon : NetworkBehaviour
                 HasPickedPistolAmmo =
                     true;
             }
-            else if (
-                !HasPickedPistolAmmo
-            )
+            else if (!HasPickedPistolAmmo)
             {
                 PistolAmmo =
                     pistolStartAmmo;
@@ -2736,6 +3481,13 @@ public class PlayerWeapon : NetworkBehaviour
 
         nextFireTime =
             Time.time + 0.1f;
+
+
+        Debug.Log(
+            "[PlayerWeapon] " +
+            "Nhặt thành công: " +
+            weapon
+        );
 
 
         return true;

@@ -3,10 +3,6 @@ using Fusion;
 
 public class MedkitPickup : NetworkBehaviour
 {
-    // =========================================================
-    // MEDKIT TYPE
-    // =========================================================
-
     public enum MedkitType
     {
         Small,
@@ -14,45 +10,47 @@ public class MedkitPickup : NetworkBehaviour
         Large
     }
 
-
-    // =========================================================
-    // MEDKIT SETTINGS
-    // =========================================================
-
     [Header("Medkit Type")]
-
     public MedkitType medkitType = MedkitType.Small;
 
-
-    // =========================================================
-    // HEAL AMOUNT
-    // =========================================================
-
     [Header("Heal Amount")]
-
     public float smallHealAmount = 50f;
     public float mediumHealAmount = 75f;
     public float largeHealAmount = 100f;
 
-
-    // =========================================================
-    // PICKUP
-    // =========================================================
-
     [Header("Pickup")]
-
     public KeyCode pickupKey = KeyCode.F;
-
     public float pickupDistance = 3f;
 
+    [Networked] public MedkitType NetworkMedkitType { get; set; }
 
-    // =========================================================
-    // GET HEAL AMOUNT
-    // =========================================================
+    public override void Spawned()
+    {
+        if (HasStateAuthority)
+        {
+            NetworkMedkitType = medkitType;
+        }
+
+        medkitType = NetworkMedkitType;
+    }
+
+    public override void Render()
+    {
+        medkitType = NetworkMedkitType;
+    }
+
+    public void SetupDroppedMedkit(MedkitType type)
+    {
+        if (!HasStateAuthority)
+            return;
+
+        NetworkMedkitType = type;
+        medkitType = type;
+    }
 
     private float GetHealAmount()
     {
-        switch (medkitType)
+        switch (NetworkMedkitType)
         {
             case MedkitType.Small:
                 return smallHealAmount;
@@ -67,159 +65,71 @@ public class MedkitPickup : NetworkBehaviour
         return 50f;
     }
 
-
-    // =========================================================
-    // UPDATE
-    // =========================================================
-
     private void Update()
     {
-        // Không có player local
         if (PlayerMovement.LocalPlayer == null)
             return;
 
-
-        // Khoảng cách tới player
         float distance = Vector3.Distance(
             transform.position,
             PlayerMovement.LocalPlayer.transform.position
         );
 
-
-        // Quá xa
         if (distance > pickupDistance)
             return;
 
+        if (!Input.GetKeyDown(pickupKey))
+            return;
 
-        // Nhấn F
-        if (Input.GetKeyDown(pickupKey))
+        NetworkObject playerObject =
+            PlayerMovement.LocalPlayer.GetComponent<NetworkObject>();
+
+        if (playerObject == null)
         {
-            NetworkObject playerObject =
-                PlayerMovement.LocalPlayer.GetComponent<NetworkObject>();
-
-
-            if (playerObject == null)
-            {
-                Debug.LogError(
-                    "[MedkitPickup] PLAYER KHÔNG CÓ NETWORKOBJECT!"
-                );
-
-                return;
-            }
-
-
-            Debug.Log(
-                "[MedkitPickup] NHẤN F - " +
-                "Type: " +
-                medkitType
-            );
-
-
-            RequestPickupRpc(playerObject);
+            Debug.LogError("[MedkitPickup] PLAYER KHÔNG CÓ NETWORKOBJECT!");
+            return;
         }
+
+        RequestPickupRpc(playerObject);
     }
 
-
-    // =========================================================
-    // PICKUP RPC
-    // =========================================================
-
-    [Rpc(
-        RpcSources.All,
-        RpcTargets.StateAuthority
-    )]
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     private void RequestPickupRpc(
         NetworkObject playerObject,
         RpcInfo info = default)
     {
-        // Chỉ State Authority xử lý
         if (!HasStateAuthority)
             return;
 
-
-        // Kiểm tra medkit
-        if (Object == null)
+        if (Object == null || !Object.IsValid)
             return;
 
-
-        // Kiểm tra player
-        if (playerObject == null)
+        if (playerObject == null || !playerObject.IsValid)
             return;
 
-
-        // Lấy PlayerHealth
         PlayerHealth health =
             playerObject.GetComponent<PlayerHealth>();
 
-
         if (health == null)
         {
-            Debug.LogError(
-                "[MedkitPickup] PLAYER KHÔNG CÓ PLAYERHEALTH!"
-            );
-
+            Debug.LogError("[MedkitPickup] PLAYER KHÔNG CÓ PLAYERHEALTH!");
             return;
         }
-
-
-        // =====================================================
-        // KIỂM TRA KHOẢNG CÁCH LẠI TRÊN SERVER
-        // =====================================================
 
         float distance = Vector3.Distance(
             transform.position,
             playerObject.transform.position
         );
 
-
         if (distance > pickupDistance)
-        {
-            Debug.LogWarning(
-                "[MedkitPickup] PLAYER QUÁ XA: " +
-                distance
-            );
-
             return;
-        }
-
-
-        // =====================================================
-        // LẤY HEAL
-        // =====================================================
 
         float healAmount = GetHealAmount();
 
-
-        // =====================================================
-        // THÊM VÀO INVENTORY
-        // =====================================================
-
         health.AddMedkit(
-            medkitType,
+            NetworkMedkitType,
             healAmount
         );
-
-
-        // =====================================================
-        // LOG
-        // =====================================================
-
-        Debug.Log(
-            "====================================\n" +
-            "[MedkitPickup] PICKUP THÀNH CÔNG\n" +
-            "Player: " +
-            playerObject.InputAuthority +
-            "\nType: " +
-            medkitType +
-            "\nHeal: " +
-            healAmount +
-            "\n===================================="
-        );
-
-
-        // =====================================================
-        // DESPAWN
-        // =====================================================
 
         Runner.Despawn(Object);
     }

@@ -136,6 +136,7 @@ MonoBehaviour:
   largeHealAmount: 100
   pickupKey: 102
   pickupDistance: 2
+  _NetworkMedkitType: 1
 --- !u!114 &7602014630875189509
 MonoBehaviour:
   m_ObjectHideFlags: 0

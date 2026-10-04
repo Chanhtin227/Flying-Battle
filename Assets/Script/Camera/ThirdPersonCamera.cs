@@ -4,35 +4,46 @@ using GameSettings;
 
 public class ThirdPersonCamera : MonoBehaviour
 {
+    // =========================================================
+    // TARGET
+    // =========================================================
 
     [Header("Target")]
-
     public Transform target;
 
 
+    // =========================================================
+    // REFERENCES
+    // =========================================================
 
     [Header("References")]
-
     public Camera cam;
 
 
+    // =========================================================
+    // MOUSE
+    // =========================================================
 
     [Header("Mouse")]
-
     public float mouseSensitivity = 150f;
 
 
+    // =========================================================
+    // NORMAL CAMERA
+    // =========================================================
 
     [Header("Normal Camera")]
-
     public Vector3 shoulderOffset =
         new Vector3(0.6f, 1.6f, 0f);
 
     public float normalDistance = 4f;
 
 
-    [Header("Aim")]
+    // =========================================================
+    // AIM
+    // =========================================================
 
+    [Header("Aim")]
     public bool isAiming = false;
 
 
@@ -57,78 +68,88 @@ public class ThirdPersonCamera : MonoBehaviour
     public float aimSpeed = 25f;
 
 
+    // =========================================================
+    // CAMERA ANGLE
+    // =========================================================
 
     [Header("Camera Angle")]
-
     public float minPitch = -30f;
-
     public float maxPitch = 60f;
 
 
+    // =========================================================
+    // ROTATION SMOOTH
+    // =========================================================
 
     [Header("Rotation Smooth")]
-
     public float rotationSmoothTime = 0.06f;
 
 
+    // =========================================================
+    // WALL COLLISION
+    // =========================================================
 
     [Header("Wall Collision")]
-
     public LayerMask wallLayer;
 
     public float cameraRadius = 0.2f;
-
     public float minDistance = 0.5f;
-
     public float collisionOffset = 0.1f;
 
 
-
+    // =========================================================
+    // CAMERA BOB
+    // =========================================================
 
     [Header("Camera Bob")]
-
     public float walkBobAmount = 0.01f;
-
     public float walkBobSpeed = 7f;
 
     public float runBobAmount = 0.025f;
-
     public float runBobSpeed = 11f;
 
 
-
+    // =========================================================
+    // PRIVATE
+    // =========================================================
 
     private float yaw;
-
     private float pitch;
 
     private float bobTimer;
 
     private float distance;
 
+    private float distanceVelocity;
+
     private Vector3 currentShoulderOffset;
 
     private PlayerWeapon playerWeapon;
-
     private PlayerHealth playerHealth;
 
     private NetworkObject networkObject;
 
 
+    // =========================================================
+    // START
+    // =========================================================
+
     private void Start()
     {
-
+        // -----------------------------------------------------
+        // CAMERA
+        // -----------------------------------------------------
 
         if (cam == null)
         {
             cam =
-                GetComponentInChildren<Camera>(
-                    true
-                );
+                GetComponentInChildren<Camera>(true);
         }
 
 
-
+        // -----------------------------------------------------
+        // TARGET
+        // -----------------------------------------------------
 
         if (target != null)
         {
@@ -159,7 +180,9 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
-
+        // -----------------------------------------------------
+        // CHỈ LOCAL PLAYER CÓ CAMERA
+        // -----------------------------------------------------
 
         if (
             networkObject != null &&
@@ -178,12 +201,20 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // -----------------------------------------------------
+        // CURSOR
+        // -----------------------------------------------------
 
         Cursor.lockState =
             CursorLockMode.Locked;
 
-        Cursor.visible = false;
+        Cursor.visible =
+            false;
 
+
+        // -----------------------------------------------------
+        // CAMERA FOV
+        // -----------------------------------------------------
 
         if (cam != null)
         {
@@ -192,13 +223,25 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // -----------------------------------------------------
+        // INITIAL DISTANCE
+        // -----------------------------------------------------
+
         distance =
             normalDistance;
 
 
+        // -----------------------------------------------------
+        // INITIAL SHOULDER
+        // -----------------------------------------------------
+
         currentShoulderOffset =
             shoulderOffset;
 
+
+        // -----------------------------------------------------
+        // INITIAL YAW
+        // -----------------------------------------------------
 
         if (target != null)
         {
@@ -211,6 +254,10 @@ public class ThirdPersonCamera : MonoBehaviour
                 transform.eulerAngles.y;
         }
 
+
+        // -----------------------------------------------------
+        // INITIAL PITCH
+        // -----------------------------------------------------
 
         pitch =
             transform.eulerAngles.x;
@@ -231,9 +278,15 @@ public class ThirdPersonCamera : MonoBehaviour
     }
 
 
+    // =========================================================
+    // LATE UPDATE
+    // =========================================================
 
     private void LateUpdate()
     {
+        // -----------------------------------------------------
+        // CHECK
+        // -----------------------------------------------------
 
         if (
             target == null ||
@@ -243,6 +296,10 @@ public class ThirdPersonCamera : MonoBehaviour
             return;
         }
 
+
+        // -----------------------------------------------------
+        // PLAYER HEALTH
+        // -----------------------------------------------------
 
         if (playerHealth == null)
         {
@@ -258,6 +315,9 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // -----------------------------------------------------
+        // DEAD
+        // -----------------------------------------------------
 
         if (
             playerHealth != null &&
@@ -267,6 +327,10 @@ public class ThirdPersonCamera : MonoBehaviour
             return;
         }
 
+
+        // -----------------------------------------------------
+        // PLAYER WEAPON
+        // -----------------------------------------------------
 
         if (playerWeapon == null)
         {
@@ -282,9 +346,19 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // =====================================================
+        // INVENTORY STATE
+        // =====================================================
 
-        bool canAim =
-            false;
+        bool inventoryOpen =
+            InventoryUI.IsInventoryOpen;
+
+
+        // =====================================================
+        // AIM
+        // =====================================================
+
+        bool canAim = false;
 
 
         if (playerWeapon != null)
@@ -298,34 +372,82 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // -----------------------------------------------------
+        // KHÔNG AIM KHI MỞ BALO
+        // -----------------------------------------------------
 
-        isAiming =
-            canAim &&
-            Input.GetMouseButton(1);
-
-
-
-        float mouseX =
-            Input.GetAxis("Mouse X");
-
-
-        float mouseY =
-            Input.GetAxis("Mouse Y");
-
-
-
-        // Độ nhạy = giá trị gốc của camera (mouseSensitivity) x hệ số người chơi chỉnh trong Cài đặt
-        float sensitivityScale =
-            GameplaySettings.MouseSensitivity;
+        if (inventoryOpen)
+        {
+            isAiming = false;
+        }
+        else
+        {
+            isAiming =
+                canAim &&
+                Input.GetMouseButton(1);
+        }
 
 
-        yaw +=
-            mouseX *
-            mouseSensitivity *
-            sensitivityScale *
-            Time.deltaTime;
+        // =====================================================
+        // CAMERA ROTATION
+        // =====================================================
+
+        if (!inventoryOpen)
+        {
+            // -------------------------------------------------
+            // MOUSE INPUT
+            // -------------------------------------------------
+
+            float mouseX =
+                Input.GetAxis("Mouse X");
 
 
+            float mouseY =
+                Input.GetAxis("Mouse Y");
+
+
+            // -------------------------------------------------
+            // GAME SETTINGS
+            // -------------------------------------------------
+
+            float sensitivityScale =
+                GameplaySettings.MouseSensitivity;
+
+
+            // -------------------------------------------------
+            // YAW
+            // -------------------------------------------------
+
+            yaw +=
+                mouseX *
+                mouseSensitivity *
+                sensitivityScale *
+                Time.deltaTime;
+
+
+            // -------------------------------------------------
+            // PITCH
+            // -------------------------------------------------
+
+            pitch -=
+                mouseY *
+                mouseSensitivity *
+                sensitivityScale *
+                Time.deltaTime;
+
+
+            pitch =
+                Mathf.Clamp(
+                    pitch,
+                    minPitch,
+                    maxPitch
+                );
+        }
+
+
+        // =====================================================
+        // ROTATION
+        // =====================================================
 
         Quaternion playerRotation =
             Quaternion.Euler(
@@ -335,23 +457,21 @@ public class ThirdPersonCamera : MonoBehaviour
             );
 
 
-        target.rotation =
-            playerRotation;
+        // =====================================================
+        // KHI ĐANG MỞ BALO
+        // CAMERA GIỮ NGUYÊN HƯỚNG
+        // =====================================================
 
-
-        pitch -=
-            mouseY *
-            mouseSensitivity *
-            sensitivityScale *
-            Time.deltaTime;
-
-
-        pitch =
-            Mathf.Clamp(
-                pitch,
-                minPitch,
-                maxPitch
-            );
+        if (inventoryOpen)
+        {
+            target.rotation =
+                playerRotation;
+        }
+        else
+        {
+            target.rotation =
+                playerRotation;
+        }
 
 
         Quaternion rotation =
@@ -362,6 +482,9 @@ public class ThirdPersonCamera : MonoBehaviour
             );
 
 
+        // =====================================================
+        // DISTANCE
+        // =====================================================
 
         float targetDistance =
             isAiming
@@ -386,6 +509,10 @@ public class ThirdPersonCamera : MonoBehaviour
             );
 
 
+        // =====================================================
+        // FOV
+        // =====================================================
+
         float targetFOV =
             isAiming
             ? aimFOV
@@ -408,12 +535,14 @@ public class ThirdPersonCamera : MonoBehaviour
             );
 
 
+        // =====================================================
+        // SHOULDER OFFSET
+        // =====================================================
 
         Vector3 wantedOffset =
             isAiming
             ? aimShoulderOffset
             : shoulderOffset;
-
 
 
         float offsetLerp =
@@ -432,11 +561,19 @@ public class ThirdPersonCamera : MonoBehaviour
             );
 
 
+        // =====================================================
+        // TARGET POSITION
+        // =====================================================
+
         Vector3 targetPos =
             target.position +
             rotation *
             currentShoulderOffset;
 
+
+        // =====================================================
+        // MOVEMENT
+        // =====================================================
 
         float horizontal =
             Input.GetAxis("Horizontal");
@@ -462,14 +599,16 @@ public class ThirdPersonCamera : MonoBehaviour
             isMoving;
 
 
-        float bobAmount;
+        // =====================================================
+        // CAMERA BOB
+        // =====================================================
 
+        float bobAmount;
         float bobSpeed;
 
 
         if (isAiming)
         {
-            // Gần như không bob khi aim
             bobAmount =
                 0.0015f;
 
@@ -494,6 +633,9 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // -----------------------------------------------------
+        // BOB TIMER
+        // -----------------------------------------------------
 
         if (isMoving)
         {
@@ -536,13 +678,15 @@ public class ThirdPersonCamera : MonoBehaviour
             );
 
 
+        // =====================================================
+        // CAMERA POSITION
+        // =====================================================
 
         Vector3 desiredCameraPos =
             targetPos -
             rotation *
             Vector3.forward *
             distance;
-
 
 
         Vector3 direction =
@@ -553,6 +697,10 @@ public class ThirdPersonCamera : MonoBehaviour
         float desiredDistance =
             direction.magnitude;
 
+
+        // =====================================================
+        // WALL COLLISION
+        // =====================================================
 
         if (
             desiredDistance >
@@ -593,6 +741,9 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // =====================================================
+        // APPLY CAMERA
+        // =====================================================
 
         cam.transform.position =
             desiredCameraPos;
@@ -602,11 +753,11 @@ public class ThirdPersonCamera : MonoBehaviour
             rotation;
 
 
+        // =====================================================
+        // FOLLOW TARGET
+        // =====================================================
 
         transform.position =
             target.position;
     }
-
-
-    private float distanceVelocity;
 }

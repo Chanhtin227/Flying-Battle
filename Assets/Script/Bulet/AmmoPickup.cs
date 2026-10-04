@@ -19,9 +19,41 @@ public class AmmoPickup : NetworkBehaviour
     public KeyCode pickupKey = KeyCode.F;
     public float pickupDistance = 3f;
 
+    [Networked] public AmmoType NetworkAmmoType { get; set; }
+    [Networked] public int NetworkAmmoAmount { get; set; }
+
+    public override void Spawned()
+    {
+        if (HasStateAuthority)
+        {
+            NetworkAmmoType = ammoType;
+            NetworkAmmoAmount = Mathf.Max(1, ammoAmount);
+        }
+
+        ammoType = NetworkAmmoType;
+        ammoAmount = NetworkAmmoAmount;
+    }
+
+    public override void Render()
+    {
+        ammoType = NetworkAmmoType;
+        ammoAmount = NetworkAmmoAmount;
+    }
+
+    public void SetupDroppedAmmo(AmmoType type, int amount)
+    {
+        if (!HasStateAuthority)
+            return;
+
+        NetworkAmmoType = type;
+        NetworkAmmoAmount = Mathf.Max(1, amount);
+
+        ammoType = NetworkAmmoType;
+        ammoAmount = NetworkAmmoAmount;
+    }
+
     private void Update()
     {
-        // Chỉ player local được phép nhận input
         if (PlayerMovement.LocalPlayer == null)
             return;
 
@@ -33,28 +65,19 @@ public class AmmoPickup : NetworkBehaviour
         if (distance > pickupDistance)
             return;
 
-        if (Input.GetKeyDown(pickupKey))
+        if (!Input.GetKeyDown(pickupKey))
+            return;
+
+        NetworkObject playerObject =
+            PlayerMovement.LocalPlayer.GetComponent<NetworkObject>();
+
+        if (playerObject == null)
         {
-            NetworkObject playerObject =
-                PlayerMovement.LocalPlayer.GetComponent<NetworkObject>();
-
-            if (playerObject == null)
-            {
-                Debug.LogError(
-                    "[AmmoPickup] PLAYER KHÔNG CÓ NETWORKOBJECT!"
-                );
-
-                return;
-            }
-
-            Debug.Log(
-                "[AmmoPickup] NHẤN F - " +
-                "Ammo: " + ammoType +
-                " +" + ammoAmount
-            );
-
-            RequestPickupRpc(playerObject);
+            Debug.LogError("[AmmoPickup] PLAYER KHÔNG CÓ NETWORKOBJECT!");
+            return;
         }
+
+        RequestPickupRpc(playerObject);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -76,52 +99,30 @@ public class AmmoPickup : NetworkBehaviour
 
         if (playerWeapon == null)
         {
-            Debug.LogError(
-                "[AmmoPickup] PLAYER KHÔNG CÓ PLAYERWEAPON!"
-            );
-
+            Debug.LogError("[AmmoPickup] PLAYER KHÔNG CÓ PLAYERWEAPON!");
             return;
         }
 
-        // Kiểm tra khoảng cách lại ở Host/State Authority
         float distance = Vector3.Distance(
             transform.position,
             playerObject.transform.position
         );
 
         if (distance > pickupDistance)
-        {
-            Debug.LogWarning(
-                "[AmmoPickup] PLAYER QUÁ XA: " +
-                distance
-            );
-
             return;
-        }
 
-        // ==============================
-        // CỘNG ĐẠN
-        // ==============================
+        if (NetworkAmmoAmount <= 0)
+            return;
 
-        if (ammoType == AmmoType.Rifle)
+        if (NetworkAmmoType == AmmoType.Rifle)
         {
-            playerWeapon.AddRifleAmmo(ammoAmount);
+            playerWeapon.AddRifleAmmo(NetworkAmmoAmount);
         }
-        else if (ammoType == AmmoType.Pistol)
+        else
         {
-            playerWeapon.AddPistolAmmo(ammoAmount);
+            playerWeapon.AddPistolAmmo(NetworkAmmoAmount);
         }
 
-        Debug.Log(
-            "====================================\n" +
-            "NHẶT ĐẠN THÀNH CÔNG\n" +
-            "Player: " + playerObject.InputAuthority +
-            "\nAmmo Type: " + ammoType +
-            "\nAmount: +" + ammoAmount +
-            "\n===================================="
-        );
-
-        // Xóa hộp đạn khỏi map
         Runner.Despawn(Object);
     }
 }
