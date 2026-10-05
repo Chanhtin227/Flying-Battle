@@ -241,7 +241,6 @@ public class PlayerWeapon : NetworkBehaviour
     [Header("Bat")]
 
     public float batDamage = 30f;
-    public float batRange = 4f;
 
 
     // =========================================================
@@ -251,7 +250,6 @@ public class PlayerWeapon : NetworkBehaviour
     [Header("Shovel")]
 
     public float shovelDamage = 40f;
-    public float shovelRange = 4f;
 
 
     // =========================================================
@@ -260,8 +258,11 @@ public class PlayerWeapon : NetworkBehaviour
 
     [Header("Melee AOE")]
 
-    [Tooltip("Thời gian giữa 2 lần đánh")]
-    public float meleeCooldown = 0.5f;
+    [Tooltip("Thời gian giữa 2 lần đánh của Bat")]
+    public float batCooldown = 0.5f;
+
+    [Tooltip("Thời gian giữa 2 lần đánh của Shovel")]
+    public float shovelCooldown = 1.5f;
 
     [Tooltip("Tầm đánh melee")]
     public float meleeRange = 4f;
@@ -2334,9 +2335,25 @@ public class PlayerWeapon : NetworkBehaviour
             return;
 
 
+        float currentMeleeCooldown;
+
+        if (CurrentWeapon == WeaponType.Bat)
+        {
+            currentMeleeCooldown = batCooldown;
+        }
+        else if (CurrentWeapon == WeaponType.Shovel)
+        {
+            currentMeleeCooldown = shovelCooldown;
+        }
+        else
+        {
+            return;
+        }
+
+
         nextMeleeTime =
             Time.time +
-            meleeCooldown;
+            currentMeleeCooldown;
 
 
         // =====================================================

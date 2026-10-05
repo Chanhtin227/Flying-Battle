@@ -18,7 +18,13 @@ public class WeaponInfoUI : MonoBehaviour
 
     [Header("Basic Info")]
     public TMP_Text weaponNameText;
+
+    [Tooltip("Chỉ dùng để hiển thị icon vũ khí: Rifle, Pistol, Bat, Shovel")]
     public Image weaponIcon;
+
+    [Tooltip("Chỉ dùng để hiển thị icon item: Ammo, Medkit")]
+    public Image itemIcon;
+
     public TMP_Text descriptionText;
 
 
@@ -699,7 +705,7 @@ public class WeaponInfoUI : MonoBehaviour
             "Rifle"
         );
 
-        SetIcon(
+        SetWeaponIcon(
             rifleIcon
         );
 
@@ -745,7 +751,7 @@ public class WeaponInfoUI : MonoBehaviour
             "Pistol"
         );
 
-        SetIcon(
+        SetWeaponIcon(
             pistolIcon
         );
 
@@ -791,7 +797,7 @@ public class WeaponInfoUI : MonoBehaviour
             "Bat"
         );
 
-        SetIcon(
+        SetWeaponIcon(
             batIcon
         );
 
@@ -840,7 +846,7 @@ public class WeaponInfoUI : MonoBehaviour
             "Shovel"
         );
 
-        SetIcon(
+        SetWeaponIcon(
             shovelIcon
         );
 
@@ -1097,7 +1103,7 @@ public class WeaponInfoUI : MonoBehaviour
 
     private void ShowItemInfo(
         string itemName,
-        Sprite itemIcon,
+        Sprite itemSprite,
         string itemDescription,
         string itemInfo)
     {
@@ -1117,9 +1123,9 @@ public class WeaponInfoUI : MonoBehaviour
         );
 
 
-        // Icon
-        SetIcon(
-            itemIcon
+        // Icon item: Ammo / Medkit
+        SetItemIcon(
+            itemSprite
         );
 
 
@@ -1566,7 +1572,7 @@ public class WeaponInfoUI : MonoBehaviour
         )
         {
             ammoText.text =
-                "Don't use bullets";
+                "None";
 
             return;
         }
@@ -1578,7 +1584,7 @@ public class WeaponInfoUI : MonoBehaviour
         )
         {
             ammoText.text =
-                "Don't use bullets";
+                "None";
 
             return;
         }
@@ -1621,12 +1627,20 @@ public class WeaponInfoUI : MonoBehaviour
 
 
     // =========================================================
-    // SET ICON
+    // SET WEAPON ICON
     // =========================================================
 
-    private void SetIcon(
+    private void SetWeaponIcon(
         Sprite icon)
     {
+        // Ẩn icon item khi đang xem vũ khí
+        if (itemIcon != null)
+        {
+            itemIcon.sprite = null;
+            itemIcon.enabled = false;
+        }
+
+
         if (weaponIcon == null)
         {
             return;
@@ -1637,6 +1651,35 @@ public class WeaponInfoUI : MonoBehaviour
             icon;
 
         weaponIcon.enabled =
+            icon != null;
+    }
+
+
+    // =========================================================
+    // SET ITEM ICON
+    // =========================================================
+
+    private void SetItemIcon(
+        Sprite icon)
+    {
+        // Ẩn icon vũ khí khi đang xem Ammo / Medkit
+        if (weaponIcon != null)
+        {
+            weaponIcon.sprite = null;
+            weaponIcon.enabled = false;
+        }
+
+
+        if (itemIcon == null)
+        {
+            return;
+        }
+
+
+        itemIcon.sprite =
+            icon;
+
+        itemIcon.enabled =
             icon != null;
     }
 
@@ -1724,6 +1767,13 @@ public class WeaponInfoUI : MonoBehaviour
         {
             weaponIcon.sprite = null;
             weaponIcon.enabled = false;
+        }
+
+
+        if (itemIcon != null)
+        {
+            itemIcon.sprite = null;
+            itemIcon.enabled = false;
         }
 
 

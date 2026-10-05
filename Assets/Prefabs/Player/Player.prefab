@@ -1722,18 +1722,17 @@ MonoBehaviour:
   _Slot3: 0
   _Slot4: 0
   fpsCamera: {fileID: 9205494430748297962}
-  rifleDamage: 25
+  rifleDamage: 35
   rifleFireRate: 10
   rifleRange: 100
-  pistolDamage: 15
+  pistolDamage: 50
   pistolFireRate: 4
-  pistolRange: 70
-  batDamage: 30
-  batRange: 2
-  shovelDamage: 40
-  shovelRange: 2.5
-  meleeCooldown: 0.5
-  meleeRange: 3
+  pistolRange: 60
+  batDamage: 60
+  shovelDamage: 80
+  batCooldown: 0.5
+  shovelCooldown: 1.5
+  meleeRange: 5
   meleeAOEAngle: 50
   meleeHeight: 1
   rifleMuzzleFlash: {fileID: 8303531603554854164}
@@ -1780,7 +1779,7 @@ MonoBehaviour:
   useMedkitKey: 101
   _UsingMedkitType: 0
   respawnDelay: 5
-  respawnEdgePadding: 50
+  respawnEdgePadding: 30
   minRespawnDistance: 150
   minDistanceFromDeathPosition: 30
   respawnTryCount: 100

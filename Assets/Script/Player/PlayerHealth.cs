@@ -58,11 +58,26 @@ public class PlayerHealth : NetworkBehaviour
 
     [Header("Random Respawn")]
     public float respawnDelay = 5f;
-    public float respawnEdgePadding = 5f;
+
+    [Tooltip("Tỉ lệ vùng giữa map được phép respawn. 0.5 = chỉ dùng 50% khu vực giữa Terrain.")]
+    [Range(0.1f, 1f)]
+    public float centerRespawnPercent = 0.5f;
+
+    [Tooltip("Khoảng cách tối thiểu giữa Player vừa hồi sinh và Player khác.")]
     public float minRespawnDistance = 10f;
-    public float minDistanceFromDeathPosition = 30f;
-    public int respawnTryCount = 100;
+
+    [Tooltip("Khoảng cách tối thiểu so với vị trí vừa chết.")]
+    public float minDistanceFromDeathPosition = 20f;
+
+    [Tooltip("Số lần thử tìm vị trí hồi sinh an toàn.")]
+    public int respawnTryCount = 50;
+
+    [Tooltip("Nâng Player lên khỏi mặt Terrain một chút.")]
     public float respawnHeightOffset = 1f;
+
+    [Tooltip("Độ dốc tối đa cho phép hồi sinh. Nhỏ hơn sẽ tránh sườn núi.")]
+    [Range(0f, 60f)]
+    public float maxRespawnSlope = 25f;
 
     [Networked] public TickTimer RespawnTimer { get; set; }
 
@@ -908,79 +923,333 @@ public class PlayerHealth : NetworkBehaviour
             Debug.LogError(
                 "[PlayerHealth] Không tìm thấy Terrain để random respawn!"
             );
+
             return false;
         }
+
+
+        TerrainData terrainData =
+            respawnTerrain.terrainData;
 
         Vector3 terrainPosition =
             respawnTerrain.transform.position;
 
         Vector3 terrainSize =
-            respawnTerrain.terrainData.size;
+            terrainData.size;
 
-        float padX = Mathf.Min(
-            respawnEdgePadding,
-            terrainSize.x / 3f
-        );
 
-        float padZ = Mathf.Min(
-            respawnEdgePadding,
-            terrainSize.z / 3f
-        );
+        // =====================================================
+        // CHỈ RESPAWN Ở KHU VỰC GẦN GIỮA MAP
+        //
+        // Ví dụ:
+        // centerRespawnPercent = 0.5
+        // => chỉ dùng 50% diện tích giữa Terrain.
+        // => bỏ 25% mỗi bên của map.
+        // =====================================================
 
-        float minX = terrainPosition.x + padX;
-        float maxX = terrainPosition.x + terrainSize.x - padX;
-        float minZ = terrainPosition.z + padZ;
-        float maxZ = terrainPosition.z + terrainSize.z - padZ;
-
-        Vector2 deathXZ = new Vector2(
-            lastDeathPosition.x,
-            lastDeathPosition.z
-        );
-
-        for (int i = 0; i < respawnTryCount; i++)
-        {
-            Vector3 candidate = new Vector3(
-                Random.Range(minX, maxX),
-                0f,
-                Random.Range(minZ, maxZ)
+        float percent =
+            Mathf.Clamp(
+                centerRespawnPercent,
+                0.1f,
+                1f
             );
 
+
+        float centerX =
+            terrainPosition.x +
+            terrainSize.x * 0.5f;
+
+        float centerZ =
+            terrainPosition.z +
+            terrainSize.z * 0.5f;
+
+
+        float halfSpawnWidth =
+            terrainSize.x *
+            percent *
+            0.5f;
+
+        float halfSpawnLength =
+            terrainSize.z *
+            percent *
+            0.5f;
+
+
+        float minX =
+            centerX -
+            halfSpawnWidth;
+
+        float maxX =
+            centerX +
+            halfSpawnWidth;
+
+        float minZ =
+            centerZ -
+            halfSpawnLength;
+
+        float maxZ =
+            centerZ +
+            halfSpawnLength;
+
+
+        Vector2 deathXZ =
+            new Vector2(
+                lastDeathPosition.x,
+                lastDeathPosition.z
+            );
+
+
+        // Chỉ tìm Player khác 1 lần.
+        PlayerHealth[] players =
+            FindObjectsByType<PlayerHealth>(
+                FindObjectsInactive.Exclude
+            );
+
+
+        int tryCount =
+            Mathf.Max(
+                1,
+                respawnTryCount
+            );
+
+
+        // =====================================================
+        // THỬ TÌM VỊ TRÍ AN TOÀN
+        // =====================================================
+
+        for (int i = 0;
+             i < tryCount;
+             i++)
+        {
+            float randomX =
+                Random.Range(
+                    minX,
+                    maxX
+                );
+
+            float randomZ =
+                Random.Range(
+                    minZ,
+                    maxZ
+                );
+
+
+            Vector3 candidate =
+                new Vector3(
+                    randomX,
+                    0f,
+                    randomZ
+                );
+
+
+            // =================================================
+            // KIỂM TRA ĐỘ DỐC TERRAIN
+            // =================================================
+
+            float normalizedX =
+                Mathf.InverseLerp(
+                    terrainPosition.x,
+                    terrainPosition.x +
+                    terrainSize.x,
+                    randomX
+                );
+
+            float normalizedZ =
+                Mathf.InverseLerp(
+                    terrainPosition.z,
+                    terrainPosition.z +
+                    terrainSize.z,
+                    randomZ
+                );
+
+
+            Vector3 terrainNormal =
+                terrainData.GetInterpolatedNormal(
+                    normalizedX,
+                    normalizedZ
+                );
+
+
+            float slope =
+                Vector3.Angle(
+                    terrainNormal,
+                    Vector3.up
+                );
+
+
+            // Quá dốc -> bỏ.
+            if (slope > maxRespawnSlope)
+            {
+                continue;
+            }
+
+
+            // =================================================
+            // LẤY ĐỘ CAO TERRAIN
+            // =================================================
+
             candidate.y =
-                respawnTerrain.SampleHeight(candidate) +
+                respawnTerrain.SampleHeight(
+                    candidate
+                ) +
                 terrainPosition.y +
                 respawnHeightOffset;
 
-            Vector2 candidateXZ = new Vector2(
-                candidate.x,
-                candidate.z
-            );
+
+            // =================================================
+            // KHÔNG QUÁ GẦN CHỖ VỪA CHẾT
+            // =================================================
+
+            Vector2 candidateXZ =
+                new Vector2(
+                    candidate.x,
+                    candidate.z
+                );
+
 
             float distanceFromDeath =
-                Vector2.Distance(deathXZ, candidateXZ);
+                Vector2.Distance(
+                    deathXZ,
+                    candidateXZ
+                );
 
-            // Không hồi sinh quá gần nơi vừa chết
-            if (distanceFromDeath < minDistanceFromDeathPosition)
+
+            if (distanceFromDeath <
+                minDistanceFromDeathPosition)
+            {
                 continue;
+            }
 
-            // Không hồi sinh quá gần Player khác
-            if (!IsRespawnPositionSafe(candidate))
+
+            // =================================================
+            // KHÔNG QUÁ GẦN PLAYER KHÁC
+            // =================================================
+
+            if (!IsRespawnPositionSafe(
+                candidate,
+                players))
+            {
                 continue;
+            }
 
-            spawnPosition = candidate;
+
+            spawnPosition =
+                candidate;
+
 
             Debug.Log(
-                "[PlayerHealth] Respawn Point OK | Try: " + (i + 1) +
-                " | Distance From Death: " + distanceFromDeath.ToString("F1") +
-                " | Position: " + candidate
+                "[PlayerHealth] CENTER RESPAWN OK" +
+                " | Try = " + (i + 1) +
+                " | Slope = " +
+                slope.ToString("F1") +
+                " | Distance From Death = " +
+                distanceFromDeath.ToString("F1") +
+                " | Position = " +
+                candidate
             );
+
 
             return true;
         }
 
-        Debug.LogWarning(
-            "[PlayerHealth] Không tìm được vị trí respawn sau " +
-            respawnTryCount + " lần thử."
+
+        // =====================================================
+        // FALLBACK
+        //
+        // Vẫn chỉ lấy ở vùng giữa map.
+        // Dùng để tránh bị kẹt ở giây 1.
+        // =====================================================
+
+        for (int i = 0; i < 20; i++)
+        {
+            float randomX =
+                Random.Range(
+                    minX,
+                    maxX
+                );
+
+            float randomZ =
+                Random.Range(
+                    minZ,
+                    maxZ
+                );
+
+
+            float normalizedX =
+                Mathf.InverseLerp(
+                    terrainPosition.x,
+                    terrainPosition.x +
+                    terrainSize.x,
+                    randomX
+                );
+
+            float normalizedZ =
+                Mathf.InverseLerp(
+                    terrainPosition.z,
+                    terrainPosition.z +
+                    terrainSize.z,
+                    randomZ
+                );
+
+
+            Vector3 terrainNormal =
+                terrainData.GetInterpolatedNormal(
+                    normalizedX,
+                    normalizedZ
+                );
+
+
+            float slope =
+                Vector3.Angle(
+                    terrainNormal,
+                    Vector3.up
+                );
+
+
+            // Fallback vẫn không cho spawn trên sườn núi quá dốc.
+            if (slope > maxRespawnSlope)
+            {
+                continue;
+            }
+
+
+            Vector3 fallback =
+                new Vector3(
+                    randomX,
+                    0f,
+                    randomZ
+                );
+
+
+            fallback.y =
+                respawnTerrain.SampleHeight(
+                    fallback
+                ) +
+                terrainPosition.y +
+                respawnHeightOffset;
+
+
+            spawnPosition =
+                fallback;
+
+
+            Debug.LogWarning(
+                "[PlayerHealth] Dùng CENTER FALLBACK RESPawn" +
+                " | Position = " +
+                fallback +
+                " | Slope = " +
+                slope.ToString("F1")
+            );
+
+
+            return true;
+        }
+
+
+        Debug.LogError(
+            "[PlayerHealth] Không tìm được vị trí hồi sinh phẳng ở vùng giữa map."
         );
+
 
         return false;
     }
@@ -991,18 +1260,27 @@ public class PlayerHealth : NetworkBehaviour
     // =========================================================
 
     private bool IsRespawnPositionSafe(
-        Vector3 position)
+        Vector3 position,
+        PlayerHealth[] players)
     {
-        // FIX:
-        // Unity mới không cần FindObjectsSortMode.None
-        PlayerHealth[] players =
-            FindObjectsByType<PlayerHealth>(
-                FindObjectsInactive.Exclude
+        if (players == null)
+        {
+            return true;
+        }
+
+
+        Vector2 spawnPosition =
+            new Vector2(
+                position.x,
+                position.z
             );
 
 
         foreach (PlayerHealth player in players)
         {
+            if (player == null)
+                continue;
+
             if (player == this)
                 continue;
 
@@ -1020,13 +1298,6 @@ public class PlayerHealth : NetworkBehaviour
                 new Vector2(
                     player.transform.position.x,
                     player.transform.position.z
-                );
-
-
-            Vector2 spawnPosition =
-                new Vector2(
-                    position.x,
-                    position.z
                 );
 
 
