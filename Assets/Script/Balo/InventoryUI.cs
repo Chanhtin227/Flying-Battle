@@ -351,6 +351,24 @@ public class InventoryUI : MonoBehaviour
 
 
         // -----------------------------------------------------
+        // PLAYER ĐANG CHẾT / ĐANG CHỜ HỒI SINH
+        //
+        // Không cho mở balo.
+        // Nếu balo đang mở thì đóng ngay.
+        // -----------------------------------------------------
+
+        if (IsLocalPlayerDead())
+        {
+            if (isOpen)
+            {
+                CloseInventory();
+            }
+
+            return;
+        }
+
+
+        // -----------------------------------------------------
         // TRACK ITEM
         // -----------------------------------------------------
 
@@ -451,6 +469,30 @@ public class InventoryUI : MonoBehaviour
             playerHealth =
                 localPlayer.GetComponent<PlayerHealth>();
         }
+    }
+
+
+    // =========================================================
+    // CHECK LOCAL PLAYER DEAD
+    // =========================================================
+
+    private bool IsLocalPlayerDead()
+    {
+        // playerHealth đã được FindLocalPlayer() gán.
+        if (playerHealth == null)
+        {
+            return false;
+        }
+
+
+        // Inventory này chỉ quan tâm Player local.
+        if (!playerHealth.HasInputAuthority)
+        {
+            return false;
+        }
+
+
+        return playerHealth.IsDead;
     }
 
 
@@ -638,6 +680,23 @@ public class InventoryUI : MonoBehaviour
         }
 
 
+        // Nếu Player đang chết / đang chờ hồi sinh:
+        // tuyệt đối không cho mở Inventory.
+        if (IsLocalPlayerDead())
+        {
+            if (isOpen)
+            {
+                CloseInventory();
+            }
+
+            Debug.Log(
+                "[InventoryUI] Không thể mở balo khi Player đang chết."
+            );
+
+            return;
+        }
+
+
         if (isOpen)
         {
             CloseInventory();
@@ -655,6 +714,15 @@ public class InventoryUI : MonoBehaviour
 
     private void OpenInventory()
     {
+        // Chặn thêm một lớp bảo vệ.
+        // Kể cả nơi khác gọi OpenInventory thì Player chết
+        // vẫn không thể mở balo.
+        if (IsLocalPlayerDead())
+        {
+            return;
+        }
+
+
         isOpen = true;
         IsInventoryOpen = true;
 
