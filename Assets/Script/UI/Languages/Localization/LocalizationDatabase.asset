@@ -161,11 +161,11 @@ MonoBehaviour:
     Chinese: "\u64CD\u4F5C\u6307\u5357"
   - Key: more1
     Vietnamese: "Kh\xE1c"
-    English: different
+    English: Different
     Japanese: "\u305D\u306E\u4ED6"
     Chinese: "\u5176\u4ED6"
   - Key: more2
-    Vietnamese: "Li\xEAn k\u1EBFtv\xE0 th\xF4ng tin th\xEAm"
+    Vietnamese: "Li\xEAn k\u1EBFt v\xE0 th\xF4ng tin th\xEAm"
     English: Links and more info
     Japanese: "\u30EA\u30F3\u30AF\u3068\u8FFD\u52A0\u60C5\u5831"
     Chinese: "\u94FE\u63A5\u548C\u66F4\u591A\u4FE1\u606F"
