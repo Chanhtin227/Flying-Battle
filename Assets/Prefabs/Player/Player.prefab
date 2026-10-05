@@ -1780,8 +1780,9 @@ MonoBehaviour:
   useMedkitKey: 101
   _UsingMedkitType: 0
   respawnDelay: 5
-  respawnEdgePadding: 25
+  respawnEdgePadding: 50
   minRespawnDistance: 150
+  minDistanceFromDeathPosition: 30
   respawnTryCount: 100
   respawnHeightOffset: 1
   playerCameraController: {fileID: 8953495007843940927}
@@ -1842,7 +1843,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
