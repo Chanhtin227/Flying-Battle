@@ -9,27 +9,31 @@ public class IntroVideoController : MonoBehaviour
     public VideoPlayer videoPlayer;
 
     [Header("Logo / Tên game")]
-    public CanvasGroup titleGroup;    
-    public RectTransform titleRect;    
-    public double showTitleAtSecond = 10.0; 
+    public CanvasGroup titleGroup;
+    public RectTransform titleRect;
+    public double showTitleAtSecond = 10.0;
 
     [Header("Chữ 'Chạm để vào game'")]
-    public CanvasGroup tapTextGroup;    
-    public float delayAfterTitle = 1f; 
-    public float blinkSpeed = 0.8f;     
-    public float minAlpha = 0.3f;   
-    public float maxAlpha = 1f;     
+    public CanvasGroup tapTextGroup;
+    public float delayAfterTitle = 1f;
+    public float blinkSpeed = 0.8f;
+    public float minAlpha = 0.3f;
+    public float maxAlpha = 1f;
 
     [Header("Vùng chạm toàn màn hình")]
-    public CanvasGroup tapAreaGroup;    
+    public CanvasGroup tapAreaGroup;
 
     [Header("Chuyển scene")]
     public string nextSceneName = "MainMenu";
 
     private bool titleShown = false;
+    private Vector3 titleOriginalScale;   // scale gốc của title (đã chỉnh trong Editor)
 
     void Start()
     {
+        // Lưu lại scale bạn đã chỉnh trong Inspector
+        titleOriginalScale = titleRect.localScale;
+
         titleGroup.alpha = 0;
         titleRect.localScale = Vector3.zero;
 
@@ -55,7 +59,7 @@ public class IntroVideoController : MonoBehaviour
 
         yield return new WaitForSeconds(delayAfterTitle);
 
-        tapAreaGroup.alpha = 1f;
+        tapAreaGroup.alpha = 0.5f;
         tapAreaGroup.interactable = true;
         tapAreaGroup.blocksRaycasts = true;
 
@@ -74,15 +78,16 @@ public class IntroVideoController : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
 
+            // Hiệu ứng phóng ra có nảy nhẹ. Muốn bỏ nảy: scale = Mathf.SmoothStep(0f, 1f, t);
             float scale = Mathf.SmoothStep(0f, 1f, t) + Mathf.Sin(t * Mathf.PI) * 0.15f * (1 - t);
-            titleRect.localScale = Vector3.one * scale;
+            titleRect.localScale = titleOriginalScale * scale;
 
             titleGroup.alpha = Mathf.SmoothStep(0f, 1f, t);
 
             yield return null;
         }
 
-        titleRect.localScale = Vector3.one;
+        titleRect.localScale = titleOriginalScale;   // trả về đúng scale gốc
         titleGroup.alpha = 1;
     }
 

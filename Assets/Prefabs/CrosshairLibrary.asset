@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: CrosshairLibrary
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings.CrosshairLibrary
   sprites:
-  - {fileID: 21300000, guid: 872e8b28338ec074bbb29a6baa9b7ebb, type: 3}
+  - {fileID: 21300000, guid: df71add07b3c48d4fb813b653b86d072, type: 3}
   - {fileID: 21300000, guid: 4562b079071a4a74ab2fb649cb389469, type: 3}
   - {fileID: 21300000, guid: 70f98c740975bcb44b171a86027edc14, type: 3}
