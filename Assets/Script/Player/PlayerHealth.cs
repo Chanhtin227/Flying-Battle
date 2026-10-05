@@ -59,11 +59,15 @@ public class PlayerHealth : NetworkBehaviour
     [Header("Random Respawn")]
     public float respawnDelay = 5f;
     public float respawnEdgePadding = 5f;
-    public float minRespawnDistance = 5f;
-    public int respawnTryCount = 50;
+    public float minRespawnDistance = 10f;
+    public float minDistanceFromDeathPosition = 30f;
+    public int respawnTryCount = 100;
     public float respawnHeightOffset = 1f;
 
     [Networked] public TickTimer RespawnTimer { get; set; }
+
+    // Vị trí Player vừa chết để tránh hồi sinh lại gần chỗ cũ
+    private Vector3 lastDeathPosition;
 
 
     [Header("Respawn Lock")]
@@ -767,33 +771,33 @@ public class PlayerHealth : NetworkBehaviour
         if (IsDead)
             return;
 
-
         CancelMedkit();
-
 
         if (TryGetComponent(out PlayerWeapon playerWeapon))
         {
             playerWeapon.CancelReloadOnDeath();
         }
 
+        // Lưu vị trí chết TRƯỚC khi bắt đầu hồi sinh
+        lastDeathPosition = transform.position;
+
+        Debug.Log(
+            "[PlayerHealth] PLAYER DIE | Player: " + Object.InputAuthority +
+            " | Death Position: " + lastDeathPosition
+        );
 
         IsDead = true;
-
         CurrentHealth = 0f;
 
-
-        RespawnTimer =
-            TickTimer.CreateFromSeconds(
-                Runner,
-                respawnDelay
-            );
-
+        RespawnTimer = TickTimer.CreateFromSeconds(
+            Runner,
+            respawnDelay
+        );
 
         if (HasInputAuthority)
         {
             SetLocalRespawnLock(true);
         }
-
 
         Rpc_PlayDeath();
     }
@@ -808,85 +812,82 @@ public class PlayerHealth : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
-
-        CurrentHealth = maxHealth;
-
-        IsDead = false;
-
-
-        RespawnTimer = TickTimer.None;
-        MedkitTimer = TickTimer.None;
-
-
-        SmallMedkitCount = 0;
-        MediumMedkitCount = 0;
-        LargeMedkitCount = 0;
-
-        UsingMedkitType = 0;
-
-
-        if (TryGetComponent(out PlayerWeapon playerWeapon))
+        // Tìm vị trí mới TRƯỚC khi đặt IsDead = false
+        if (!TryGetRandomRespawnPosition(out Vector3 randomSpawnPosition))
         {
-            playerWeapon.ResetAllInventoryOnRespawn();
+            Debug.LogWarning(
+                "[PlayerHealth] Không tìm được vị trí respawn an toàn. Sẽ thử lại ở network tick tiếp theo."
+            );
+            return;
         }
 
+        Debug.Log(
+            "[PlayerHealth] RESPAWN TARGET | Death: " + lastDeathPosition +
+            " | New: " + randomSpawnPosition
+        );
 
         CharacterController characterController = null;
-
         TryGetComponent(out characterController);
 
-
-        // Tắt CharacterController trước khi teleport
         if (characterController != null)
         {
             characterController.enabled = false;
         }
 
-
-        if (TryGetRandomRespawnPosition(
-            out Vector3 randomSpawnPosition))
+        if (TryGetComponent(out PlayerMovement movement))
         {
-            // Đặt vị trí trực tiếp trên StateAuthority
-            transform.position = randomSpawnPosition;
-
-
-            /*
-             * FIX QUAN TRỌNG:
-             *
-             * NetworkCharacterControllerPrototype
-             * không tồn tại trong Fusion version hiện tại.
-             *
-             * Player hiện tại nếu có NetworkTransform
-             * thì dùng NetworkTransform.Teleport().
-             */
-
-            if (TryGetComponent(
-                out NetworkTransform netTransform))
-            {
-                netTransform.Teleport(
-                    randomSpawnPosition
-                );
-            }
+            movement.ResetMovementState();
         }
 
+        // Teleport bằng NetworkTransform để Fusion đồng bộ vị trí
+        if (TryGetComponent(out NetworkTransform netTransform))
+        {
+            netTransform.Teleport(randomSpawnPosition);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[PlayerHealth] Player không có NetworkTransform. Dùng transform.position."
+            );
+        }
 
-        // Bật lại CharacterController
+        // Đặt trực tiếp trên State Authority trong tick hiện tại
+        transform.position = randomSpawnPosition;
+
+        // Reset inventory
+        if (TryGetComponent(out PlayerWeapon playerWeapon))
+        {
+            playerWeapon.ResetAllInventoryOnRespawn();
+        }
+
+        SmallMedkitCount = 0;
+        MediumMedkitCount = 0;
+        LargeMedkitCount = 0;
+        UsingMedkitType = 0;
+        MedkitTimer = TickTimer.None;
+
+        // Chỉ cho sống lại SAU KHI đã teleport xong
+        CurrentHealth = maxHealth;
+        IsDead = false;
+        RespawnTimer = TickTimer.None;
+
         if (characterController != null)
         {
             characterController.enabled = true;
         }
 
-
-        // Reset movement
-        if (TryGetComponent(out PlayerMovement movement))
+        if (movement != null)
         {
             movement.ResetMovementState();
-
             movement.enabled = true;
         }
 
-
         Rpc_PlayRespawn();
+
+        Debug.Log(
+            "[PlayerHealth] RESPAWN SUCCESS | Player: " + Object.InputAuthority +
+            " | Position: " + transform.position
+        );
     }
 
 
@@ -899,23 +900,22 @@ public class PlayerHealth : NetworkBehaviour
     {
         spawnPosition = transform.position;
 
-
         FindRespawnTerrain();
-
 
         if (respawnTerrain == null ||
             respawnTerrain.terrainData == null)
         {
+            Debug.LogError(
+                "[PlayerHealth] Không tìm thấy Terrain để random respawn!"
+            );
             return false;
         }
-
 
         Vector3 terrainPosition =
             respawnTerrain.transform.position;
 
         Vector3 terrainSize =
             respawnTerrain.terrainData.size;
-
 
         float padX = Mathf.Min(
             respawnEdgePadding,
@@ -927,51 +927,60 @@ public class PlayerHealth : NetworkBehaviour
             terrainSize.z / 3f
         );
 
+        float minX = terrainPosition.x + padX;
+        float maxX = terrainPosition.x + terrainSize.x - padX;
+        float minZ = terrainPosition.z + padZ;
+        float maxZ = terrainPosition.z + terrainSize.z - padZ;
 
-        float minX =
-            terrainPosition.x + padX;
+        Vector2 deathXZ = new Vector2(
+            lastDeathPosition.x,
+            lastDeathPosition.z
+        );
 
-        float maxX =
-            terrainPosition.x
-            + terrainSize.x
-            - padX;
-
-
-        float minZ =
-            terrainPosition.z + padZ;
-
-        float maxZ =
-            terrainPosition.z
-            + terrainSize.z
-            - padZ;
-
-
-        for (int i = 0;
-             i < respawnTryCount;
-             i++)
+        for (int i = 0; i < respawnTryCount; i++)
         {
-            Vector3 candidate =
-                new Vector3(
-                    Random.Range(minX, maxX),
-                    0f,
-                    Random.Range(minZ, maxZ)
-                );
-
+            Vector3 candidate = new Vector3(
+                Random.Range(minX, maxX),
+                0f,
+                Random.Range(minZ, maxZ)
+            );
 
             candidate.y =
-                respawnTerrain.SampleHeight(candidate)
-                + terrainPosition.y
-                + respawnHeightOffset;
+                respawnTerrain.SampleHeight(candidate) +
+                terrainPosition.y +
+                respawnHeightOffset;
 
+            Vector2 candidateXZ = new Vector2(
+                candidate.x,
+                candidate.z
+            );
 
-            if (IsRespawnPositionSafe(candidate))
-            {
-                spawnPosition = candidate;
+            float distanceFromDeath =
+                Vector2.Distance(deathXZ, candidateXZ);
 
-                return true;
-            }
+            // Không hồi sinh quá gần nơi vừa chết
+            if (distanceFromDeath < minDistanceFromDeathPosition)
+                continue;
+
+            // Không hồi sinh quá gần Player khác
+            if (!IsRespawnPositionSafe(candidate))
+                continue;
+
+            spawnPosition = candidate;
+
+            Debug.Log(
+                "[PlayerHealth] Respawn Point OK | Try: " + (i + 1) +
+                " | Distance From Death: " + distanceFromDeath.ToString("F1") +
+                " | Position: " + candidate
+            );
+
+            return true;
         }
 
+        Debug.LogWarning(
+            "[PlayerHealth] Không tìm được vị trí respawn sau " +
+            respawnTryCount + " lần thử."
+        );
 
         return false;
     }

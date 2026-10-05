@@ -1701,6 +1701,10 @@ MonoBehaviour:
   pistolDropPrefab: {fileID: -7654561805207130772, guid: 0117b8222c7b85941a9ed069bc8d470b, type: 3}
   batDropPrefab: {fileID: 9073074160740678669, guid: df17277d0d78dd34e94590af26b57b05, type: 3}
   shovelDropPrefab: {fileID: -2677815843141767284, guid: a497c7e2553f8024d87cdb293e6da087, type: 3}
+  rifleAmmoDropPrefab: {fileID: 6628533313626474607, guid: cbedd99859b6a68429328d7ac0f45dc1, type: 3}
+  pistolAmmoDropPrefab: {fileID: 4715295223174157682, guid: c223871eefc46d142a522a4edacb8d62, type: 3}
+  rifleAmmoDropAmount: 1
+  pistolAmmoDropAmount: 1
   dropDistance: 1.2
   dropHeight: 0.5
   _CurrentWeapon: 0
@@ -1762,6 +1766,11 @@ MonoBehaviour:
   _SmallMedkitCount: 0
   _MediumMedkitCount: 0
   _LargeMedkitCount: 0
+  smallMedkitDropPrefab: {fileID: 3696487186503190778, guid: 02e7a969121e2ff46b45f6c9be464592, type: 3}
+  mediumMedkitDropPrefab: {fileID: 7602014630875189509, guid: 48fc523ce66d9e9408ab3ed80a060e7b, type: 3}
+  largeMedkitDropPrefab: {fileID: 4329497175582913693, guid: 53c01445823a58e41a652aabeb2ff580, type: 3}
+  medkitDropDistance: 1.2
+  medkitDropHeight: 0.5
   smallHealAmount: 50
   mediumHealAmount: 75
   largeHealAmount: 100
@@ -1771,8 +1780,9 @@ MonoBehaviour:
   useMedkitKey: 101
   _UsingMedkitType: 0
   respawnDelay: 5
-  respawnEdgePadding: 25
+  respawnEdgePadding: 50
   minRespawnDistance: 150
+  minDistanceFromDeathPosition: 30
   respawnTryCount: 100
   respawnHeightOffset: 1
   playerCameraController: {fileID: 8953495007843940927}
@@ -1833,7 +1843,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
