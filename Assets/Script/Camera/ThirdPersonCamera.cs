@@ -316,14 +316,20 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
         // -----------------------------------------------------
-        // DEAD
+        // DEAD / MATCH END = KHÓA HOÀN TOÀN CAMERA INPUT
         // -----------------------------------------------------
 
+        bool matchEnded =
+            MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded;
+
+
         if (
-            playerHealth != null &&
-            playerHealth.IsDead
+            matchEnded ||
+            (playerHealth != null && playerHealth.IsDead)
         )
         {
+            isAiming = false;
             return;
         }
 

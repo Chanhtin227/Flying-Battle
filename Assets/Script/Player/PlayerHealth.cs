@@ -9,6 +9,10 @@ public class PlayerHealth : NetworkBehaviour
     [Networked] public float CurrentHealth { get; set; }
     [Networked] public NetworkBool IsDead { get; set; }
 
+    [Networked] public int Kills { get; set; }
+
+    [Networked] public PlayerRef LastAttacker { get; set; }
+
 
     [Header("Medkit Inventory")]
     [Networked] public int SmallMedkitCount { get; set; }
@@ -64,7 +68,7 @@ public class PlayerHealth : NetworkBehaviour
     public float centerRespawnPercent = 0.5f;
 
     [Tooltip("Khoảng cách tối thiểu giữa Player vừa hồi sinh và Player khác.")]
-    public float minRespawnDistance = 10f;
+    public float minRespawnDistance = 30f;
 
     [Tooltip("Khoảng cách tối thiểu so với vị trí vừa chết.")]
     public float minDistanceFromDeathPosition = 20f;
@@ -80,6 +84,17 @@ public class PlayerHealth : NetworkBehaviour
     public float maxRespawnSlope = 25f;
 
     [Networked] public TickTimer RespawnTimer { get; set; }
+
+    [Header("Respawn Invulnerability")]
+    [Min(0f)]
+    public float respawnInvulnerabilityDuration = 5f;
+
+    [Networked] public TickTimer InvulnerabilityTimer { get; set; }
+
+    // Timer được State Authority tạo và Fusion đồng bộ cho các máy.
+    public bool IsInvulnerable =>
+        Object != null && Object.IsValid && Runner != null &&
+        !IsDead && !InvulnerabilityTimer.ExpiredOrNotRunning(Runner);
 
     // Vị trí Player vừa chết để tránh hồi sinh lại gần chỗ cũ
     private Vector3 lastDeathPosition;
@@ -102,6 +117,20 @@ public class PlayerHealth : NetworkBehaviour
     {
         if (!HasInputAuthority)
             return;
+
+
+        // MATCH END = KHÓA TOÀN BỘ CONTROL VÀ KHÔNG BẬT LẠI
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
+        {
+            SetLocalRespawnLock(true);
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            return;
+        }
+
 
         if (IsDead)
         {
@@ -127,6 +156,15 @@ public class PlayerHealth : NetworkBehaviour
     {
         if (!HasStateAuthority)
             return;
+
+
+        // Khi trận đã kết thúc thì không heal / không respawn nữa.
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
+        {
+            return;
+        }
+
 
         if (IsDead)
         {
@@ -650,6 +688,9 @@ public class PlayerHealth : NetworkBehaviour
 
             IsDead = false;
 
+            Kills = 0;
+            LastAttacker = PlayerRef.None;
+
             SmallMedkitCount = 0;
             MediumMedkitCount = 0;
             LargeMedkitCount = 0;
@@ -658,6 +699,7 @@ public class PlayerHealth : NetworkBehaviour
 
             MedkitTimer = TickTimer.None;
             RespawnTimer = TickTimer.None;
+            InvulnerabilityTimer = TickTimer.None;
         }
 
 
@@ -701,41 +743,134 @@ public class PlayerHealth : NetworkBehaviour
     {
         TakeDamage(
             damage,
-            transform.position
+            transform.position,
+            PlayerRef.None
         );
     }
 
+    // DAMAGE WITH ATTACKER POSITION
 
     public void TakeDamage(
         float damage,
         Vector3 attackerPosition)
     {
+        TakeDamage(
+            damage,
+            attackerPosition,
+            PlayerRef.None
+        );
+    }
+
+    // DAMAGE WITH ATTACKER
+
+    public void TakeDamage(
+        float damage,
+        Vector3 attackerPosition,
+        PlayerRef attacker)
+    {
+        // ONLY STATE AUTHORITY
+
         if (!HasStateAuthority)
             return;
 
-        if (IsDead)
+        // DEAD / INVULNERABLE
+
+        if (IsDead || IsInvulnerable)
             return;
 
+        // VALID DAMAGE
 
-        damage = Mathf.Max(damage, 0f);
+        damage =
+            Mathf.Max(
+                damage,
+                0f
+            );
 
 
-        CurrentHealth = Mathf.Clamp(
-            CurrentHealth - damage,
-            0f,
-            maxHealth
+        if (damage <= 0f)
+            return;
+
+        // SAVE HEALTH BEFORE DAMAGE
+
+        float healthBeforeDamage =
+            CurrentHealth;
+
+        // SAVE ATTACKER
+
+        if (attacker != PlayerRef.None &&
+            attacker != Object.InputAuthority)
+        {
+            LastAttacker =
+                attacker;
+        }
+
+        // APPLY DAMAGE
+
+        CurrentHealth =
+            Mathf.Clamp(
+                CurrentHealth - damage,
+                0f,
+                maxHealth
+            );
+
+        // ACTUAL DAMAGE
+        //
+        // Ví dụ:
+        // Enemy còn 10 HP
+        // Rifle gây 25
+        // => Total Damage chỉ +10
+
+        float actualDamage =
+            Mathf.Max(
+                0f,
+                healthBeforeDamage -
+                CurrentHealth
+            );
+
+        // ADD DAMAGE TO ATTACKER STATS
+
+        if (actualDamage > 0f &&
+            attacker != PlayerRef.None &&
+            attacker != Object.InputAuthority)
+        {
+            AddDamageToAttacker(
+                attacker,
+                actualDamage
+            );
+        }
+
+        // DEBUG
+
+        Debug.Log(
+            "[PlayerHealth] DAMAGE" +
+            " | Victim = " +
+            Object.InputAuthority +
+            " | Attacker = " +
+            attacker +
+            " | Damage = " +
+            damage.ToString("F0") +
+            " | Actual = " +
+            actualDamage.ToString("F0") +
+            " | HP = " +
+            CurrentHealth.ToString("F0") +
+            "/" +
+            maxHealth.ToString("F0")
         );
 
+        // CANCEL MEDKIT
 
         if (UsingMedkitType != 0)
         {
             CancelMedkit();
         }
 
+        // HIT / DIE
 
         if (CurrentHealth > 0f)
         {
-            Rpc_PlayHit(attackerPosition);
+            Rpc_PlayHit(
+                attackerPosition
+            );
         }
         else
         {
@@ -743,40 +878,134 @@ public class PlayerHealth : NetworkBehaviour
         }
     }
 
+    // ADD DAMAGE TO ATTACKER STATS
 
-    // =========================================================
+    private void AddDamageToAttacker(
+        PlayerRef attackerRef,
+        float damageAmount)
+    {
+        if (!HasStateAuthority)
+            return;
+
+
+        if (attackerRef == PlayerRef.None)
+            return;
+
+
+        if (damageAmount <= 0f)
+            return;
+
+        // FIND ALL PLAYERS
+
+        PlayerHealth[] players =
+            FindObjectsByType<PlayerHealth>(
+                FindObjectsInactive.Exclude
+            );
+
+        // FIND ATTACKER
+
+        foreach (PlayerHealth player in players)
+        {
+            if (player == null)
+                continue;
+
+
+            if (player.Object == null)
+                continue;
+
+
+            if (!player.Object.IsValid)
+                continue;
+
+
+            if (player.Object.InputAuthority !=
+                attackerRef)
+            {
+                continue;
+            }
+
+            // GET MATCH STATS TRACKER
+
+            MatchStatsTracker tracker =
+                player.GetComponent<MatchStatsTracker>();
+
+
+            if (tracker == null)
+            {
+                Debug.LogWarning(
+                    "[MatchStats] Player " +
+                    attackerRef +
+                    " chưa có MatchStatsTracker!"
+                );
+
+                return;
+            }
+
+            // ADD DAMAGE
+
+            tracker.AddDamage(
+                damageAmount
+            );
+
+
+            Debug.Log(
+                "[MatchStats]" +
+                " | Player = " +
+                attackerRef +
+                " | Damage +" +
+                damageAmount.ToString("F0") +
+                " | Total Damage = " +
+                tracker.TotalDamage.ToString("F0")
+            );
+
+
+            return;
+        }
+
+
+        Debug.LogWarning(
+            "[MatchStats] Không tìm thấy attacker" +
+            " | PlayerRef = " +
+            attackerRef
+        );
+    }
+
     // HIT RPC
-    // =========================================================
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    [Rpc(
+        RpcSources.StateAuthority,
+        RpcTargets.All
+    )]
     private void Rpc_PlayHit(
         Vector3 attackerPosition)
     {
-        if (TryGetComponent(out PlayerAnimation playerAnim))
+
+        // HIT ANIMATION
+
+        if (TryGetComponent(
+            out PlayerAnimation playerAnim))
         {
             playerAnim.Hit();
         }
 
+        // DAMAGE DIRECTION UI
 
         if (HasInputAuthority)
         {
-            // FIX:
-            // phải chỉ rõ DamageDirectionUI
             DamageDirectionUI damageUI =
                 FindAnyObjectByType<DamageDirectionUI>();
 
 
             if (damageUI != null)
             {
-                damageUI.ShowDamage(attackerPosition);
+                damageUI.ShowDamage(
+                    attackerPosition
+                );
             }
         }
     }
 
-
-    // =========================================================
     // DIE
-    // =========================================================
 
     private void Die()
     {
@@ -802,6 +1031,7 @@ public class PlayerHealth : NetworkBehaviour
         );
 
         IsDead = true;
+        InvulnerabilityTimer = TickTimer.None;
         CurrentHealth = 0f;
 
         RespawnTimer = TickTimer.CreateFromSeconds(
@@ -814,7 +1044,134 @@ public class PlayerHealth : NetworkBehaviour
             SetLocalRespawnLock(true);
         }
 
+        RegisterKillForLastAttacker();
+
         Rpc_PlayDeath();
+    }
+
+    // REGISTER SOLO KILL
+
+    private void RegisterKillForLastAttacker()
+    {
+        if (!HasStateAuthority)
+            return;
+
+
+        PlayerRef killerRef =
+            LastAttacker;
+
+
+        // Reset ngay để cùng một mạng không thể cộng kill 2 lần.
+        LastAttacker =
+            PlayerRef.None;
+
+
+        // Không có killer.
+        if (killerRef == PlayerRef.None)
+        {
+            Debug.LogWarning(
+                "[SOLO KILL] LastAttacker = NONE"
+            );
+
+            return;
+        }
+
+
+        // Không tính tự sát.
+        if (killerRef == Object.InputAuthority)
+        {
+            Debug.LogWarning(
+                "[SOLO KILL] Player tự giết chính mình."
+            );
+
+            return;
+        }
+
+        // TÌM PLAYER GÂY KILL
+        
+
+        PlayerHealth[] players =
+            FindObjectsByType<PlayerHealth>(
+                FindObjectsInactive.Exclude
+            );
+
+
+        PlayerHealth killerHealth =
+            null;
+
+
+        foreach (PlayerHealth player in players)
+        {
+            if (player == null)
+                continue;
+
+
+            if (player.Object == null)
+                continue;
+
+
+            if (!player.Object.IsValid)
+                continue;
+
+
+            if (player.Object.InputAuthority ==
+                killerRef)
+            {
+                killerHealth =
+                    player;
+
+                break;
+            }
+        }
+
+
+        // =====================================================
+        // KHÔNG TÌM THẤY KILLER
+        // =====================================================
+
+        if (killerHealth == null)
+        {
+            Debug.LogError(
+                "[SOLO KILL] KHÔNG TÌM THẤY KILLER | PlayerRef = " +
+                killerRef
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // CỘNG KILL
+        // =====================================================
+
+        killerHealth.Kills++;
+
+
+        Debug.Log(
+            "[SOLO KILL] THÀNH CÔNG | Killer = " +
+            killerRef +
+            " | Kills = " +
+            killerHealth.Kills
+        );
+
+
+        // =====================================================
+        // BÁO MATCH MANAGER
+        // =====================================================
+
+        if (MatchManager.Instance != null)
+        {
+            MatchManager.Instance.ReportKill(
+                killerRef,
+                killerHealth.Kills
+            );
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[SOLO KILL] MatchManager.Instance = NULL"
+            );
+        }
     }
 
 
@@ -826,6 +1183,15 @@ public class PlayerHealth : NetworkBehaviour
     {
         if (!HasStateAuthority)
             return;
+
+
+        // Không hồi sinh nếu trận đã kết thúc.
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
+        {
+            return;
+        }
+
 
         // Tìm vị trí mới TRƯỚC khi đặt IsDead = false
         if (!TryGetRandomRespawnPosition(out Vector3 randomSpawnPosition))
@@ -881,9 +1247,15 @@ public class PlayerHealth : NetworkBehaviour
         UsingMedkitType = 0;
         MedkitTimer = TickTimer.None;
 
+        // Bắt đầu bảo vệ chỉ sau khi tìm được vị trí và teleport thành công.
+        InvulnerabilityTimer = respawnInvulnerabilityDuration > 0f
+            ? TickTimer.CreateFromSeconds(Runner, respawnInvulnerabilityDuration)
+            : TickTimer.None;
+
         // Chỉ cho sống lại SAU KHI đã teleport xong
         CurrentHealth = maxHealth;
         IsDead = false;
+        LastAttacker = PlayerRef.None;
         RespawnTimer = TickTimer.None;
 
         if (characterController != null)
@@ -939,12 +1311,7 @@ public class PlayerHealth : NetworkBehaviour
 
 
         // =====================================================
-        // CHỈ RESPAWN Ở KHU VỰC GẦN GIỮA MAP
-        //
-        // Ví dụ:
-        // centerRespawnPercent = 0.5
-        // => chỉ dùng 50% diện tích giữa Terrain.
-        // => bỏ 25% mỗi bên của map.
+        // KHU VỰC RESPAWN GẦN GIỮA MAP
         // =====================================================
 
         float percent =
@@ -999,7 +1366,6 @@ public class PlayerHealth : NetworkBehaviour
             );
 
 
-        // Chỉ tìm Player khác 1 lần.
         PlayerHealth[] players =
             FindObjectsByType<PlayerHealth>(
                 FindObjectsInactive.Exclude
@@ -1008,14 +1374,36 @@ public class PlayerHealth : NetworkBehaviour
 
         int tryCount =
             Mathf.Max(
-                1,
+                10,
                 respawnTryCount
             );
 
 
         // =====================================================
-        // THỬ TÌM VỊ TRÍ AN TOÀN
+        // THAY VÌ BẮT BUỘC "PHẢI >= 30M",
+        // TA TÌM ĐIỂM TỐT NHẤT / XA NHẤT.
+        //
+        // Điều này giúp:
+        // - vẫn ưu tiên xa Player khác
+        // - không bị kẹt nếu vùng giữa map nhỏ
+        // - luôn có cơ hội hồi sinh
         // =====================================================
+
+        bool foundCandidate =
+            false;
+
+        Vector3 bestCandidate =
+            transform.position;
+
+        float bestScore =
+            float.MinValue;
+
+        float bestPlayerDistance =
+            0f;
+
+        float bestDeathDistance =
+            0f;
+
 
         for (int i = 0;
              i < tryCount;
@@ -1043,7 +1431,7 @@ public class PlayerHealth : NetworkBehaviour
 
 
             // =================================================
-            // KIỂM TRA ĐỘ DỐC TERRAIN
+            // KIỂM TRA ĐỘ DỐC
             // =================================================
 
             float normalizedX =
@@ -1077,7 +1465,6 @@ public class PlayerHealth : NetworkBehaviour
                 );
 
 
-            // Quá dốc -> bỏ.
             if (slope > maxRespawnSlope)
             {
                 continue;
@@ -1096,10 +1483,6 @@ public class PlayerHealth : NetworkBehaviour
                 respawnHeightOffset;
 
 
-            // =================================================
-            // KHÔNG QUÁ GẦN CHỖ VỪA CHẾT
-            // =================================================
-
             Vector2 candidateXZ =
                 new Vector2(
                     candidate.x,
@@ -1114,6 +1497,7 @@ public class PlayerHealth : NetworkBehaviour
                 );
 
 
+            // Không ưu tiên spawn sát nơi vừa chết.
             if (distanceFromDeath <
                 minDistanceFromDeathPosition)
             {
@@ -1122,30 +1506,77 @@ public class PlayerHealth : NetworkBehaviour
 
 
             // =================================================
-            // KHÔNG QUÁ GẦN PLAYER KHÁC
+            // TÍNH KHOẢNG CÁCH TỚI PLAYER GẦN NHẤT
             // =================================================
 
-            if (!IsRespawnPositionSafe(
-                candidate,
-                players))
+            float nearestPlayerDistance =
+                GetNearestLivingPlayerDistance(
+                    candidate,
+                    players
+                );
+
+
+            // =================================================
+            // ĐIỂM ƯU TIÊN
+            //
+            // Ưu tiên mạnh việc cách xa Player khác,
+            // sau đó mới xét khoảng cách với nơi vừa chết.
+            // =================================================
+
+            float score =
+                nearestPlayerDistance * 2f +
+                distanceFromDeath * 0.25f;
+
+
+            // Nếu đạt khoảng cách mong muốn thì cộng bonus lớn.
+            if (nearestPlayerDistance >=
+                minRespawnDistance)
             {
-                continue;
+                score += 10000f;
             }
 
 
+            if (!foundCandidate ||
+                score > bestScore)
+            {
+                foundCandidate =
+                    true;
+
+                bestScore =
+                    score;
+
+                bestCandidate =
+                    candidate;
+
+                bestPlayerDistance =
+                    nearestPlayerDistance;
+
+                bestDeathDistance =
+                    distanceFromDeath;
+            }
+        }
+
+
+        // =====================================================
+        // CÓ ĐIỂM HỢP LỆ
+        // =====================================================
+
+        if (foundCandidate)
+        {
             spawnPosition =
-                candidate;
+                bestCandidate;
 
 
             Debug.Log(
-                "[PlayerHealth] CENTER RESPAWN OK" +
-                " | Try = " + (i + 1) +
-                " | Slope = " +
-                slope.ToString("F1") +
+                "[PlayerHealth] BEST CENTER RESPAWN" +
+                " | Distance To Player = " +
+                bestPlayerDistance.ToString("F1") +
+                " | Desired Min = " +
+                minRespawnDistance.ToString("F1") +
                 " | Distance From Death = " +
-                distanceFromDeath.ToString("F1") +
+                bestDeathDistance.ToString("F1") +
                 " | Position = " +
-                candidate
+                bestCandidate
             );
 
 
@@ -1154,13 +1585,17 @@ public class PlayerHealth : NetworkBehaviour
 
 
         // =====================================================
-        // FALLBACK
+        // FALLBACK CUỐI
         //
-        // Vẫn chỉ lấy ở vùng giữa map.
-        // Dùng để tránh bị kẹt ở giây 1.
+        // Nếu không có điểm nào đạt điều kiện slope/death distance
+        // thì lấy một điểm phẳng gần giữa map.
+        // KHÔNG kiểm tra cứng Min Respawn Distance ở đây,
+        // để tránh Player bị kẹt không hồi sinh.
         // =====================================================
 
-        for (int i = 0; i < 20; i++)
+        for (int i = 0;
+             i < 30;
+             i++)
         {
             float randomX =
                 Random.Range(
@@ -1206,7 +1641,6 @@ public class PlayerHealth : NetworkBehaviour
                 );
 
 
-            // Fallback vẫn không cho spawn trên sườn núi quá dốc.
             if (slope > maxRespawnSlope)
             {
                 continue;
@@ -1234,11 +1668,11 @@ public class PlayerHealth : NetworkBehaviour
 
 
             Debug.LogWarning(
-                "[PlayerHealth] Dùng CENTER FALLBACK RESPawn" +
+                "[PlayerHealth] RESPAWN FALLBACK" +
+                " | Không tìm được điểm đạt khoảng cách mong muốn." +
+                " Dùng điểm phẳng gần giữa map để tránh bị kẹt." +
                 " | Position = " +
-                fallback +
-                " | Slope = " +
-                slope.ToString("F1")
+                fallback
             );
 
 
@@ -1247,11 +1681,95 @@ public class PlayerHealth : NetworkBehaviour
 
 
         Debug.LogError(
-            "[PlayerHealth] Không tìm được vị trí hồi sinh phẳng ở vùng giữa map."
+            "[PlayerHealth] Không tìm được bất kỳ vị trí hồi sinh hợp lệ nào."
         );
 
 
         return false;
+    }
+
+
+    // =========================================================
+    // GET NEAREST LIVING PLAYER DISTANCE
+    // =========================================================
+
+    private float GetNearestLivingPlayerDistance(
+        Vector3 position,
+        PlayerHealth[] players)
+    {
+        if (players == null ||
+            players.Length == 0)
+        {
+            return 99999f;
+        }
+
+
+        Vector2 spawnXZ =
+            new Vector2(
+                position.x,
+                position.z
+            );
+
+
+        float nearestDistance =
+            99999f;
+
+        bool foundOtherPlayer =
+            false;
+
+
+        foreach (PlayerHealth player in players)
+        {
+            if (player == null)
+                continue;
+
+            if (player == this)
+                continue;
+
+            if (player.Object == null)
+                continue;
+
+            if (!player.Object.IsValid)
+                continue;
+
+            if (player.IsDead)
+                continue;
+
+
+            foundOtherPlayer =
+                true;
+
+
+            Vector2 playerXZ =
+                new Vector2(
+                    player.transform.position.x,
+                    player.transform.position.z
+                );
+
+
+            float distance =
+                Vector2.Distance(
+                    spawnXZ,
+                    playerXZ
+                );
+
+
+            if (distance <
+                nearestDistance)
+            {
+                nearestDistance =
+                    distance;
+            }
+        }
+
+
+        if (!foundOtherPlayer)
+        {
+            return 99999f;
+        }
+
+
+        return nearestDistance;
     }
 
 

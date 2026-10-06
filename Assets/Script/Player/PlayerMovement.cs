@@ -149,6 +149,17 @@ public class PlayerMovement : NetworkBehaviour
             return;
 
 
+        // DEAD / MATCH END = KHÔNG NHẬN INPUT LOCAL
+        if (
+            (playerHealth != null && playerHealth.IsDead) ||
+            (MatchManager.Instance != null && MatchManager.Instance.MatchEnded)
+        )
+        {
+            jumpQueued = false;
+            return;
+        }
+
+
         // Chỉ ghi nhận đúng khung hình vừa bấm Space xuống (không tính giữ phím),
         // để 1 lần bấm chỉ tính là 1 lần nhảy, không nhảy lặp lại khi giữ.
         if (Input.GetKeyDown(KeyCode.Space))
@@ -173,8 +184,8 @@ public class PlayerMovement : NetworkBehaviour
         // =====================================================
 
         if (
-            playerHealth != null &&
-            playerHealth.IsDead
+            (playerHealth != null && playerHealth.IsDead) ||
+            (MatchManager.Instance != null && MatchManager.Instance.MatchEnded)
         )
         {
             // Xóa cờ đã queue để không tự nhảy ngay khi vừa hồi sinh
@@ -266,12 +277,12 @@ public class PlayerMovement : NetworkBehaviour
 
 
         // =====================================================
-        // DEAD = ĐỨNG IM HOÀN TOÀN
+        // DEAD / MATCH END = ĐỨNG IM HOÀN TOÀN
         // =====================================================
 
         if (
-            playerHealth != null &&
-            playerHealth.IsDead
+            (playerHealth != null && playerHealth.IsDead) ||
+            (MatchManager.Instance != null && MatchManager.Instance.MatchEnded)
         )
         {
             velocity =

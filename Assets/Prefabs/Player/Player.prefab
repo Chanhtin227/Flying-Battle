@@ -1557,6 +1557,9 @@ PrefabInstance:
       addedObject: {fileID: 1600288243756836947}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 5845137765224247411}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 2614666991485716670}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
@@ -1762,6 +1765,7 @@ MonoBehaviour:
   _CurrentHealth: 0
   _IsDead:
     RawValue: 0
+  _Kills: 0
   _SmallMedkitCount: 0
   _MediumMedkitCount: 0
   _LargeMedkitCount: 0
@@ -1779,12 +1783,27 @@ MonoBehaviour:
   useMedkitKey: 101
   _UsingMedkitType: 0
   respawnDelay: 5
-  respawnEdgePadding: 30
+  centerRespawnPercent: 0.5
   minRespawnDistance: 150
-  minDistanceFromDeathPosition: 30
+  minDistanceFromDeathPosition: 15
   respawnTryCount: 100
   respawnHeightOffset: 1
+  maxRespawnSlope: 25
+  respawnInvulnerabilityDuration: 5
   playerCameraController: {fileID: 8953495007843940927}
+--- !u!114 &5845137765224247411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8323938116521971073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7ce972294e0c054bbfc913a40957d47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MatchStatsTracker
+  _TotalDamage: 0
 --- !u!82 &2614666991485716670
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1872,7 +1891,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 1.1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -1908,6 +1927,7 @@ MonoBehaviour:
   - {fileID: 4713323537150237153}
   - {fileID: 2270641106786434766}
   - {fileID: 1600288243756836947}
+  - {fileID: 5845137765224247411}
   - {fileID: -2570491720007723357}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-2570491720007723357

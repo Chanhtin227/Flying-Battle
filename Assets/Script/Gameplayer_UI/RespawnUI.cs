@@ -95,6 +95,11 @@ public class RespawnUI : MonoBehaviour
         {
             audioSource = GetComponent<AudioSource>();
         }
+
+        if (audioSource != null)
+        {
+            audioSource.Stop();
+        }
     }
 
 
@@ -109,6 +114,42 @@ public class RespawnUI : MonoBehaviour
         // =====================================================
 
         FindLocalPlayer();
+
+
+        // =====================================================
+        // MATCH ĐÃ KẾT THÚC
+        // =====================================================
+
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
+        {
+            // Ẩn toàn bộ UI hồi sinh.
+            SetPanel(false);
+
+            if (countdownText != null)
+            {
+                countdownText.text = "";
+            }
+
+            if (progressSlider != null)
+            {
+                progressSlider.value = 0f;
+            }
+
+            // Reset trạng thái để không phát âm thanh hoàn tất
+            // sau khi trận đã kết thúc.
+            wasRespawning = false;
+            lastPlayedSecond = -1;
+            lastDeadState = false;
+
+            // Dừng ngay mọi âm thanh hồi sinh đang phát.
+            if (audioSource != null)
+            {
+                audioSource.Stop();
+            }
+
+            return;
+        }
 
 
         if (playerHealth == null)
@@ -382,6 +423,12 @@ public class RespawnUI : MonoBehaviour
 
     private void PlayTickSound()
     {
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
+        {
+            return;
+        }
+
         if (audioSource == null)
             return;
 
@@ -403,6 +450,12 @@ public class RespawnUI : MonoBehaviour
 
     private void PlayCompleteSound()
     {
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
+        {
+            return;
+        }
+
         if (audioSource == null)
             return;
 

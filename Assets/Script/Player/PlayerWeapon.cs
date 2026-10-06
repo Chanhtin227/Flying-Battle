@@ -2109,7 +2109,8 @@ public class PlayerWeapon : NetworkBehaviour
                 {
                     target.TakeDamage(
                         damage,
-                        origin
+                        origin,
+                        Object.InputAuthority
                     );
                 }
             }
@@ -2616,7 +2617,8 @@ public class PlayerWeapon : NetworkBehaviour
 
             target.TakeDamage(
                 damage,
-                transform.position
+                transform.position,
+                Object.InputAuthority
             );
 
 
