@@ -52,6 +52,22 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     [Header("Transition Effect")]
     public Image fadeImage;
 
+    [Header("Game Mode Animation")]
+    [SerializeField] private float gameModeSlideDistance = 700f;
+    [SerializeField] private float gameModeSlideDuration = 0.4f;
+
+    private RectTransform btn1vs1Rect;
+    private RectTransform btn2vs2Rect;
+
+    private Vector2 btn1vs1OriginalPos;
+    private Vector2 btn2vs2OriginalPos;
+
+    private CanvasGroup btn1vs1CanvasGroup;
+    private CanvasGroup btn2vs2CanvasGroup;
+
+    private Coroutine gameModeAnimationCoroutine;
+    private bool isGameModeAnimating = false;
+
     private int maxPlayers = 2;
     private Coroutine errorNotificationCoroutine;
 
@@ -59,6 +75,24 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (fadeImage != null) fadeImage.gameObject.SetActive(false);
         ResetUI();
+        btn1vs1Rect = btn1vs1.GetComponent<RectTransform>();
+        btn2vs2Rect = btn2vs2.GetComponent<RectTransform>();
+
+        btn1vs1OriginalPos = btn1vs1Rect.anchoredPosition;
+        btn2vs2OriginalPos = btn2vs2Rect.anchoredPosition;
+
+        btn1vs1CanvasGroup = btn1vs1.GetComponent<CanvasGroup>();
+
+        if (btn1vs1CanvasGroup == null)
+            btn1vs1CanvasGroup = btn1vs1.gameObject.AddComponent<CanvasGroup>();
+
+        btn2vs2CanvasGroup = btn2vs2.GetComponent<CanvasGroup>();
+
+        if (btn2vs2CanvasGroup == null)
+            btn2vs2CanvasGroup = btn2vs2.gameObject.AddComponent<CanvasGroup>();
+
+        btn1vs1CanvasGroup.alpha = 1f;
+        btn2vs2CanvasGroup.alpha = 1f;
         // Tải lại tên đã lưu trước đó lên ô InputField trong cài đặt (nếu có)
         if (settingNameInput != null)
         {
@@ -140,16 +174,179 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
     private void OpenGameModePanel()
     {
+        if (isGameModeAnimating)
+            return;
+
         panelGameMode.SetActive(true);
+
         gameModeBtn.gameObject.SetActive(false);
         settingBtn.gameObject.SetActive(false);
+
+        // Đặt button ra ngoài 2 phía
+        btn1vs1Rect.anchoredPosition =
+            btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
+
+        btn2vs2Rect.anchoredPosition =
+            btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
+
+        // Khi mở panel thì hiện đầy đủ
+        btn1vs1CanvasGroup.alpha = 1f;
+        btn2vs2CanvasGroup.alpha = 1f;
+
+        gameModeAnimationCoroutine =
+            StartCoroutine(AnimateGameModeButtonsOpen());
+    }
+
+    private System.Collections.IEnumerator AnimateGameModeButtonsOpen()
+    {
+        isGameModeAnimating = true;
+
+        btn1vs1.interactable = false;
+        btn2vs2.interactable = false;
+
+        Vector2 startPos1 =
+            btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
+
+        Vector2 startPos2 =
+            btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
+
+        float time = 0f;
+
+        while (time < gameModeSlideDuration)
+        {
+            time += Time.unscaledDeltaTime;
+
+            float t = Mathf.Clamp01(time / gameModeSlideDuration);
+
+            // Ease Out Cubic
+            float smoothT = 1f - Mathf.Pow(1f - t, 3f);
+
+            btn1vs1Rect.anchoredPosition =
+                Vector2.LerpUnclamped(
+                    startPos1,
+                    btn1vs1OriginalPos,
+                    smoothT
+                );
+
+            btn2vs2Rect.anchoredPosition =
+                Vector2.LerpUnclamped(
+                    startPos2,
+                    btn2vs2OriginalPos,
+                    smoothT
+                );
+
+            yield return null;
+        }
+
+        btn1vs1Rect.anchoredPosition = btn1vs1OriginalPos;
+        btn2vs2Rect.anchoredPosition = btn2vs2OriginalPos;
+
+        btn1vs1.interactable = true;
+        btn2vs2.interactable = true;
+
+        isGameModeAnimating = false;
+        gameModeAnimationCoroutine = null;
     }
 
     private void CloseGameModePanel()
     {
+        if (isGameModeAnimating)
+            return;
+
+        gameModeAnimationCoroutine =
+            StartCoroutine(AnimateGameModeButtonsClose());
+    }
+
+    private System.Collections.IEnumerator AnimateGameModeButtonsClose()
+    {
+        isGameModeAnimating = true;
+
+        btn1vs1.interactable = false;
+        btn2vs2.interactable = false;
+
+        // Vị trí hiện tại
+        Vector2 startPos1 = btn1vs1Rect.anchoredPosition;
+        Vector2 startPos2 = btn2vs2Rect.anchoredPosition;
+
+        // Vị trí sẽ bay ra ngoài
+        Vector2 targetPos1 =
+            btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
+
+        Vector2 targetPos2 =
+            btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
+
+        float startAlpha1 = btn1vs1CanvasGroup.alpha;
+        float startAlpha2 = btn2vs2CanvasGroup.alpha;
+
+        float time = 0f;
+
+        while (time < gameModeSlideDuration)
+        {
+            time += Time.unscaledDeltaTime;
+
+            float t = Mathf.Clamp01(time / gameModeSlideDuration);
+
+            // Ease In Cubic:
+            // ban đầu đi chậm, sau đó nhanh dần ra ngoài
+            float smoothT = t * t * t;
+
+            // =============================
+            // Di chuyển ra 2 cạnh
+            // =============================
+            btn1vs1Rect.anchoredPosition =
+                Vector2.LerpUnclamped(
+                    startPos1,
+                    targetPos1,
+                    smoothT
+                );
+
+            btn2vs2Rect.anchoredPosition =
+                Vector2.LerpUnclamped(
+                    startPos2,
+                    targetPos2,
+                    smoothT
+                );
+
+            // =============================
+            // Mờ dần
+            // =============================
+            btn1vs1CanvasGroup.alpha =
+                Mathf.Lerp(startAlpha1, 0f, t);
+
+            btn2vs2CanvasGroup.alpha =
+                Mathf.Lerp(startAlpha2, 0f, t);
+
+            yield return null;
+        }
+
+        // Đảm bảo kết thúc chính xác
+        btn1vs1Rect.anchoredPosition = targetPos1;
+        btn2vs2Rect.anchoredPosition = targetPos2;
+
+        btn1vs1CanvasGroup.alpha = 0f;
+        btn2vs2CanvasGroup.alpha = 0f;
+
+        // Sau khi animation xong mới đóng panel
         panelGameMode.SetActive(false);
+
+        // =============================
+        // RESET để lần mở sau hoạt động bình thường
+        // =============================
+
+        btn1vs1Rect.anchoredPosition = btn1vs1OriginalPos;
+        btn2vs2Rect.anchoredPosition = btn2vs2OriginalPos;
+
+        btn1vs1CanvasGroup.alpha = 1f;
+        btn2vs2CanvasGroup.alpha = 1f;
+
+        btn1vs1.interactable = true;
+        btn2vs2.interactable = true;
+
         gameModeBtn.gameObject.SetActive(true);
         settingBtn.gameObject.SetActive(true);
+
+        isGameModeAnimating = false;
+        gameModeAnimationCoroutine = null;
     }
 
     private void ResetUI()
