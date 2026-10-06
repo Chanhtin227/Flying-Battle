@@ -101,8 +101,10 @@ public class MatchManager : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
+
         if (!MatchStarted)
             return;
+
 
         if (MatchEnded)
             return;
@@ -138,11 +140,14 @@ public class MatchManager : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
+
         if (!MatchStarted)
             return;
 
+
         if (MatchEnded)
             return;
+
 
         if (killer == PlayerRef.None)
             return;
@@ -157,6 +162,10 @@ public class MatchManager : NetworkBehaviour
             killLimit
         );
 
+
+        // =====================================================
+        // KILL LIMIT
+        // =====================================================
 
         if (currentKills >= killLimit)
         {
@@ -179,22 +188,49 @@ public class MatchManager : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
+
         if (MatchEnded)
             return;
 
 
-        Winner = winner;
+        // =====================================================
+        // SAVE RESULT
+        // =====================================================
 
-        WinnerKills = kills;
+        Winner =
+            winner;
 
-        MatchEnded = true;
 
-        MatchStarted = false;
+        WinnerKills =
+            kills;
+
+
+        MatchEnded =
+            true;
+
+
+        MatchStarted =
+            false;
 
 
         MatchTimer =
             TickTimer.None;
 
+
+        // =====================================================
+        // CLOSE ROOM
+        //
+        // Sau khi trận kết thúc:
+        // Không cho Player mới hoặc Player vừa rời
+        // nhập lại ID để join room này.
+        // =====================================================
+
+        CloseRoom();
+
+
+        // =====================================================
+        // DEBUG
+        // =====================================================
 
         Debug.Log(
             "=============================\n" +
@@ -206,6 +242,7 @@ public class MatchManager : NetworkBehaviour
             "\nTIME = " +
             GetPlayedTime().ToString("F1") +
             "s\n" +
+            "ROOM CLOSED = TRUE\n" +
             "============================="
         );
     }
@@ -220,9 +257,14 @@ public class MatchManager : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
+
         if (MatchEnded)
             return;
 
+
+        // =====================================================
+        // FIND PLAYERS
+        // =====================================================
 
         PlayerHealth[] players =
             FindObjectsByType<PlayerHealth>(
@@ -233,17 +275,24 @@ public class MatchManager : NetworkBehaviour
         PlayerHealth bestPlayer =
             null;
 
+
         int bestKills =
             -1;
+
 
         bool draw =
             false;
 
 
+        // =====================================================
+        // FIND HIGHEST KILLS
+        // =====================================================
+
         foreach (PlayerHealth player in players)
         {
             if (player == null)
                 continue;
+
 
             if (player.Object == null ||
                 !player.Object.IsValid)
@@ -257,14 +306,17 @@ public class MatchManager : NetworkBehaviour
                 bestKills =
                     player.Kills;
 
+
                 bestPlayer =
                     player;
+
 
                 draw =
                     false;
             }
-            else if (player.Kills ==
-                     bestKills)
+            else if (
+                player.Kills ==
+                bestKills)
             {
                 draw =
                     true;
@@ -272,8 +324,13 @@ public class MatchManager : NetworkBehaviour
         }
 
 
+        // =====================================================
+        // STOP MATCH
+        // =====================================================
+
         MatchEnded =
             true;
+
 
         MatchStarted =
             false;
@@ -281,6 +338,13 @@ public class MatchManager : NetworkBehaviour
 
         MatchTimer =
             TickTimer.None;
+
+
+        // =====================================================
+        // CLOSE ROOM
+        // =====================================================
+
+        CloseRoom();
 
 
         // =====================================================
@@ -293,6 +357,7 @@ public class MatchManager : NetworkBehaviour
             Winner =
                 PlayerRef.None;
 
+
             WinnerKills =
                 Mathf.Max(
                     0,
@@ -303,7 +368,8 @@ public class MatchManager : NetworkBehaviour
             Debug.Log(
                 "[MatchManager] TIME UP - DRAW" +
                 " | Played Time = " +
-                GetPlayedTime().ToString("F1")
+                GetPlayedTime().ToString("F1") +
+                " | ROOM CLOSED"
             );
 
 
@@ -330,7 +396,73 @@ public class MatchManager : NetworkBehaviour
             " | KILLS = " +
             WinnerKills +
             " | TIME = " +
-            GetPlayedTime().ToString("F1")
+            GetPlayedTime().ToString("F1") +
+            " | ROOM CLOSED"
+        );
+    }
+
+
+    // =========================================================
+    // CLOSE ROOM
+    // =========================================================
+
+    private void CloseRoom()
+    {
+        // =====================================================
+        // CHECK RUNNER
+        // =====================================================
+
+        if (Runner == null)
+        {
+            Debug.LogWarning(
+                "[MatchManager] Runner = NULL. Không thể đóng room."
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // CHỈ SERVER / HOST ĐƯỢC ĐÓNG ROOM
+        // =====================================================
+
+        if (!Runner.IsServer)
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // CHECK SESSION
+        // =====================================================
+
+        if (!Runner.SessionInfo.IsValid)
+        {
+            Debug.LogWarning(
+                "[MatchManager] SessionInfo không hợp lệ."
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // LOCK ROOM
+        //
+        // QUAN TRỌNG:
+        // false = không cho bất kỳ ai join thêm.
+        // =====================================================
+
+        Runner.SessionInfo.IsOpen =
+            false;
+
+
+        Debug.Log(
+            "[MatchManager] ROOM LOCKED" +
+            " | ID = " +
+            Runner.SessionInfo.Name +
+            " | IsOpen = " +
+            Runner.SessionInfo.IsOpen
         );
     }
 

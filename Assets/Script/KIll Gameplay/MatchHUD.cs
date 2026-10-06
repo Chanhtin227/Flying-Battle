@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using Fusion;
+using System.Collections;
 using System.Collections.Generic;
 
 public class MatchHUD : MonoBehaviour
@@ -60,8 +61,34 @@ public class MatchHUD : MonoBehaviour
     [Tooltip("Âm thanh phát khi Local Player thua")]
     public AudioClip loseSound;
 
+    [Tooltip("Âm thanh phát trong đoạn cinematic trước khi hiện Win/Lose")]
+    public AudioClip matchEndCinematicSound;
+
     [Range(0f, 1f)]
     public float resultVolume = 1f;
+
+
+    // =========================================================
+    // MATCH END CINEMATIC SOUND
+    // =========================================================
+
+    private void PlayMatchEndCinematicSound()
+    {
+        if (resultAudioSource == null)
+            return;
+
+        if (matchEndCinematicSound == null)
+            return;
+
+
+        resultAudioSource.Stop();
+
+
+        resultAudioSource.PlayOneShot(
+            matchEndCinematicSound,
+            resultVolume
+        );
+    }
 
 
     // =========================================================
@@ -72,6 +99,41 @@ public class MatchHUD : MonoBehaviour
 
     [Tooltip("Kéo AudioSource đang phát nhạc nền của game vào đây")]
     public AudioSource backgroundMusicSource;
+
+    // =========================================================
+    // MATCH END CINEMATIC
+    // =========================================================
+
+    [Header("Match End Cinematic")]
+
+    [Tooltip("CanvasGroup của Image đen full màn hình")]
+    public CanvasGroup matchEndFade;
+
+    [Tooltip("Có thể để trống, script sẽ tự lấy Camera.main")]
+    public Camera cinematicCamera;
+
+    [Tooltip("Vị trí camera so với Player thắng")]
+    public Vector3 cinematicCameraOffset =
+        new Vector3(
+            0f,
+            2.2f,
+            -4f
+        );
+
+    [Tooltip("Điểm camera nhìn vào trên người Player")]
+    public float cinematicLookHeight = 1.3f;
+
+    [Tooltip("Thời gian màn hình tối dần")]
+    public float fadeToBlackDuration = 0.7f;
+
+    [Tooltip("Thời gian camera bay tới Player")]
+    public float cameraFlyDuration = 2.5f;
+
+    [Tooltip("Thời gian màn hình sáng trở lại")]
+    public float fadeFromBlackDuration = 0.8f;
+
+    [Tooltip("Thời gian giữ camera trước khi hiện Win/Lose")]
+    public float cinematicHoldTime = 1f;
 
 
     // =========================================================
@@ -91,10 +153,10 @@ public class MatchHUD : MonoBehaviour
     private void Start()
     {
         if (player1NameText != null)
-            player1NameText.text = "PLAYER 1";
+            player1NameText.text = "Team 1";
 
         if (player2NameText != null)
-            player2NameText.text = "PLAYER 2";
+            player2NameText.text = "Team 2";
 
         if (player1KillText != null)
             player1KillText.text = "0";
@@ -164,6 +226,21 @@ public class MatchHUD : MonoBehaviour
             resultAudioSource.spatialBlend = 0f;
 
             resultAudioSource.Stop();
+        }
+
+        // =====================================================
+        // RESET MATCH END FADE
+        // =====================================================
+
+        if (matchEndFade != null)
+        {
+            matchEndFade.alpha = 0f;
+
+            matchEndFade.blocksRaycasts = false;
+
+            matchEndFade.gameObject.SetActive(
+                false
+            );
         }
     }
 
@@ -316,7 +393,10 @@ public class MatchHUD : MonoBehaviour
     private void ShowMatchResult(
         MatchManager manager)
     {
-        // Chờ LocalPlayer có đầy đủ trước.
+        // =====================================================
+        // LOCAL PLAYER
+        // =====================================================
+
         if (PlayerMovement.LocalPlayer == null)
         {
             Debug.LogWarning(
@@ -347,19 +427,28 @@ public class MatchHUD : MonoBehaviour
         }
 
 
+        // Không cho gọi lại nhiều lần
         resultShown = true;
 
 
         // =====================================================
-        // PAUSE BACKGROUND MUSIC
+        // PAUSE MUSIC
         // =====================================================
 
         PauseBackgroundMusic();
 
 
+        // =====================================================
+        // LOCAL PLAYER REF
+        // =====================================================
+
         PlayerRef localPlayerRef =
             localObject.InputAuthority;
 
+
+        // =====================================================
+        // OTHER PLAYER
+        // =====================================================
 
         PlayerHealth otherHealth =
             null;
@@ -380,6 +469,10 @@ public class MatchHUD : MonoBehaviour
                 player2Health;
         }
 
+
+        // =====================================================
+        // SCORE
+        // =====================================================
 
         int localKills =
             localHealth != null
@@ -402,17 +495,13 @@ public class MatchHUD : MonoBehaviour
         {
             if (winPanel != null)
             {
-                winPanel.SetActive(
-                    false
-                );
+                winPanel.SetActive(false);
             }
 
 
             if (losePanel != null)
             {
-                losePanel.SetActive(
-                    false
-                );
+                losePanel.SetActive(false);
             }
 
 
@@ -435,28 +524,20 @@ public class MatchHUD : MonoBehaviour
 
 
         // =====================================================
-        // WIN
+        // LOCAL WIN?
         // =====================================================
 
-        if (localPlayerRef ==
-            manager.Winner)
+        bool localWon =
+            localPlayerRef ==
+            manager.Winner;
+
+
+        // =====================================================
+        // SET SCORE TRƯỚC
+        // =====================================================
+
+        if (localWon)
         {
-            if (winPanel != null)
-            {
-                winPanel.SetActive(
-                    true
-                );
-            }
-
-
-            if (losePanel != null)
-            {
-                losePanel.SetActive(
-                    false
-                );
-            }
-
-
             if (winScoreLeftText != null)
             {
                 winScoreLeftText.text =
@@ -468,6 +549,273 @@ public class MatchHUD : MonoBehaviour
             {
                 winScoreRightText.text =
                     otherKills.ToString();
+            }
+        }
+        else
+        {
+            if (loseScoreLeftText != null)
+            {
+                loseScoreLeftText.text =
+                    localKills.ToString();
+            }
+
+
+            if (loseScoreRightText != null)
+            {
+                loseScoreRightText.text =
+                    otherKills.ToString();
+            }
+        }
+
+
+        // =====================================================
+        // ĐẢM BẢO PANEL CHƯA HIỆN
+        // =====================================================
+
+        if (winPanel != null)
+        {
+            winPanel.SetActive(false);
+        }
+
+
+        if (losePanel != null)
+        {
+            losePanel.SetActive(false);
+        }
+
+
+        // =====================================================
+        // PLAY CINEMATIC SOUND
+        // =====================================================
+
+        PlayMatchEndCinematicSound();
+
+
+        // =====================================================
+        // PLAY CINEMATIC
+        // =====================================================
+
+        StartCoroutine(
+            MatchEndCinematicRoutine(
+                manager.Winner,
+                localWon,
+                localKills,
+                otherKills
+            )
+        );
+    }
+
+    // =========================================================
+    // MATCH END CINEMATIC
+    // =========================================================
+
+    private IEnumerator MatchEndCinematicRoutine(
+        PlayerRef targetPlayerRef,
+        bool localWon,
+        int localKills,
+        int otherKills)
+    {
+        // =====================================================
+        // TÌM CAMERA
+        // =====================================================
+
+        if (cinematicCamera == null)
+        {
+            cinematicCamera =
+                Camera.main;
+        }
+
+
+        // =====================================================
+        // TÌM PLAYER MỤC TIÊU
+        // =====================================================
+
+        Transform targetPlayer =
+            FindPlayerTransform(
+                targetPlayerRef
+            );
+
+
+        // =====================================================
+        // FADE TO BLACK
+        // =====================================================
+
+        yield return StartCoroutine(
+            FadeMatchScreen(
+                0f,
+                1f,
+                fadeToBlackDuration
+            )
+        );
+
+
+        // =====================================================
+        // CAMERA
+        // =====================================================
+
+        if (cinematicCamera != null &&
+            targetPlayer != null)
+        {
+            // Camera bắt đầu ở vị trí hiện tại
+            Vector3 startPosition =
+                cinematicCamera
+                    .transform
+                    .position;
+
+
+            Quaternion startRotation =
+                cinematicCamera
+                    .transform
+                    .rotation;
+
+
+            // =================================================
+            // VỊ TRÍ CAMERA CUỐI
+            // =================================================
+
+            Vector3 targetPosition =
+                targetPlayer.TransformPoint(
+                    cinematicCameraOffset
+                );
+
+
+            Vector3 lookPoint =
+                targetPlayer.position +
+                Vector3.up *
+                cinematicLookHeight;
+
+
+            Quaternion targetRotation =
+                Quaternion.LookRotation(
+                    lookPoint -
+                    targetPosition
+                );
+
+
+            // =================================================
+            // BẮT ĐẦU SÁNG LẠI
+            // =================================================
+
+            StartCoroutine(
+                FadeMatchScreen(
+                    1f,
+                    0f,
+                    fadeFromBlackDuration
+                )
+            );
+
+
+            // =================================================
+            // CAMERA BAY
+            // =================================================
+
+            float timer =
+                0f;
+
+
+            while (timer <
+                   cameraFlyDuration)
+            {
+                timer +=
+                    Time.unscaledDeltaTime;
+
+
+                float t =
+                    Mathf.Clamp01(
+                        timer /
+                        cameraFlyDuration
+                    );
+
+
+                // Smooth Step
+                float smoothT =
+                    t *
+                    t *
+                    (3f - 2f * t);
+
+
+                cinematicCamera
+                    .transform
+                    .position =
+                    Vector3.Lerp(
+                        startPosition,
+                        targetPosition,
+                        smoothT
+                    );
+
+
+                cinematicCamera
+                    .transform
+                    .rotation =
+                    Quaternion.Slerp(
+                        startRotation,
+                        targetRotation,
+                        smoothT
+                    );
+
+
+                yield return null;
+            }
+
+
+            // =================================================
+            // ĐẢM BẢO CAMERA ĐÚNG VỊ TRÍ CUỐI
+            // =================================================
+
+            cinematicCamera
+                .transform
+                .position =
+                targetPosition;
+
+
+            cinematicCamera
+                .transform
+                .LookAt(
+                    lookPoint
+                );
+        }
+        else
+        {
+            // Không tìm được Player thì vẫn sáng lại
+            yield return StartCoroutine(
+                FadeMatchScreen(
+                    1f,
+                    0f,
+                    fadeFromBlackDuration
+                )
+            );
+        }
+
+
+        // =====================================================
+        // HOLD CAMERA
+        // =====================================================
+
+        yield return
+            new WaitForSecondsRealtime(
+                cinematicHoldTime
+            );
+
+
+        // =====================================================
+        // SHOW WIN
+        // =====================================================
+
+        if (localWon)
+        {
+            if (losePanel != null)
+            {
+                losePanel.SetActive(
+                    false
+                );
+            }
+
+
+            if (winPanel != null)
+            {
+                winPanel.SetActive(
+                    true
+                );
             }
 
 
@@ -483,7 +831,7 @@ public class MatchHUD : MonoBehaviour
         }
 
         // =====================================================
-        // LOSE
+        // SHOW LOSE
         // =====================================================
 
         else
@@ -504,20 +852,6 @@ public class MatchHUD : MonoBehaviour
             }
 
 
-            if (loseScoreLeftText != null)
-            {
-                loseScoreLeftText.text =
-                    localKills.ToString();
-            }
-
-
-            if (loseScoreRightText != null)
-            {
-                loseScoreRightText.text =
-                    otherKills.ToString();
-            }
-
-
             PlayLoseSound();
 
 
@@ -527,6 +861,191 @@ public class MatchHUD : MonoBehaviour
                 " - " +
                 otherKills
             );
+        }
+
+
+        // =====================================================
+        // CURSOR
+        // =====================================================
+
+        Cursor.lockState =
+            CursorLockMode.None;
+
+        Cursor.visible =
+            true;
+    }
+
+    // =========================================================
+    // FIND CINEMATIC PLAYER
+    // =========================================================
+
+    private Transform FindPlayerTransform(
+        PlayerRef playerRef)
+    {
+        if (playerRef ==
+            PlayerRef.None)
+        {
+            return null;
+        }
+
+
+        PlayerHealth[] players =
+            FindObjectsByType<PlayerHealth>(
+                FindObjectsInactive.Exclude
+            );
+
+
+        foreach (PlayerHealth player in players)
+        {
+            if (player == null)
+                continue;
+
+
+            if (player.Object == null)
+                continue;
+
+
+            if (!player.Object.IsValid)
+                continue;
+
+
+            if (player.Object.InputAuthority !=
+                playerRef)
+            {
+                continue;
+            }
+
+
+            return player.transform;
+        }
+
+
+        return null;
+    }
+
+    // =========================================================
+    // FADE MATCH SCREEN
+    // =========================================================
+
+    private IEnumerator FadeMatchScreen(
+        float from,
+        float to,
+        float duration)
+    {
+        // =====================================================
+        // CHECK FADE
+        // =====================================================
+
+        if (matchEndFade == null)
+        {
+            yield break;
+        }
+
+
+        // =====================================================
+        // BẬT MÀN HÌNH FADE
+        // =====================================================
+
+        matchEndFade
+            .gameObject
+            .SetActive(
+                true
+            );
+
+
+        // =====================================================
+        // ĐƯA FADE LÊN TRÊN CÙNG UI
+        //
+        // Rất quan trọng:
+        // WinPanel / LosePanel / HUD sẽ không che màn đen.
+        // =====================================================
+
+        matchEndFade
+            .transform
+            .SetAsLastSibling();
+
+
+        // =====================================================
+        // ALPHA BAN ĐẦU
+        // =====================================================
+
+        matchEndFade.alpha =
+            from;
+
+
+        // Không chặn click.
+        matchEndFade.blocksRaycasts =
+            false;
+
+
+        float timer =
+            0f;
+
+
+        duration =
+            Mathf.Max(
+                0.01f,
+                duration
+            );
+
+
+        // =====================================================
+        // FADE
+        // =====================================================
+
+        while (timer <
+               duration)
+        {
+            timer +=
+                Time.unscaledDeltaTime;
+
+
+            float t =
+                Mathf.Clamp01(
+                    timer /
+                    duration
+                );
+
+
+            // Smooth hơn Linear một chút
+            float smoothT =
+                t *
+                t *
+                (3f - 2f * t);
+
+
+            matchEndFade.alpha =
+                Mathf.Lerp(
+                    from,
+                    to,
+                    smoothT
+                );
+
+
+            yield return null;
+        }
+
+
+        // =====================================================
+        // ĐẢM BẢO GIÁ TRỊ CUỐI
+        // =====================================================
+
+        matchEndFade.alpha =
+            to;
+
+
+        // =====================================================
+        // NẾU ĐÃ SÁNG LẠI HOÀN TOÀN
+        // THÌ TẮT OBJECT FADE
+        // =====================================================
+
+        if (to <= 0f)
+        {
+            matchEndFade
+                .gameObject
+                .SetActive(
+                    false
+                );
         }
     }
 
@@ -672,8 +1191,7 @@ public class MatchHUD : MonoBehaviour
 
         ThirdPersonCamera[] cameraControllers =
             FindObjectsByType<ThirdPersonCamera>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None
+                FindObjectsInactive.Include
             );
 
 

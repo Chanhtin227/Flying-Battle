@@ -1662,7 +1662,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
   audioSource: {fileID: 2614666991485716670}
-  batHitSound: {fileID: 8300000, guid: 8bc2316f8102ce54aad5f4ccf2590350, type: 3}
+  batHitSound: {fileID: 8300000, guid: c9e3250ffd1ea374db596289caf9d59d, type: 3}
 --- !u!114 &2270641106786434766
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1791,6 +1791,13 @@ MonoBehaviour:
   maxRespawnSlope: 25
   respawnInvulnerabilityDuration: 5
   playerCameraController: {fileID: 8953495007843940927}
+  deathCamera: {fileID: 0}
+  respawnPanel: {fileID: 0}
+  deathCameraHeight: 9
+  deathCameraRiseDuration: 2.2
+  deathCameraHoldDuration: 0.6
+  deathCameraOffset: {x: 0, y: 0, z: -2}
+  deathCameraLookHeight: 0.8
 --- !u!114 &5845137765224247411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1804,6 +1811,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MatchStatsTracker
   _TotalDamage: 0
+  _TotalDamageTaken: 0
 --- !u!82 &2614666991485716670
 AudioSource:
   m_ObjectHideFlags: 0

@@ -13,12 +13,32 @@ public class MatchStatsUI : MonoBehaviour
 
 
     // =========================================================
+    // WIN / LOSE PANEL
+    // =========================================================
+
+    [Header("Win / Lose Panel")]
+
+    [Tooltip("Kéo WinPanel vào đây")]
+    public GameObject winPanel;
+
+    [Tooltip("Kéo LosePanel vào đây")]
+    public GameObject losePanel;
+
+
+    // Lưu trạng thái trước khi mở bảng tổng kết
+    private bool winPanelWasActive;
+    private bool losePanelWasActive;
+
+
+    // =========================================================
     // TEXT VALUES
     // =========================================================
 
     [Header("Stats Text")]
 
     public TMP_Text damageValueText;
+
+    public TMP_Text damageTakenValueText;
 
     public TMP_Text killValueText;
 
@@ -34,8 +54,6 @@ public class MatchStatsUI : MonoBehaviour
     [Header("Buttons")]
 
     public Button closeButton;
-
-    public Button closeXButton;
 
 
     // =========================================================
@@ -91,22 +109,6 @@ public class MatchStatsUI : MonoBehaviour
             );
 
             closeButton.onClick.AddListener(
-                ClosePanel
-            );
-        }
-
-
-        // =====================================================
-        // X BUTTON
-        // =====================================================
-
-        if (closeXButton != null)
-        {
-            closeXButton.onClick.RemoveListener(
-                ClosePanel
-            );
-
-            closeXButton.onClick.AddListener(
                 ClosePanel
             );
         }
@@ -166,6 +168,44 @@ public class MatchStatsUI : MonoBehaviour
 
 
         // =====================================================
+        // LƯU TRẠNG THÁI WIN / LOSE
+        // =====================================================
+
+        if (winPanel != null)
+        {
+            winPanelWasActive =
+                winPanel.activeSelf;
+        }
+
+
+        if (losePanel != null)
+        {
+            losePanelWasActive =
+                losePanel.activeSelf;
+        }
+
+
+        // =====================================================
+        // ẨN WIN / LOSE PANEL
+        // =====================================================
+
+        if (winPanel != null)
+        {
+            winPanel.SetActive(
+                false
+            );
+        }
+
+
+        if (losePanel != null)
+        {
+            losePanel.SetActive(
+                false
+            );
+        }
+
+
+        // =====================================================
         // REFRESH DATA TRƯỚC
         // =====================================================
 
@@ -203,13 +243,36 @@ public class MatchStatsUI : MonoBehaviour
 
     public void ClosePanel()
     {
-        if (statsPanel == null)
-            return;
+        // =====================================================
+        // HIDE STATS PANEL
+        // =====================================================
+
+        if (statsPanel != null)
+        {
+            statsPanel.SetActive(
+                false
+            );
+        }
 
 
-        statsPanel.SetActive(
-            false
-        );
+        // =====================================================
+        // HIỆN LẠI WIN / LOSE PANEL ĐÚNG TRẠNG THÁI CŨ
+        // =====================================================
+
+        if (winPanel != null)
+        {
+            winPanel.SetActive(
+                winPanelWasActive
+            );
+        }
+
+
+        if (losePanel != null)
+        {
+            losePanel.SetActive(
+                losePanelWasActive
+            );
+        }
 
 
         Debug.Log(
@@ -271,15 +334,18 @@ public class MatchStatsUI : MonoBehaviour
         if (killValueText != null)
         {
             killValueText.text =
-                kills.ToString("00");
+                kills.ToString("0");
         }
 
 
         // =====================================================
-        // TOTAL DAMAGE
+        // TOTAL DAMAGE + DAMAGE TAKEN
         // =====================================================
 
         int totalDamage =
+            0;
+
+        int totalDamageTaken =
             0;
 
 
@@ -290,9 +356,10 @@ public class MatchStatsUI : MonoBehaviour
         if (tracker != null)
         {
             totalDamage =
-                Mathf.RoundToInt(
-                    tracker.TotalDamage
-                );
+                tracker.GetTotalDamageInt();
+
+            totalDamageTaken =
+                tracker.GetTotalDamageTakenInt();
         }
         else
         {
@@ -302,10 +369,25 @@ public class MatchStatsUI : MonoBehaviour
         }
 
 
+        // =====================================================
+        // TOTAL DAMAGE TEXT
+        // =====================================================
+
         if (damageValueText != null)
         {
             damageValueText.text =
-                totalDamage.ToString("0000");
+                totalDamage.ToString("000");
+        }
+
+
+        // =====================================================
+        // DAMAGE TAKEN TEXT
+        // =====================================================
+
+        if (damageTakenValueText != null)
+        {
+            damageTakenValueText.text =
+                totalDamageTaken.ToString("000");
         }
 
 
@@ -379,6 +461,8 @@ public class MatchStatsUI : MonoBehaviour
             "[MatchStatsUI]" +
             " | Damage = " +
             totalDamage +
+            " | Damage Taken = " +
+            totalDamageTaken +
             " | Kills = " +
             kills +
             " | Time = " +

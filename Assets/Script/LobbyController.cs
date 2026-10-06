@@ -487,8 +487,32 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             return;
         }
 
-        Debug.Log("[Lobby] Đủ người chơi. Starting Match...");
-        currentRunner.LoadScene(SceneRef.FromIndex(1));
+        Debug.Log(
+     "[Lobby] Đủ người chơi. Starting Match..."
+ );
+
+
+        // =========================================================
+        // KHÓA ROOM TRƯỚC KHI VÀO GAME
+        // =========================================================
+
+        if (currentRunner.SessionInfo.IsValid)
+        {
+            currentRunner.SessionInfo.IsOpen =
+                false;
+
+
+            Debug.Log(
+                "[Lobby] ROOM LOCKED BEFORE MATCH" +
+                " | ID = " +
+                currentRunner.SessionInfo.Name
+            );
+        }
+
+
+        currentRunner.LoadScene(
+            SceneRef.FromIndex(1)
+        );
     }
 
     // Đã thêm tham số "message" với giá trị mặc định
@@ -551,7 +575,65 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     // CÁC CALLBACK CỦA FUSION NETWORK RUNNER
     // ==========================================
 
-    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
+    public void OnPlayerJoined(
+     NetworkRunner runner,
+     PlayerRef player)
+    {
+        // Chỉ Host / Server được thay đổi trạng thái phòng
+        if (!runner.IsServer)
+            return;
+
+
+        if (!runner.SessionInfo.IsValid)
+            return;
+
+
+        int currentPlayers =
+            runner.SessionInfo.PlayerCount;
+
+
+        int roomMaxPlayers =
+            runner.SessionInfo.MaxPlayers;
+
+
+        Debug.Log(
+            "[Lobby] Player Joined" +
+            " | Current = " +
+            currentPlayers +
+            " | Max = " +
+            roomMaxPlayers
+        );
+
+
+        // =====================================================
+        // ĐỦ NGƯỜI -> KHÓA PHÒNG VĨNH VIỄN
+        //
+        // Ví dụ 1v1:
+        // 2/2 -> IsOpen = false
+        //
+        // Sau đó dù 1 người rời:
+        // 1/2 nhưng IsOpen vẫn false
+        // => không thể nhập ID để vào lại.
+        // =====================================================
+
+        if (currentPlayers >= roomMaxPlayers)
+        {
+            runner.SessionInfo.IsOpen =
+                false;
+
+
+            Debug.Log(
+                "[Lobby] ROOM FULL - LOCKED" +
+                " | Room ID = " +
+                runner.SessionInfo.Name +
+                " | Players = " +
+                currentPlayers +
+                "/" +
+                roomMaxPlayers
+            );
+        }
+    }
+
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Fusion;
+using System.Collections;
 
 public class PlayerHealth : NetworkBehaviour
 {
@@ -108,7 +109,40 @@ public class PlayerHealth : NetworkBehaviour
 
     private bool localRespawnLocked = true;
 
+    // =========================================================
+    // DEATH CAMERA
+    // =========================================================
 
+    [Header("Death Camera")]
+
+    [Tooltip("Camera của local player. Có thể để trống.")]
+    public Camera deathCamera;
+
+    [Tooltip("UI hồi sinh. UI này chỉ hiện sau khi camera bay lên xong.")]
+    public GameObject respawnPanel;
+
+    [Tooltip("Camera bay cao bao nhiêu mét so với vị trí chết.")]
+    public float deathCameraHeight = 9f;
+
+    [Tooltip("Thời gian camera bay từ vị trí hiện tại lên trên.")]
+    public float deathCameraRiseDuration = 2.2f;
+
+    [Tooltip("Giữ góc nhìn trên cao trước khi hiện Respawn UI.")]
+    public float deathCameraHoldDuration = 0.6f;
+
+    [Tooltip("Độ lệch camera. Z âm sẽ tạo góc nhìn hơi xiên.")]
+    public Vector3 deathCameraOffset =
+        new Vector3(
+            0f,
+            0f,
+            -2f
+        );
+
+    [Tooltip("Camera nhìn vào vị trí cao hơn chân Player một chút.")]
+    public float deathCameraLookHeight = 0.8f;
+
+
+    private Coroutine deathCameraCoroutine;
     // =========================================================
     // UPDATE
     // =========================================================
@@ -256,24 +290,47 @@ public class PlayerHealth : NetworkBehaviour
     /// </summary>
     private void FindCameraController()
     {
-        MonoBehaviour[] behaviours =
-            GetComponentsInChildren<MonoBehaviour>(true);
+        ThirdPersonCamera[] cameraControllers =
+            FindObjectsByType<ThirdPersonCamera>(
+                FindObjectsInactive.Include
+            );
 
-        foreach (MonoBehaviour behaviour in behaviours)
+        foreach (ThirdPersonCamera cameraController
+                 in cameraControllers)
         {
-            if (behaviour == null || behaviour == this)
+            if (cameraController == null)
                 continue;
 
-            string typeName = behaviour.GetType().Name;
+            if (cameraController.target == null)
+                continue;
 
-            if (typeName == "ThirdPersonCamera" ||
-                typeName == "PlayerCameraController" ||
-                typeName == "CameraController")
-            {
-                playerCameraController = behaviour;
-                return;
-            }
+
+            Transform target =
+                cameraController.target;
+
+
+            bool belongsToThisPlayer =
+                target == transform
+                ||
+                target.IsChildOf(transform)
+                ||
+                transform.IsChildOf(target);
+
+
+            if (!belongsToThisPlayer)
+                continue;
+
+
+            playerCameraController =
+                cameraController;
+
+            return;
         }
+
+
+        Debug.LogWarning(
+            "[PlayerHealth] Không tìm thấy ThirdPersonCamera của Local Player."
+        );
     }
 
 
@@ -706,6 +763,11 @@ public class PlayerHealth : NetworkBehaviour
         if (HasInputAuthority)
         {
             localRespawnLocked = true;
+            if (respawnPanel != null)
+            {
+                respawnPanel.SetActive(false);
+            }
+
 
             SetLocalRespawnLock(false);
         }
@@ -826,6 +888,24 @@ public class PlayerHealth : NetworkBehaviour
                 healthBeforeDamage -
                 CurrentHealth
             );
+
+        // =====================================================
+        // ADD DAMAGE TAKEN TO VICTIM STATS
+        // =====================================================
+
+        if (actualDamage > 0f)
+        {
+            MatchStatsTracker victimTracker =
+                GetComponent<MatchStatsTracker>();
+
+
+            if (victimTracker != null)
+            {
+                victimTracker.AddDamageTaken(
+                    actualDamage
+                );
+            }
+        }
 
         // ADD DAMAGE TO ATTACKER STATS
 
@@ -1088,7 +1168,7 @@ public class PlayerHealth : NetworkBehaviour
         }
 
         // TÌM PLAYER GÂY KILL
-        
+
 
         PlayerHealth[] players =
             FindObjectsByType<PlayerHealth>(
@@ -1840,10 +1920,295 @@ public class PlayerHealth : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void Rpc_PlayDeath()
     {
+        // =====================================================
+        // DEATH ANIMATION
+        // =====================================================
+
         if (TryGetComponent(
             out PlayerAnimation playerAnim))
         {
             playerAnim.Die();
+        }
+
+        // =====================================================
+        // CHỈ LOCAL PLAYER BỊ CHẾT
+        // MỚI CHẠY DEATH CAMERA
+        // =====================================================
+
+        if (!HasInputAuthority)
+            return;
+
+
+        // Ẩn Respawn UI trước
+        if (respawnPanel != null)
+        {
+            respawnPanel.SetActive(false);
+        }
+
+
+        // Dừng cinematic cũ nếu còn
+        if (deathCameraCoroutine != null)
+        {
+            StopCoroutine(
+                deathCameraCoroutine
+            );
+
+            deathCameraCoroutine = null;
+        }
+
+
+        deathCameraCoroutine =
+            StartCoroutine(
+                PlayDeathCameraEffect()
+            );
+    }
+
+    // =========================================================
+    // DEATH CAMERA EFFECT
+    // =========================================================
+
+    private IEnumerator PlayDeathCameraEffect()
+    {
+        // =====================================================
+        // CHECK
+        // =====================================================
+
+        if (!HasInputAuthority)
+        {
+            yield break;
+        }
+        // =====================================================
+        // LOCK PLAYER + TPS CAMERA
+        // =====================================================
+
+        SetLocalRespawnLock(
+            true
+        );
+
+
+        // =====================================================
+        // GET CAMERA
+        // =====================================================
+
+        if (deathCamera == null)
+        {
+            deathCamera =
+                Camera.main;
+        }
+
+
+        if (deathCamera == null)
+        {
+            Debug.LogWarning(
+                "[PlayerHealth] Không tìm thấy Camera.main cho Death Camera."
+            );
+
+
+            ShowRespawnPanel();
+            yield break;
+        }
+
+
+        // =====================================================
+        // START CAMERA
+        // =====================================================
+
+        Vector3 startPosition =
+            deathCamera
+                .transform
+                .position;
+
+
+        Quaternion startRotation =
+            deathCamera
+                .transform
+                .rotation;
+
+
+        // =====================================================
+        // PLAYER DEATH POSITION
+        // =====================================================
+
+        Vector3 deathPosition =
+            transform.position;
+
+
+        // =====================================================
+        // END POSITION
+        // =====================================================
+
+        Vector3 endPosition =
+            deathPosition +
+            Vector3.up *
+            deathCameraHeight +
+            deathCameraOffset;
+
+
+        Vector3 lookPoint =
+            deathPosition +
+            Vector3.up *
+            deathCameraLookHeight;
+
+
+        Vector3 lookDirection =
+            lookPoint -
+            endPosition;
+
+
+        Quaternion endRotation =
+            startRotation;
+
+
+        if (lookDirection.sqrMagnitude >
+            0.001f)
+        {
+            endRotation =
+                Quaternion.LookRotation(
+                    lookDirection.normalized,
+                    Vector3.up
+                );
+        }
+
+
+        // =====================================================
+        // CAMERA RISE
+        // =====================================================
+
+        float duration =
+            Mathf.Max(
+                0.01f,
+                deathCameraRiseDuration
+            );
+
+
+        float timer =
+            0f;
+
+
+        while (timer <
+               duration)
+        {
+            // Nếu trận kết thúc trong lúc camera đang chạy
+            // thì dừng cinematic hồi sinh.
+            if (MatchManager.Instance != null &&
+                MatchManager.Instance.MatchEnded)
+            {
+                deathCameraCoroutine =
+                    null;
+
+
+                yield break;
+            }
+
+
+            timer +=
+                Time.unscaledDeltaTime;
+
+
+            float t =
+                Mathf.Clamp01(
+                    timer /
+                    duration
+                );
+
+
+            // SmoothStep
+            float smoothT =
+                t *
+                t *
+                (3f - 2f * t);
+
+
+            // =============================================
+            // POSITION
+            // =============================================
+
+            deathCamera
+                .transform
+                .position =
+                Vector3.Lerp(
+                    startPosition,
+                    endPosition,
+                    smoothT
+                );
+
+
+            // =============================================
+            // ROTATION
+            // =============================================
+
+            deathCamera
+                .transform
+                .rotation =
+                Quaternion.Slerp(
+                    startRotation,
+                    endRotation,
+                    smoothT
+                );
+
+
+            yield return null;
+        }
+
+
+        // =====================================================
+        // FINAL POSITION
+        // =====================================================
+
+        deathCamera
+            .transform
+            .position =
+            endPosition;
+
+
+        deathCamera
+            .transform
+            .rotation =
+            endRotation;
+
+
+        // =====================================================
+        // HOLD TOP VIEW
+        // =====================================================
+
+        if (deathCameraHoldDuration >
+            0f)
+        {
+            yield return
+                new WaitForSecondsRealtime(
+                    deathCameraHoldDuration
+                );
+        }
+
+
+        // =====================================================
+        // SHOW RESPAWN UI
+        // =====================================================
+
+        if (MatchManager.Instance == null ||
+            !MatchManager.Instance.MatchEnded)
+        {
+            ShowRespawnPanel();
+        }
+        deathCameraCoroutine =
+            null;
+    }
+
+    // =========================================================
+    // SHOW RESPAWN UI
+    // =========================================================
+
+    private void ShowRespawnPanel()
+    {
+        if (!HasInputAuthority)
+            return;
+
+
+        if (respawnPanel != null)
+        {
+            respawnPanel.SetActive(
+                true
+            );
         }
     }
 
@@ -1882,7 +2247,38 @@ public class PlayerHealth : NetworkBehaviour
 
         if (HasInputAuthority)
         {
-            SetLocalRespawnLock(false);
+            // =====================================================
+            // STOP DEATH CAMERA
+            // =====================================================
+
+            if (deathCameraCoroutine != null)
+            {
+                StopCoroutine(
+                    deathCameraCoroutine
+                );
+
+                deathCameraCoroutine =
+                    null;
+            }
+            // =====================================================
+            // HIDE RESPAWN UI
+            // =====================================================
+
+            if (respawnPanel != null)
+            {
+                respawnPanel.SetActive(
+                    false
+                );
+            }
+
+
+            // =====================================================
+            // UNLOCK PLAYER + TPS CAMERA
+            // =====================================================
+
+            SetLocalRespawnLock(
+                false
+            );
         }
     }
 }

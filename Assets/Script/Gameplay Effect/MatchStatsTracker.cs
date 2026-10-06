@@ -12,6 +12,9 @@ public class MatchStatsTracker : NetworkBehaviour
     [Networked]
     public float TotalDamage { get; set; }
 
+    [Networked]
+    public float TotalDamageTaken { get; set; }
+
 
     // =========================================================
     // SPAWNED
@@ -25,21 +28,26 @@ public class MatchStatsTracker : NetworkBehaviour
             return;
 
 
-        // Reset damage khi Player được spawn vào trận.
+        // Reset stats khi Player được spawn vào trận.
         TotalDamage = 0f;
+
+        TotalDamageTaken = 0f;
 
 
         Debug.Log(
             "[MatchStatsTracker] SPAWNED" +
             " | Player = " +
             Object.InputAuthority +
-            " | Total Damage = 0"
+            " | Total Damage = 0" +
+            " | Damage Taken = 0"
         );
     }
 
 
     // =========================================================
     // ADD DAMAGE
+    //
+    // Sát thương Player này gây ra cho Player khác.
     // =========================================================
 
     public void AddDamage(float damage)
@@ -89,7 +97,6 @@ public class MatchStatsTracker : NetworkBehaviour
         TotalDamage += damage;
 
 
-        // Đảm bảo không bao giờ âm.
         TotalDamage =
             Mathf.Max(
                 0f,
@@ -109,6 +116,82 @@ public class MatchStatsTracker : NetworkBehaviour
             damage.ToString("F0") +
             " | Total Damage = " +
             TotalDamage.ToString("F0")
+        );
+    }
+
+
+    // =========================================================
+    // ADD DAMAGE TAKEN
+    //
+    // Sát thương Player này nhận vào.
+    // =========================================================
+
+    public void AddDamageTaken(float damage)
+    {
+        // =====================================================
+        // CHỈ STATE AUTHORITY ĐƯỢC CỘNG
+        // =====================================================
+
+        if (!HasStateAuthority)
+        {
+            Debug.LogWarning(
+                "[MatchStatsTracker] AddDamageTaken bị bỏ qua" +
+                " | Không có State Authority" +
+                " | Player = " +
+                Object.InputAuthority
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // DAMAGE PHẢI > 0
+        // =====================================================
+
+        if (damage <= 0f)
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // KHÔNG CỘNG SAU KHI MATCH ĐÃ KẾT THÚC
+        // =====================================================
+
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // CỘNG DAMAGE TAKEN
+        // =====================================================
+
+        TotalDamageTaken += damage;
+
+
+        TotalDamageTaken =
+            Mathf.Max(
+                0f,
+                TotalDamageTaken
+            );
+
+
+        // =====================================================
+        // DEBUG
+        // =====================================================
+
+        Debug.Log(
+            "[MatchStatsTracker] DAMAGE TAKEN" +
+            " | Player = " +
+            Object.InputAuthority +
+            " | +" +
+            damage.ToString("F0") +
+            " | Total Damage Taken = " +
+            TotalDamageTaken.ToString("F0")
         );
     }
 
@@ -142,6 +225,34 @@ public class MatchStatsTracker : NetworkBehaviour
 
 
     // =========================================================
+    // GET DAMAGE TAKEN
+    // =========================================================
+
+    public float GetTotalDamageTaken()
+    {
+        return Mathf.Max(
+            0f,
+            TotalDamageTaken
+        );
+    }
+
+
+    // =========================================================
+    // GET DAMAGE TAKEN AS INT
+    // =========================================================
+
+    public int GetTotalDamageTakenInt()
+    {
+        return Mathf.RoundToInt(
+            Mathf.Max(
+                0f,
+                TotalDamageTaken
+            )
+        );
+    }
+
+
+    // =========================================================
     // RESET MATCH STATS
     // =========================================================
 
@@ -154,12 +265,15 @@ public class MatchStatsTracker : NetworkBehaviour
 
         TotalDamage = 0f;
 
+        TotalDamageTaken = 0f;
+
 
         Debug.Log(
             "[MatchStatsTracker] RESET STATS" +
             " | Player = " +
             Object.InputAuthority +
-            " | Total Damage = 0"
+            " | Total Damage = 0" +
+            " | Damage Taken = 0"
         );
     }
 }
