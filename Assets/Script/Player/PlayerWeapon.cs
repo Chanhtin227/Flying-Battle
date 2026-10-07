@@ -305,6 +305,22 @@ public class PlayerWeapon : NetworkBehaviour
     public AudioClip pistolReloadSound;
 
 
+    [Header("Pickup Sound")]
+
+    [Tooltip("Âm thanh phát riêng cho người chơi vừa nhặt vũ khí.")]
+    public AudioClip pickupWeaponSound;
+
+    [Range(0f, 1f)]
+    public float pickupWeaponVolume = 1f;
+
+    [Header("Item Pickup Sound")]
+
+    public AudioClip itemPickupSound;
+
+    [Range(0f, 1f)]
+    public float itemPickupVolume = 1f;
+
+
     // =========================================================
     // BULLET
     // =========================================================
@@ -3502,6 +3518,13 @@ public class PlayerWeapon : NetworkBehaviour
             Time.time + 0.1f;
 
 
+        // =====================================================
+        // PICKUP SOUND
+        // =====================================================
+
+        Rpc_PlayPickupWeaponSound();
+
+
         Debug.Log(
             "[PlayerWeapon] " +
             "Nhặt thành công: " +
@@ -3510,6 +3533,31 @@ public class PlayerWeapon : NetworkBehaviour
 
 
         return true;
+    }
+
+
+    // =========================================================
+    // PICKUP WEAPON SOUND RPC
+    // =========================================================
+
+    [Rpc(
+        RpcSources.StateAuthority,
+        RpcTargets.InputAuthority
+    )]
+    private void Rpc_PlayPickupWeaponSound()
+    {
+        if (audioSource == null)
+            return;
+
+
+        if (pickupWeaponSound == null)
+            return;
+
+
+        audioSource.PlayOneShot(
+            pickupWeaponSound,
+            pickupWeaponVolume
+        );
     }
 
 
@@ -3796,6 +3844,49 @@ public class PlayerWeapon : NetworkBehaviour
             origin +
             forward *
             meleeRange
+        );
+    }
+
+    // =========================================================
+    // PLAY ITEM PICKUP SOUND
+    // =========================================================
+
+    public void ServerPlayItemPickupSound()
+    {
+        if (!HasStateAuthority)
+            return;
+
+        Rpc_PlayItemPickupSound();
+    }
+
+
+    // =========================================================
+    // ITEM PICKUP SOUND RPC
+    // =========================================================
+
+    [Rpc(
+        RpcSources.StateAuthority,
+        RpcTargets.InputAuthority
+    )]
+    private void Rpc_PlayItemPickupSound()
+    {
+        if (itemPickupSound == null)
+            return;
+
+
+        if (GameAudio.SfxPlayer.Instance == null)
+        {
+            Debug.LogWarning(
+                "[PlayerWeapon] Không tìm thấy SfxPlayer!"
+            );
+
+            return;
+        }
+
+
+        GameAudio.SfxPlayer.Instance.PlaySfx(
+            itemPickupSound,
+            itemPickupVolume
         );
     }
 }

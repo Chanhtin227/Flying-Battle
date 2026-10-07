@@ -109,8 +109,21 @@ public class WeaponChest : NetworkBehaviour
 
     [Header("Interaction")]
 
-    public KeyCode interactKey = KeyCode.F;
-    public float interactDistance = 3f;
+public KeyCode interactKey = KeyCode.F;
+public float interactDistance = 3f;
+
+
+// =========================================================
+// CHEST OPEN SOUND
+// =========================================================
+
+[Header("Chest Open Sound")]
+
+[Tooltip("Âm thanh phát khi player mở rương thành công.")]
+public AudioClip chestOpenSound;
+
+[Range(0f, 1f)]
+public float chestOpenVolume = 1f;
 
 
     // =========================================================
@@ -391,7 +404,9 @@ public class WeaponChest : NetworkBehaviour
         // MỞ RƯƠNG
         // =====================================================
 
-        OpenChest();
+        OpenChest(
+            playerObject.InputAuthority
+        );
     }
 
 
@@ -439,15 +454,16 @@ public class WeaponChest : NetworkBehaviour
 
 
         if (
-            distance >
-            interactDistance
-        )
+    distance >
+    interactDistance)
         {
             return;
         }
 
 
-        OpenChest();
+        OpenChest(
+            player.Object.InputAuthority
+        );
     }
 
 
@@ -455,7 +471,8 @@ public class WeaponChest : NetworkBehaviour
     // OPEN CHEST
     // =========================================================
 
-    private void OpenChest()
+    private void OpenChest(
+        PlayerRef opener)
     {
         if (
             opened ||
@@ -480,6 +497,15 @@ public class WeaponChest : NetworkBehaviour
 
 
         // =====================================================
+        // PHÁT ÂM THANH MỞ RƯƠNG
+        // =====================================================
+
+        Rpc_PlayChestOpenSound(
+            opener
+        );
+
+
+        // =====================================================
         // SPAWN RANDOM ITEM
         // =====================================================
 
@@ -490,7 +516,65 @@ public class WeaponChest : NetworkBehaviour
         // DESPAWN CHEST
         // =====================================================
 
-        Runner.Despawn(Object);
+        Runner.Despawn(
+            Object
+        );
+    }
+
+
+    // =========================================================
+    // CHEST OPEN SOUND RPC
+    // =========================================================
+
+    [Rpc(
+        RpcSources.StateAuthority,
+        RpcTargets.All
+    )]
+    private void Rpc_PlayChestOpenSound(
+        PlayerRef opener)
+    {
+        // =====================================================
+        // CHỈ PLAYER MỞ RƯƠNG MỚI NGHE
+        // =====================================================
+
+        if (Runner == null)
+            return;
+
+
+        if (Runner.LocalPlayer != opener)
+            return;
+
+
+        // =====================================================
+        // CHECK SOUND
+        // =====================================================
+
+        if (chestOpenSound == null)
+            return;
+
+
+        // =====================================================
+        // CHECK SFX PLAYER
+        // =====================================================
+
+        if (GameAudio.SfxPlayer.Instance == null)
+        {
+            Debug.LogWarning(
+                "[WeaponChest] Không tìm thấy GameAudio.SfxPlayer!"
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // PLAY
+        // =====================================================
+
+        GameAudio.SfxPlayer.Instance.PlaySfx(
+            chestOpenSound,
+            chestOpenVolume
+        );
     }
 
 

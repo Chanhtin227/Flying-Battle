@@ -5,15 +5,20 @@ public struct NetworkInputData : INetworkInput
 {
     public Vector3 moveDirection;
     public Vector3 lookDirection;
+
     public NetworkBool isRunning;
-    public NetworkBool isJumping;    // giữ Space (dùng để bay lên sau khi đã nhảy)
-    public NetworkBool jumpPressed;  // chỉ true đúng 1 lần khi bấm Space xuống (để nhảy)
+
+    public NetworkBool isJumping;
+
+    public NetworkBool jumpPressed;
 }
+
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : NetworkBehaviour
 {
     public static PlayerMovement LocalPlayer;
+
 
     // =========================================================
     // MOVEMENT
@@ -22,20 +27,24 @@ public class PlayerMovement : NetworkBehaviour
     [Header("Movement")]
 
     public float walkSpeed = 2f;
+
     public float runSpeed = 5f;
+
     public float gravity = -20f;
+
     public float jumpHeight = 2f;
 
-    // MỚI: nhảy xong giữ Space để bay lên có giới hạn
+
+    // =========================================================
+    // JUMP BOOST
+    // =========================================================
+
     [Header("Jump Boost (giữ Space sau khi nhảy)")]
 
-    // Tốc độ bay lên khi giữ Space
     public float boostSpeed = 4f;
 
-    // Độ cao tối đa so với điểm bắt đầu nhảy (tính cả cú nhảy)
     public float maxBoostHeight = 4f;
 
-    // Thời gian tối đa được bay lên tính từ lúc nhảy (giây)
     public float maxBoostTime = 1.5f;
 
 
@@ -46,8 +55,38 @@ public class PlayerMovement : NetworkBehaviour
     [Header("Medkit Movement")]
 
     public float smallMedkitSpeed = 1f;
+
     public float mediumMedkitSpeed = 0.75f;
+
     public float largeMedkitSpeed = 0.5f;
+
+
+    // =========================================================
+    // FOOTSTEP SOUND
+    // =========================================================
+
+    [Header("Footstep Sound")]
+
+    [Tooltip("Âm thanh bước chân khi đi bộ.")]
+    public AudioClip walkFootstepSound;
+
+    [Tooltip("Âm thanh bước chân khi chạy.")]
+    public AudioClip runFootstepSound;
+
+
+    [Range(0f, 1f)]
+    public float footstepVolume = 0.7f;
+
+
+    [Tooltip("Thời gian giữa 2 bước khi đi bộ.")]
+    public float walkStepInterval = 0.3f;
+
+
+    [Tooltip("Thời gian giữa 2 bước khi chạy.")]
+    public float runStepInterval = 0.1f;
+
+
+    private float nextFootstepTime = 0f;
 
 
     // =========================================================
@@ -64,17 +103,26 @@ public class PlayerMovement : NetworkBehaviour
     // =========================================================
 
     private CharacterController characterController;
+
     private PlayerAnimation playerAnim;
+
     private PlayerHealth playerHealth;
+
 
     private Vector3 velocity;
 
-    // Ghi nhận bấm Space 1 lần để nhảy trên mặt đất (tiêu thụ 1 lần trong GetLocalInput)
+
+    // =========================================================
+    // JUMP STATE
+    // =========================================================
+
     private bool jumpQueued;
 
-    // Trạng thái "bay lên có giới hạn" sau khi nhảy (chỉ State Authority dùng)
+
     private bool boostArmed;
+
     private float boostTimer;
+
     private float boostStartY;
 
 
@@ -95,8 +143,10 @@ public class PlayerMovement : NetworkBehaviour
         characterController =
             GetComponent<CharacterController>();
 
+
         playerAnim =
             GetComponent<PlayerAnimation>();
+
 
         playerHealth =
             GetComponent<PlayerHealth>();
@@ -113,7 +163,7 @@ public class PlayerMovement : NetworkBehaviour
 
 
         // =====================================================
-        // CHỈ STATE AUTHORITY SIMULATE CHARACTER CONTROLLER
+        // ONLY STATE AUTHORITY SIMULATES MOVEMENT
         // =====================================================
 
         if (!HasStateAuthority)
@@ -139,29 +189,41 @@ public class PlayerMovement : NetworkBehaviour
 
 
     // =========================================================
-    // UPDATE (MỚI THÊM - chỉ để bắt phím bật/tắt bay cho đúng khung hình bấm xuống)
+    // UPDATE
     // =========================================================
 
     private void Update()
     {
-        // Chỉ người chơi đang điều khiển nhân vật này mới được bấm phím nhảy
+        // =====================================================
+        // ONLY LOCAL PLAYER
+        // =====================================================
+
         if (!HasInputAuthority)
             return;
 
 
-        // DEAD / MATCH END = KHÔNG NHẬN INPUT LOCAL
+        // =====================================================
+        // DEAD / MATCH END
+        // =====================================================
+
         if (
-            (playerHealth != null && playerHealth.IsDead) ||
-            (MatchManager.Instance != null && MatchManager.Instance.MatchEnded)
+            (playerHealth != null &&
+             playerHealth.IsDead) ||
+
+            (MatchManager.Instance != null &&
+             MatchManager.Instance.MatchEnded)
         )
         {
             jumpQueued = false;
+
             return;
         }
 
 
-        // Chỉ ghi nhận đúng khung hình vừa bấm Space xuống (không tính giữ phím),
-        // để 1 lần bấm chỉ tính là 1 lần nhảy, không nhảy lặp lại khi giữ.
+        // =====================================================
+        // JUMP PRESS
+        // =====================================================
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             jumpQueued = true;
@@ -180,26 +242,37 @@ public class PlayerMovement : NetworkBehaviour
 
 
         // =====================================================
-        // DEAD = KHÔNG NHẬN INPUT
+        // DEAD / MATCH END
         // =====================================================
 
         if (
-            (playerHealth != null && playerHealth.IsDead) ||
-            (MatchManager.Instance != null && MatchManager.Instance.MatchEnded)
+            (playerHealth != null &&
+             playerHealth.IsDead) ||
+
+            (MatchManager.Instance != null &&
+             MatchManager.Instance.MatchEnded)
         )
         {
-            // Xóa cờ đã queue để không tự nhảy ngay khi vừa hồi sinh
             jumpQueued = false;
 
             return data;
         }
 
 
+        // =====================================================
+        // MOVEMENT INPUT
+        // =====================================================
+
         float horizontal =
-            Input.GetAxisRaw("Horizontal");
+            Input.GetAxisRaw(
+                "Horizontal"
+            );
+
 
         float vertical =
-            Input.GetAxisRaw("Vertical");
+            Input.GetAxisRaw(
+                "Vertical"
+            );
 
 
         // =====================================================
@@ -211,15 +284,18 @@ public class PlayerMovement : NetworkBehaviour
             Vector3 forward =
                 cameraRoot.forward;
 
+
             Vector3 right =
                 cameraRoot.right;
 
 
             forward.y = 0f;
+
             right.y = 0f;
 
 
             forward.Normalize();
+
             right.Normalize();
 
 
@@ -241,7 +317,9 @@ public class PlayerMovement : NetworkBehaviour
         // =====================================================
 
         data.isRunning =
-            Input.GetKey(KeyCode.LeftShift);
+            Input.GetKey(
+                KeyCode.LeftShift
+            );
 
 
         // =====================================================
@@ -249,11 +327,14 @@ public class PlayerMovement : NetworkBehaviour
         // =====================================================
 
         data.isJumping =
-            Input.GetKey(KeyCode.Space); // giữ để bay lên
+            Input.GetKey(
+                KeyCode.Space
+            );
 
 
         data.jumpPressed =
-            jumpQueued;                  // bấm 1 lần để nhảy
+            jumpQueued;
+
 
         jumpQueued = false;
 
@@ -269,7 +350,7 @@ public class PlayerMovement : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         // =====================================================
-        // CHỈ STATE AUTHORITY
+        // ONLY STATE AUTHORITY
         // =====================================================
 
         if (!HasStateAuthority)
@@ -277,18 +358,23 @@ public class PlayerMovement : NetworkBehaviour
 
 
         // =====================================================
-        // DEAD / MATCH END = ĐỨNG IM HOÀN TOÀN
+        // DEAD / MATCH END
         // =====================================================
 
         if (
-            (playerHealth != null && playerHealth.IsDead) ||
-            (MatchManager.Instance != null && MatchManager.Instance.MatchEnded)
+            (playerHealth != null &&
+             playerHealth.IsDead) ||
+
+            (MatchManager.Instance != null &&
+             MatchManager.Instance.MatchEnded)
         )
         {
             velocity =
                 Vector3.zero;
 
-            boostArmed = false;
+
+            boostArmed =
+                false;
 
 
             NetworkedAnimSpeed =
@@ -297,7 +383,9 @@ public class PlayerMovement : NetworkBehaviour
 
             if (playerAnim != null)
             {
-                playerAnim.Move(0f);
+                playerAnim.Move(
+                    0f
+                );
             }
 
 
@@ -309,8 +397,11 @@ public class PlayerMovement : NetworkBehaviour
         // GET INPUT
         // =====================================================
 
-        if (!GetInput(
-            out NetworkInputData data))
+        if (
+            !GetInput(
+                out NetworkInputData data
+            )
+        )
         {
             return;
         }
@@ -331,6 +422,7 @@ public class PlayerMovement : NetworkBehaviour
                     Vector3.up
                 );
         }
+
 
         // =====================================================
         // SPEED
@@ -410,6 +502,15 @@ public class PlayerMovement : NetworkBehaviour
 
 
         // =====================================================
+        // FOOTSTEP SOUND
+        // =====================================================
+
+        HandleFootstepSound(
+            data
+        );
+
+
+        // =====================================================
         // JUMP
         // =====================================================
 
@@ -419,12 +520,15 @@ public class PlayerMovement : NetworkBehaviour
             characterController.isGrounded
         )
         {
-            velocity.y = -2f;
+            velocity.y =
+                -2f;
 
-            boostArmed = false;
+
+            boostArmed =
+                false;
 
 
-            if (data.jumpPressed) // đổi từ data.isJumping
+            if (data.jumpPressed)
             {
                 velocity.y =
                     Mathf.Sqrt(
@@ -433,10 +537,17 @@ public class PlayerMovement : NetworkBehaviour
                         gravity
                     );
 
-                // MỚI: bắt đầu cho phép giữ Space để bay lên
-                boostArmed = true;
-                boostTimer = 0f;
-                boostStartY = transform.position.y;
+
+                boostArmed =
+                    true;
+
+
+                boostTimer =
+                    0f;
+
+
+                boostStartY =
+                    transform.position.y;
 
 
                 if (playerAnim != null)
@@ -448,7 +559,7 @@ public class PlayerMovement : NetworkBehaviour
 
 
         // =====================================================
-        // JUMP BOOST (MỚI): nhảy rồi giữ Space để bay lên có giới hạn
+        // JUMP BOOST
         // =====================================================
 
         if (boostArmed)
@@ -456,31 +567,38 @@ public class PlayerMovement : NetworkBehaviour
             bool heldSpace =
                 data.isJumping;
 
+
             bool underTime =
-                boostTimer < maxBoostTime;
+                boostTimer <
+                maxBoostTime;
+
 
             bool underHeight =
-                transform.position.y - boostStartY <
+                transform.position.y -
+                boostStartY <
                 maxBoostHeight;
 
 
-            if (heldSpace && underTime && underHeight)
+            if (
+                heldSpace &&
+                underTime &&
+                underHeight
+            )
             {
-                // Giữ vận tốc đi lên tối thiểu bằng boostSpeed
                 velocity.y =
                     Mathf.Max(
                         velocity.y,
                         boostSpeed
                     );
 
+
                 boostTimer +=
                     Runner.DeltaTime;
             }
             else
             {
-                // Thả Space hoặc hết giới hạn: tắt boost, rớt xuống
-                // (phải nhảy lại mới có boost tiếp)
-                boostArmed = false;
+                boostArmed =
+                    false;
             }
         }
 
@@ -516,6 +634,120 @@ public class PlayerMovement : NetworkBehaviour
 
 
     // =========================================================
+    // FOOTSTEP SOUND
+    // =========================================================
+
+    private void HandleFootstepSound(
+        NetworkInputData data)
+    {
+        // =====================================================
+        // ONLY LOCAL PLAYER
+        // =====================================================
+
+        if (!HasInputAuthority)
+            return;
+
+
+        // =====================================================
+        // CHECK CHARACTER CONTROLLER
+        // =====================================================
+
+        if (characterController == null)
+            return;
+
+
+        // =====================================================
+        // MUST BE GROUNDED
+        // =====================================================
+
+        if (!characterController.isGrounded)
+            return;
+
+
+        // =====================================================
+        // MUST BE MOVING
+        // =====================================================
+
+        if (
+            data.moveDirection.sqrMagnitude <
+            0.01f
+        )
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // TIMER
+        // =====================================================
+
+        if (
+            Time.time <
+            nextFootstepTime
+        )
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // WALK / RUN
+        // =====================================================
+
+        bool isRunning =
+            data.isRunning;
+
+
+        float interval =
+            isRunning
+            ? runStepInterval
+            : walkStepInterval;
+
+
+        AudioClip footstepClip =
+            isRunning
+            ? runFootstepSound
+            : walkFootstepSound;
+
+
+        nextFootstepTime =
+            Time.time +
+            interval;
+
+
+        // =====================================================
+        // CHECK AUDIO CLIP
+        // =====================================================
+
+        if (footstepClip == null)
+            return;
+
+
+        // =====================================================
+        // CHECK SFX PLAYER
+        // =====================================================
+
+        if (
+            GameAudio.SfxPlayer.Instance ==
+            null
+        )
+        {
+            return;
+        }
+
+
+        // =====================================================
+        // PLAY FOOTSTEP
+        // =====================================================
+
+        GameAudio.SfxPlayer.Instance.PlaySfx(
+            footstepClip,
+            footstepVolume
+        );
+    }
+
+
+    // =========================================================
     // RESET MOVEMENT
     // =========================================================
 
@@ -524,7 +756,13 @@ public class PlayerMovement : NetworkBehaviour
         velocity =
             Vector3.zero;
 
-        boostArmed = false;
+
+        boostArmed =
+            false;
+
+
+        nextFootstepTime =
+            0f;
 
 
         if (HasStateAuthority)
@@ -545,12 +783,17 @@ public class PlayerMovement : NetworkBehaviour
         switch (medkitType)
         {
             case 1:
+
                 return smallMedkitSpeed;
 
+
             case 2:
+
                 return mediumMedkitSpeed;
 
+
             case 3:
+
                 return largeMedkitSpeed;
         }
 

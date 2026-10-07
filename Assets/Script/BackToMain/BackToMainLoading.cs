@@ -410,7 +410,7 @@ public class BackToMainLoading : MonoBehaviour
                 if (loadingText != null)
                 {
                     loadingText.text =
-                        "LOADING GAME...";
+                        "Loading... ";
                 }
 
 

@@ -1648,6 +1648,11 @@ MonoBehaviour:
   smallMedkitSpeed: 1
   mediumMedkitSpeed: 1
   largeMedkitSpeed: 1
+  walkFootstepSound: {fileID: 8300000, guid: 4e6416001b081784196742c63c03eb42, type: 3}
+  runFootstepSound: {fileID: 8300000, guid: 4e6416001b081784196742c63c03eb42, type: 3}
+  footstepVolume: 1
+  walkStepInterval: 0.3
+  runStepInterval: 0.1
   cameraRoot: {fileID: 6453958068249345380}
 --- !u!114 &7572080613702007642
 MonoBehaviour:
@@ -1743,10 +1748,14 @@ MonoBehaviour:
   audioSource: {fileID: 2614666991485716670}
   rifleShotSound: {fileID: 8300000, guid: 7f48f5e2b72dc3447a2a348702fe35f3, type: 3}
   pistolShotSound: {fileID: 8300000, guid: 867e5eee532ff2d4695c17134af57c37, type: 3}
-  batHitSound: {fileID: 8300000, guid: 28fa253d6c2125f459ee92ce2db31310, type: 3}
-  shovelHitSound: {fileID: 8300000, guid: 28fa253d6c2125f459ee92ce2db31310, type: 3}
+  batHitSound: {fileID: 8300000, guid: 879fcdfb85b8fb840afa93ce7ce4de29, type: 3}
+  shovelHitSound: {fileID: 8300000, guid: 0cd22b9c857a74441b007f59c058792c, type: 3}
   rifleReloadSound: {fileID: 8300000, guid: 049cfaafbf81cd04eb202c489108794b, type: 3}
   pistolReloadSound: {fileID: 8300000, guid: b7dea84c0d1df4d46af20e41ff3aa8f3, type: 3}
+  pickupWeaponSound: {fileID: 8300000, guid: 2d1176f1fa263d6408f349dfc4922807, type: 3}
+  pickupWeaponVolume: 0.3
+  itemPickupSound: {fileID: 8300000, guid: 2d1176f1fa263d6408f349dfc4922807, type: 3}
+  itemPickupVolume: 1
   tracerPrefab: {fileID: 8941377978627608511, guid: 2a2395de5b97e73499da6fdc62d7b768, type: 3}
   firePoint: {fileID: 8055155273452660666}
 --- !u!114 &1600288243756836947
@@ -1785,7 +1794,7 @@ MonoBehaviour:
   respawnDelay: 5
   centerRespawnPercent: 0.5
   minRespawnDistance: 150
-  minDistanceFromDeathPosition: 15
+  minDistanceFromDeathPosition: 19
   respawnTryCount: 100
   respawnHeightOffset: 1
   maxRespawnSlope: 25
