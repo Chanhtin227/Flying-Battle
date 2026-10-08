@@ -1650,9 +1650,9 @@ MonoBehaviour:
   largeMedkitSpeed: 1
   walkFootstepSound: {fileID: 8300000, guid: 4e6416001b081784196742c63c03eb42, type: 3}
   runFootstepSound: {fileID: 8300000, guid: 4e6416001b081784196742c63c03eb42, type: 3}
-  footstepVolume: 1
+  footstepVolume: 0.5
   walkStepInterval: 0.3
-  runStepInterval: 0.1
+  runStepInterval: 0.3
   cameraRoot: {fileID: 6453958068249345380}
 --- !u!114 &7572080613702007642
 MonoBehaviour:

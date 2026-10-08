@@ -3,6 +3,11 @@ using System.Collections;
 
 public class ResultPanelEffect : MonoBehaviour
 {
+    [Header("UI cần ẩn khi kết thúc trận đấu")]
+    public GameObject weaponHUD;
+    public GameObject matchHUD;
+    public GameObject topLeftUI;
+
     [Header("References")]
     public CanvasGroup canvasGroup;
     public RectTransform panelRect;
@@ -49,6 +54,9 @@ public class ResultPanelEffect : MonoBehaviour
 
     private void OnEnable()
     {
+        weaponHUD.SetActive(false);
+        matchHUD.SetActive(false);
+        topLeftUI.SetActive(false);
         PlayEffect();
     }
 
