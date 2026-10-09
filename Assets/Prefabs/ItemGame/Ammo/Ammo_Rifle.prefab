@@ -68,9 +68,17 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 24c9b7ec02f4eea4cb99e02aab43d8cc, type: 2}
+    - target: {fileID: -2479939420555371872, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
       propertyPath: m_Name
       value: Ammo_Rifle
+      objectReference: {fileID: 0}
+    - target: {fileID: 1188256223936568184, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
+      propertyPath: m_Name
+      value: Visual
       objectReference: {fileID: 0}
     - target: {fileID: 1701301799562459933, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -88,13 +96,13 @@ PrefabInstance:
       addedObject: {fileID: 6628533313626474607}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2089332213770783757}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
-      insertIndex: -1
       addedObject: {fileID: -2360130316293668812}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5182427374050121100}
+    - targetCorrespondingSourceObject: {fileID: 1188256223936568184, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8403092111715628920}
   m_SourcePrefab: {fileID: 100100000, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
 --- !u!1 &6982820968750013824 stripped
 GameObject:
@@ -140,19 +148,6 @@ MonoBehaviour:
   - {fileID: 5182427374050121100}
   - {fileID: 2637862776566158466}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &2089332213770783757
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6982820968750013824}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b27aef7b4d7a9241b145d6fd7a1735c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemRotate
-  rotateSpeed: 100
 --- !u!65 &-2360130316293668812
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -214,3 +209,31 @@ MonoBehaviour:
     MinImpactfulCollisionAlignment: 0.3
     ImpactStartCorrectionTime: 0.1
     ImpactCorrectionTimeComplete: 0.3
+--- !u!4 &7833183845959426380 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -9181836567796383331, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
+  m_PrefabInstance: {fileID: 7793091565646471377}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8960781997950745513 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1188256223936568184, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
+  m_PrefabInstance: {fileID: 7793091565646471377}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8403092111715628920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8960781997950745513}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbdc74374c5302441910b7a8eb10932b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponPickupEffect
+  visualObject: {fileID: 7833183845959426380}
+  enableRotation: 1
+  rotationSpeed: 90
+  enableFloating: 1
+  floatHeight: 0.2
+  floatSpeed: 2

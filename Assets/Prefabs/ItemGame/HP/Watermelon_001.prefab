@@ -1,5 +1,114 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2843116444051454041
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3068656512037159958}
+  - component: {fileID: 6750679846400534160}
+  - component: {fileID: 1771887667531720215}
+  - component: {fileID: 6538043148169426381}
+  m_Layer: 0
+  m_Name: Visual
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3068656512037159958
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2843116444051454041}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4453847662854216729}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &6750679846400534160
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2843116444051454041}
+  m_Mesh: {fileID: 1616471948417666808, guid: 63880a8e4dec7364a9518ae02e49f3d6, type: 3}
+--- !u!23 &1771887667531720215
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2843116444051454041}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: ad39eccb39be39f40b3ba8c2298f9fd2, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &6538043148169426381
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2843116444051454041}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbdc74374c5302441910b7a8eb10932b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponPickupEffect
+  visualObject: {fileID: 3068656512037159958}
+  enableRotation: 1
+  rotationSpeed: 90
+  enableFloating: 1
+  floatHeight: 0.2
+  floatSpeed: 2
 --- !u!1001 &4198911380710783986
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -72,9 +181,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Watermelon_001
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: -7511558181221131132, guid: 63880a8e4dec7364a9518ae02e49f3d6, type: 3}
+    - {fileID: -5754084199372789682, guid: 63880a8e4dec7364a9518ae02e49f3d6, type: 3}
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 63880a8e4dec7364a9518ae02e49f3d6, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3068656512037159958}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 63880a8e4dec7364a9518ae02e49f3d6, type: 3}
       insertIndex: -1
@@ -85,9 +199,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 63880a8e4dec7364a9518ae02e49f3d6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4329497175582913693}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 63880a8e4dec7364a9518ae02e49f3d6, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8778405593436058712}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 63880a8e4dec7364a9518ae02e49f3d6, type: 3}
       insertIndex: -1
       addedObject: {fileID: 14141819912002798}
@@ -158,19 +269,6 @@ MonoBehaviour:
   - {fileID: 14141819912002798}
   - {fileID: 7631531651584625263}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &8778405593436058712
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3928526967939352227}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b27aef7b4d7a9241b145d6fd7a1735c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemRotate
-  rotateSpeed: 100
 --- !u!114 &14141819912002798
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -211,3 +309,8 @@ MonoBehaviour:
     MinImpactfulCollisionAlignment: 0.3
     ImpactStartCorrectionTime: 0.1
     ImpactCorrectionTimeComplete: 0.3
+--- !u!4 &4453847662854216729 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 63880a8e4dec7364a9518ae02e49f3d6, type: 3}
+  m_PrefabInstance: {fileID: 4198911380710783986}
+  m_PrefabAsset: {fileID: 0}

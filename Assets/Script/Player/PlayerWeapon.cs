@@ -295,6 +295,10 @@ public class PlayerWeapon : NetworkBehaviour
 
     public AudioSource audioSource;
 
+    [Header("Weapon Audio Settings")]
+    [Range(0f, 1f)] public float weaponSoundVolume = 0.85f;
+    [Min(1f)] public float otherPlayerSoundMaxDistance = 35f;
+
     public AudioClip rifleShotSound;
     public AudioClip pistolShotSound;
 
@@ -363,6 +367,9 @@ public class PlayerWeapon : NetworkBehaviour
         playerHealth =
             GetComponent<PlayerHealth>();
 
+        // Each spawned network player needs an active weapon audio source.
+        SetupWeaponAudio();
+
 
         // =====================================================
         // INITIAL NETWORK STATE
@@ -412,6 +419,81 @@ public class PlayerWeapon : NetworkBehaviour
         StopAllMuzzleFlash();
 
         UpdateWeaponVisibility();
+
+        DisableHeldWeaponEffects();
+    }
+
+
+    // =========================================================
+    // WEAPON AUDIO - ONE SOURCE PER NETWORK PLAYER
+    // =========================================================
+
+    private void SetupWeaponAudio()
+    {
+        // Luon dung AudioSource rieng tren Player, khong dung source cua nhac nen,
+        // vu khi co the bi SetActive(false), hoac AudioMixer Group bi mute.
+        Transform child = transform.Find("WeaponAudio");
+        if (child == null)
+        {
+            GameObject obj = new GameObject("WeaponAudio");
+            obj.transform.SetParent(transform, false);
+            child = obj.transform;
+        }
+
+        child.localPosition = Vector3.up;
+        child.gameObject.SetActive(true);
+
+        audioSource = child.GetComponent<AudioSource>();
+        if (audioSource == null)
+            audioSource = child.gameObject.AddComponent<AudioSource>();
+
+        audioSource.enabled = true;
+        audioSource.playOnAwake = false;
+        audioSource.loop = false;
+        audioSource.mute = false;
+        audioSource.volume = 1f;
+        audioSource.pitch = 1f;
+        audioSource.outputAudioMixerGroup = null; // Tranh mixer nhac nen mute tieng sung.
+        audioSource.bypassEffects = true;
+        audioSource.bypassListenerEffects = true;
+        audioSource.spatialBlend = HasInputAuthority ? 0f : 1f;
+        audioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+        audioSource.minDistance = 3f;
+        audioSource.maxDistance = Mathf.Max(3f, otherPlayerSoundMaxDistance);
+        audioSource.dopplerLevel = 0f;
+    }
+
+    private void PlayWeaponSound(AudioClip clip)
+    {
+        if (clip == null)
+        {
+            Debug.LogWarning("[PlayerWeapon] Chua gan AudioClip tren Player prefab: " + name);
+            return;
+        }
+
+        if (audioSource == null || !audioSource.isActiveAndEnabled ||
+            audioSource.gameObject.name != "WeaponAudio")
+            SetupWeaponAudio();
+
+        if (audioSource == null || !audioSource.isActiveAndEnabled)
+        {
+            Debug.LogError("[PlayerWeapon] WeaponAudio khong hoat dong: " + name);
+            return;
+        }
+
+        if (AudioListener.pause || AudioListener.volume <= 0f)
+        {
+            Debug.LogWarning("[PlayerWeapon] AudioListener dang Pause hoac volume = 0. Kiem tra he thong audio cua game.");
+        }
+
+        float volume = Mathf.Clamp01(weaponSoundVolume);
+        if (volume <= 0f)
+        {
+            Debug.LogWarning("[PlayerWeapon] Weapon Sound Volume = 0. Tu dong dung 0.85 de nghe duoc.");
+            volume = 0.85f;
+        }
+
+        audioSource.PlayOneShot(clip, volume);
     }
 
 
@@ -2123,11 +2205,21 @@ public class PlayerWeapon : NetworkBehaviour
                     !target.IsDead
                 )
                 {
+                    // Chỉ hiển thị Hit Marker khi đạn gây sát thương thật.
+                    // Player đang bất tử không mất máu -> không hiện marker.
+                    float healthBefore = target.CurrentHealth;
+
                     target.TakeDamage(
                         damage,
                         origin,
                         Object.InputAuthority
                     );
+
+                    if (target.CurrentHealth < healthBefore)
+                    {
+                        // Player chết vì phát bắn này -> marker đỏ.
+                        Rpc_ShowHitMarker(target.IsDead);
+                    }
                 }
             }
         }
@@ -2138,6 +2230,27 @@ public class PlayerWeapon : NetworkBehaviour
             targetPoint,
             CurrentWeapon
         );
+    }
+
+
+    // =========================================================
+    // HIT MARKER - ONLY SHOOTER SEES IT
+    // =========================================================
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    private void Rpc_ShowHitMarker(bool isKill)
+    {
+        if (!HasInputAuthority)
+            return;
+
+        // UI nằm trong Canvas local, không phải prefab network.
+        HitMarkerUI marker =
+            FindFirstObjectByType<HitMarkerUI>();
+
+        if (marker != null)
+        {
+            marker.ShowHit(isKill);
+        }
     }
 
 
@@ -2250,10 +2363,6 @@ public class PlayerWeapon : NetworkBehaviour
     private void PlayShootSoundOnce(
         WeaponType weapon)
     {
-        if (audioSource == null)
-            return;
-
-
         int currentTick =
             Runner.Tick.Raw;
 
@@ -2273,23 +2382,17 @@ public class PlayerWeapon : NetworkBehaviour
 
         if (
             weapon ==
-                WeaponType.Rifle &&
-            rifleShotSound != null
+                WeaponType.Rifle
         )
         {
-            audioSource.PlayOneShot(
-                rifleShotSound
-            );
+            PlayWeaponSound(rifleShotSound);
         }
         else if (
             weapon ==
-                WeaponType.Pistol &&
-            pistolShotSound != null
+                WeaponType.Pistol
         )
         {
-            audioSource.PlayOneShot(
-                pistolShotSound
-            );
+            PlayWeaponSound(pistolShotSound);
         }
     }
 
@@ -2517,6 +2620,10 @@ public class PlayerWeapon : NetworkBehaviour
         HashSet<PlayerHealth> damagedPlayers =
             new HashSet<PlayerHealth>();
 
+        // Một nhịp đánh chỉ phát một Hit Marker cho người đánh.
+        bool meleeHitConfirmed = false;
+        bool meleeKillConfirmed = false;
+
 
         // =====================================================
         // LOOP
@@ -2631,11 +2738,23 @@ public class PlayerWeapon : NetworkBehaviour
             // DAMAGE
             // =================================================
 
+            // Chỉ báo trúng khi State Authority xác nhận HP giảm.
+            // Đối thủ đang bất tử sẽ không kích hoạt Hit Marker.
+            float healthBefore = target.CurrentHealth;
+
             target.TakeDamage(
                 damage,
                 transform.position,
                 Object.InputAuthority
             );
+
+            if (target.CurrentHealth < healthBefore)
+            {
+                meleeHitConfirmed = true;
+
+                if (target.IsDead)
+                    meleeKillConfirmed = true;
+            }
 
 
             damagedPlayers.Add(
@@ -2662,6 +2781,13 @@ public class PlayerWeapon : NetworkBehaviour
         // =====================================================
         // EFFECT
         // =====================================================
+
+        // Dùng chung Hit Marker (và âm thanh) với Rifle / Pistol.
+        // Nhiều collider / nhiều mục tiêu: chỉ báo một lần mỗi đòn.
+        if (meleeHitConfirmed)
+        {
+            Rpc_ShowHitMarker(meleeKillConfirmed);
+        }
 
         Rpc_PlayMeleeEffects(
             CurrentWeapon
@@ -2699,10 +2825,6 @@ public class PlayerWeapon : NetworkBehaviour
     private void PlayMeleeSoundOnce(
         WeaponType weapon)
     {
-        if (audioSource == null)
-            return;
-
-
         int currentTick =
             Runner.Tick.Raw;
 
@@ -2722,23 +2844,17 @@ public class PlayerWeapon : NetworkBehaviour
 
         if (
             weapon ==
-                WeaponType.Bat &&
-            batHitSound != null
+                WeaponType.Bat
         )
         {
-            audioSource.PlayOneShot(
-                batHitSound
-            );
+            PlayWeaponSound(batHitSound);
         }
         else if (
             weapon ==
-                WeaponType.Shovel &&
-            shovelHitSound != null
+                WeaponType.Shovel
         )
         {
-            audioSource.PlayOneShot(
-                shovelHitSound
-            );
+            PlayWeaponSound(shovelHitSound);
         }
     }
 
@@ -3233,10 +3349,6 @@ public class PlayerWeapon : NetworkBehaviour
     private void PlayReloadSoundOnce(
         WeaponType weapon)
     {
-        if (audioSource == null)
-            return;
-
-
         int currentTick =
             Runner.Tick.Raw;
 
@@ -3260,9 +3372,7 @@ public class PlayerWeapon : NetworkBehaviour
             rifleReloadSound != null
         )
         {
-            audioSource.PlayOneShot(
-                rifleReloadSound
-            );
+            PlayWeaponSound(rifleReloadSound);
         }
         else if (
             weapon ==
@@ -3270,9 +3380,7 @@ public class PlayerWeapon : NetworkBehaviour
             pistolReloadSound != null
         )
         {
-            audioSource.PlayOneShot(
-                pistolReloadSound
-            );
+            PlayWeaponSound(pistolReloadSound);
         }
     }
 
@@ -3414,92 +3522,80 @@ public class PlayerWeapon : NetworkBehaviour
         );
 
 
+
         // =====================================================
-        // RIFLE AMMO
+        // RIFLE AMMO - FIX
         // =====================================================
 
-        if (
-            weapon ==
-            WeaponType.Rifle
-        )
+        if (weapon == WeaponType.Rifle)
         {
-            if (
-                droppedRifleAmmo >= 0 &&
-                droppedRifleReserveAmmo >= 0
-            )
+            if (droppedRifleAmmo >= 0 &&
+                droppedRifleReserveAmmo >= 0)
             {
-                RifleAmmo =
-                    Mathf.Clamp(
-                        droppedRifleAmmo,
-                        0,
-                        rifleMagazineSize
-                    );
+                // Súng được người chơi vứt ra
+                // Giữ số đạn của khẩu súng đó
 
+                RifleAmmo = Mathf.Clamp(
+                    droppedRifleAmmo,
+                    0,
+                    rifleMagazineSize
+                );
 
-                RifleReserveAmmo =
-                    Mathf.Max(
-                        0,
-                        droppedRifleReserveAmmo
-                    );
+                RifleReserveAmmo = Mathf.Max(
+                    0,
+                    droppedRifleReserveAmmo
+                );
 
-
-                HasPickedRifleAmmo =
-                    true;
+                HasPickedRifleAmmo = true;
             }
-            else if (!HasPickedRifleAmmo)
+            else
             {
-                RifleAmmo =
-                    rifleStartAmmo;
+                // Súng mới từ rương
+                // Luôn có đầy 30 viên trong băng
 
+                RifleAmmo = rifleMagazineSize;
 
-                RifleReserveAmmo =
-                    rifleStartReserveAmmo;
+                // KHÔNG thay đổi RifleReserveAmmo
+                // Giữ nguyên đạn dự trữ hiện tại
             }
         }
 
-
         // =====================================================
-        // PISTOL AMMO
+        // PISTOL AMMO - FIX
         // =====================================================
 
-        if (
-            weapon ==
-            WeaponType.Pistol
-        )
+        if (weapon == WeaponType.Pistol)
         {
-            if (
-                droppedPistolAmmo >= 0 &&
-                droppedPistolReserveAmmo >= 0
-            )
+            if (droppedPistolAmmo >= 0 &&
+                droppedPistolReserveAmmo >= 0)
             {
-                PistolAmmo =
-                    Mathf.Clamp(
-                        droppedPistolAmmo,
-                        0,
-                        pistolMagazineSize
-                    );
+                // Súng được người chơi vứt ra
+                // Giữ số đạn của khẩu súng đó
 
+                PistolAmmo = Mathf.Clamp(
+                    droppedPistolAmmo,
+                    0,
+                    pistolMagazineSize
+                );
 
-                PistolReserveAmmo =
-                    Mathf.Max(
-                        0,
-                        droppedPistolReserveAmmo
-                    );
+                PistolReserveAmmo = Mathf.Max(
+                    0,
+                    droppedPistolReserveAmmo
+                );
 
-
-                HasPickedPistolAmmo =
-                    true;
+                HasPickedPistolAmmo = true;
             }
-            else if (!HasPickedPistolAmmo)
+            else
             {
-                PistolAmmo =
-                    pistolStartAmmo;
+                // Pistol mới từ rương
+                // Luôn có đầy 12 viên trong băng
 
+                PistolAmmo = pistolMagazineSize;
 
-                PistolReserveAmmo =
-                    pistolStartReserveAmmo;
+                // Giữ nguyên đạn dự trữ hiện tại
             }
         }
+
 
 
         // =====================================================
@@ -3546,17 +3642,42 @@ public class PlayerWeapon : NetworkBehaviour
     )]
     private void Rpc_PlayPickupWeaponSound()
     {
-        if (audioSource == null)
+        // RPC chi phat cho nguoi vua nhat vu khi.
+        if (!HasInputAuthority)
             return;
-
 
         if (pickupWeaponSound == null)
+        {
+            Debug.LogWarning(
+                "[PlayerWeapon] Chua gan Pickup Weapon Sound trong Player prefab!"
+            );
             return;
+        }
 
+        // Dung SFX 2D cua game: khong phu thuoc AudioSource
+        // cua Player co dang bat hay co o gan camera hay khong.
+        if (GameAudio.SfxPlayer.Instance != null)
+        {
+            GameAudio.SfxPlayer.Instance.PlaySfx(
+                pickupWeaponSound,
+                pickupWeaponVolume
+            );
+            return;
+        }
 
-        audioSource.PlayOneShot(
-            pickupWeaponSound,
-            pickupWeaponVolume
+        // Du phong khi scene khong co GameAudio.SfxPlayer.
+        if (audioSource != null && audioSource.isActiveAndEnabled)
+        {
+            audioSource.PlayOneShot(
+                pickupWeaponSound,
+                pickupWeaponVolume
+            );
+            return;
+        }
+
+        Debug.LogWarning(
+            "[PlayerWeapon] Khong phat duoc tieng nhat sung: " +
+            "thieu GameAudio.SfxPlayer va AudioSource hop le."
         );
     }
 
@@ -3889,4 +4010,24 @@ public class PlayerWeapon : NetworkBehaviour
             itemPickupVolume
         );
     }
+
+    private void DisableHeldWeaponEffects()
+    {
+        GameObject[] weapons = { gun, pistol, bat, shovel };
+
+        foreach (GameObject weapon in weapons)
+        {
+            if (weapon == null)
+                continue;
+
+            WeaponPickupEffect effect =
+                weapon.GetComponent<WeaponPickupEffect>();
+
+            if (effect != null)
+            {
+                effect.enabled = false;
+            }
+        }
+    }
+
 }

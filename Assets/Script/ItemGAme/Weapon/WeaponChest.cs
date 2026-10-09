@@ -1,5 +1,6 @@
 using UnityEngine;
 using Fusion;
+using System.Collections;
 
 public class WeaponChest : NetworkBehaviour
 {
@@ -109,21 +110,21 @@ public class WeaponChest : NetworkBehaviour
 
     [Header("Interaction")]
 
-public KeyCode interactKey = KeyCode.F;
-public float interactDistance = 3f;
+    public KeyCode interactKey = KeyCode.F;
+    public float interactDistance = 3f;
 
 
-// =========================================================
-// CHEST OPEN SOUND
-// =========================================================
+    // =========================================================
+    // CHEST OPEN SOUND
+    // =========================================================
 
-[Header("Chest Open Sound")]
+    [Header("Chest Open Sound")]
 
-[Tooltip("Âm thanh phát khi player mở rương thành công.")]
-public AudioClip chestOpenSound;
+    [Tooltip("Âm thanh phát khi player mở rương thành công.")]
+    public AudioClip chestOpenSound;
 
-[Range(0f, 1f)]
-public float chestOpenVolume = 1f;
+    [Range(0f, 1f)]
+    public float chestOpenVolume = 1f;
 
 
     // =========================================================
@@ -134,6 +135,21 @@ public float chestOpenVolume = 1f;
 
     public GameObject lightBeam;
 
+
+    // =========================================================
+    // CHEST OPEN ANIMATION
+    // =========================================================
+
+    [Header("Chest Open Animation")]
+    [Tooltip("Animator tren Chest_Animated (co the de trong de tu tim)")]
+    public Animator chestAnimator;
+
+    [Tooltip("Ten Trigger chuyen tu anim cho sang anim mo ruong")]
+    public string openTriggerName = "Open";
+
+    [Tooltip("Thoi gian cho animation mo ruong truoc khi spawn vat pham")]
+    [Min(0f)]
+    public float openAnimationDuration = 1.2f;
 
     // =========================================================
     // STATE
@@ -152,7 +168,13 @@ public float chestOpenVolume = 1f;
         base.Spawned();
 
         hasLanded = true;
+        opened = false;
 
+        if (chestAnimator == null)
+            chestAnimator = GetComponentInChildren<Animator>(true);
+
+        // Animator Controller phai co default state la Chest_Rotation
+        // (hoac mot Idle), KHONG phai Chest_Shake / Chest_Open_Close.
         if (lightBeam != null)
         {
             lightBeam.SetActive(true);
@@ -299,7 +321,7 @@ public float chestOpenVolume = 1f;
     // =========================================================
 
     [Rpc(
-        RpcSources.InputAuthority,
+        RpcSources.All,
         RpcTargets.StateAuthority
     )]
     private void RequestOpenChestRpc(
@@ -471,54 +493,61 @@ public float chestOpenVolume = 1f;
     // OPEN CHEST
     // =========================================================
 
-    private void OpenChest(
-        PlayerRef opener)
+    private void OpenChest(PlayerRef opener)
     {
-        if (
-            opened ||
-            !HasStateAuthority
-        )
-        {
+        if (opened || !HasStateAuthority ||
+            Object == null || !Object.IsValid)
             return;
-        }
 
-
+        // Khoa mo ruong ngay, tranh nhieu player mo cung luc.
         opened = true;
 
+        // Tat beam tren tat ca may va phat animation dong bo.
+        Rpc_PlayOpenAnimation();
 
-        // =====================================================
-        // TẮT LIGHT BEAM
-        // =====================================================
+        // Am thanh chi cho player da mo ruong (giu logic cu).
+        Rpc_PlayChestOpenSound(opener);
+
+        // Chi State Authority duoc spawn vat pham va despawn ruong.
+        StartCoroutine(OpenChestRoutine());
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_PlayOpenAnimation()
+    {
+        opened = true;
 
         if (lightBeam != null)
-        {
             lightBeam.SetActive(false);
+
+        if (chestAnimator == null)
+            chestAnimator = GetComponentInChildren<Animator>(true);
+
+        if (chestAnimator != null &&
+            !string.IsNullOrEmpty(openTriggerName))
+        {
+            chestAnimator.ResetTrigger(openTriggerName);
+            chestAnimator.SetTrigger(openTriggerName);
         }
+        else
+        {
+            Debug.LogWarning(
+                "[WeaponChest] Chua gan Animator / Open Trigger.");
+        }
+    }
 
+    private IEnumerator OpenChestRoutine()
+    {
+        // Cho animation mo ruong chay truoc khi lay do.
+        if (openAnimationDuration > 0f)
+            yield return new WaitForSeconds(openAnimationDuration);
 
-        // =====================================================
-        // PHÁT ÂM THANH MỞ RƯƠNG
-        // =====================================================
-
-        Rpc_PlayChestOpenSound(
-            opener
-        );
-
-
-        // =====================================================
-        // SPAWN RANDOM ITEM
-        // =====================================================
+        if (!HasStateAuthority || Runner == null ||
+            Object == null || !Object.IsValid)
+            yield break;
 
         SpawnRandomItem();
-
-
-        // =====================================================
-        // DESPAWN CHEST
-        // =====================================================
-
-        Runner.Despawn(
-            Object
-        );
+        Runner.Despawn(Object);
     }
 
 
@@ -584,6 +613,14 @@ public float chestOpenVolume = 1f;
 
     private void SpawnRandomItem()
     {
+        // Chi spawn vat pham SAU KHI ruong duoc mo boi Player.
+        // Ruong chua mo: khong tao vat pham, nen khong co timer 5 giay.
+        if (!HasStateAuthority || !opened ||
+            Object == null || !Object.IsValid)
+        {
+            return;
+        }
+
         // =====================================================
         // TỔNG TỈ LỆ
         // =====================================================

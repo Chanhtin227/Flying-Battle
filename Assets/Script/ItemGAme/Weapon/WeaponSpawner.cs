@@ -81,10 +81,12 @@ public class WeaponSpawner : NetworkBehaviour
 
     [Header("Spawn Offset")]
 
-    [Tooltip(
-        "Độ cao cộng thêm so với mặt Terrain."
-    )]
-    public float spawnOffset = 0.5f;
+    [Tooltip("Khoảng cách giữa rương và mặt đất")]
+    [Min(0f)]
+    public float spawnOffset = 0.05f;
+
+    [Tooltip("Tự căn đáy Collider của rương sát mặt Terrain sau khi spawn.")]
+    public bool autoAlignChestToGround = true;
 
 
     // =========================================================
@@ -941,6 +943,16 @@ public class WeaponSpawner : NetworkBehaviour
 
 
         // =====================================================
+        // ALIGN CHEST BOTTOM TO TERRAIN
+        // =====================================================
+
+        if (autoAlignChestToGround)
+        {
+            AlignChestBottomToGround(chest);
+        }
+
+
+        // =====================================================
         // ADD ACTIVE CHEST
         // =====================================================
 
@@ -961,6 +973,60 @@ public class WeaponSpawner : NetworkBehaviour
 
 
         return true;
+    }
+
+
+    // =========================================================
+    // ALIGN CHEST BOTTOM TO TERRAIN
+    // Chỉ chạy trên State Authority, NetworkTransform đồng bộ vị trí.
+    // =========================================================
+
+    private void AlignChestBottomToGround(NetworkObject chest)
+    {
+        if (chest == null || terrain == null)
+            return;
+
+        float groundY =
+            terrain.SampleHeight(chest.transform.position) +
+            terrain.transform.position.y;
+
+        float lowestY = float.PositiveInfinity;
+
+        // Ưu tiên Collider vật lý, bỏ qua Trigger (vùng tương tác).
+        Collider[] colliders = chest.GetComponentsInChildren<Collider>();
+        foreach (Collider col in colliders)
+        {
+            if (col == null || !col.enabled || col.isTrigger)
+                continue;
+
+            lowestY = Mathf.Min(lowestY, col.bounds.min.y);
+        }
+
+        // Nếu prefab không có Collider vật lý, dùng phần Mesh Renderer.
+        if (float.IsPositiveInfinity(lowestY))
+        {
+            Renderer[] renderers = chest.GetComponentsInChildren<Renderer>();
+            foreach (Renderer r in renderers)
+            {
+                if (r == null || !r.enabled || r is ParticleSystemRenderer)
+                    continue;
+
+                lowestY = Mathf.Min(lowestY, r.bounds.min.y);
+            }
+        }
+
+        if (float.IsPositiveInfinity(lowestY))
+        {
+            Debug.LogWarning(
+                "[WeaponSpawner] Chest không có Collider/Renderer để căn đáy. " +
+                "Đang dùng vị trí theo Pivot và Spawn Offset."
+            );
+            return;
+        }
+
+        // Đẩy Root lên/xuống để đáy vừa chạm Terrain + khoảng hở.
+        float deltaY = groundY + Mathf.Max(0f, spawnOffset) - lowestY;
+        chest.transform.position += Vector3.up * deltaY;
     }
 
 

@@ -64,12 +64,51 @@ public class WeaponPickup : NetworkBehaviour
 
 
     // =========================================================
+    // DISABLE ROTATION ON HELD WEAPONS
+    // =========================================================
+
+    private void Awake()
+    {
+        DisableEffectWhenHeld();
+    }
+
+    private void OnEnable()
+    {
+        DisableEffectWhenHeld();
+    }
+
+    private void OnTransformParentChanged()
+    {
+        DisableEffectWhenHeld();
+    }
+
+    private void DisableEffectWhenHeld()
+    {
+        // Chỉ tắt hiệu ứng khi vũ khí thuộc hierarchy Player.
+        // Vũ khí nằm dưới đất vẫn được xoay bình thường.
+        if (GetComponentInParent<PlayerWeapon>() == null)
+            return;
+
+        WeaponPickupEffect[] effects =
+            GetComponentsInChildren<WeaponPickupEffect>(true);
+
+        foreach (WeaponPickupEffect effect in effects)
+        {
+            if (effect != null)
+                effect.enabled = false;
+        }
+    }
+
+
+    // =========================================================
     // SPAWNED
     // =========================================================
 
     public override void Spawned()
     {
         pickupConsumed = false;
+        // Chạy ở cả Host và Client để model trên tay không xoay.
+        DisableEffectWhenHeld();
 
 
         if (!HasStateAuthority)
