@@ -26,7 +26,12 @@ public class IntroVideoController : MonoBehaviour
     [Header("Chuyển scene")]
     public string nextSceneName = "MainMenu";
 
+    [Tooltip("Kéo object đang gắn BackToMainLoading vào đây để hiện Loading Panel khi bấm")]
+    public BackToMainLoading loadingController;
+
     private bool titleShown = false;
+    private bool isGoingNext = false;
+    private Coroutine blinkCoroutine;
     private Vector3 titleOriginalScale;   // scale gốc của title (đã chỉnh trong Editor)
 
     void Start()
@@ -65,7 +70,7 @@ public class IntroVideoController : MonoBehaviour
 
         yield return StartCoroutine(FadeCanvasGroup(tapTextGroup, 0f, 1f, 0.6f));
 
-        StartCoroutine(BlinkTapText());
+        blinkCoroutine = StartCoroutine(BlinkTapText());
     }
 
     IEnumerator AnimateTitleIn()
@@ -112,8 +117,28 @@ public class IntroVideoController : MonoBehaviour
         group.alpha = to;
     }
 
+    // Gán hàm này vào OnClick của vùng chạm / nút bấm
     public void GoToNextScene()
     {
-        SceneManager.LoadScene(nextSceneName);
+        if (isGoingNext) return;   // chặn bấm nhiều lần
+        isGoingNext = true;
+
+        // Dừng hiệu ứng nhấp nháy và khóa vùng chạm
+        if (blinkCoroutine != null) StopCoroutine(blinkCoroutine);
+        tapAreaGroup.interactable = false;
+        tapAreaGroup.blocksRaycasts = false;
+
+        if (loadingController != null)
+        {
+            // Truyền scene đích rồi bật Loading Panel
+            loadingController.mainMenuSceneName = nextSceneName;
+            loadingController.BackToMain();
+        }
+        else
+        {
+            // Dự phòng nếu quên kéo loadingController
+            Debug.LogWarning("[IntroVideoController] Chưa gán loadingController, load scene trực tiếp.");
+            SceneManager.LoadScene(nextSceneName);
+        }
     }
 }
