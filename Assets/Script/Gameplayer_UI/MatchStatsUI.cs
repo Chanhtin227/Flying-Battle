@@ -64,6 +64,12 @@ public class MatchStatsUI : MonoBehaviour
 
     public int goldPerKill = 35;
 
+    [Tooltip("Tu dong luu vang khi tran dau ket thuc.")]
+    public bool autoSaveGoldOnMatchEnd = true;
+
+    // Chi trao thuong 1 lan cho 1 lan choi tran dau.
+    private bool goldAwardedThisMatch = false;
+
 
     // =========================================================
     // EFFECT
@@ -114,6 +120,45 @@ public class MatchStatsUI : MonoBehaviour
         }
     }
 
+
+    // =========================================================
+    // SAVE GOLD ONCE AFTER MATCH END
+    // =========================================================
+
+    private void Update()
+    {
+        // MatchStatsUI phai nam tren GameObject luon Active suot tran.
+        if (autoSaveGoldOnMatchEnd && !goldAwardedThisMatch)
+            TrySaveMatchGold();
+    }
+
+    private void OnDisable()
+    {
+        // Du phong khi UI bi tat luc ket thuc tran.
+        if (autoSaveGoldOnMatchEnd && !goldAwardedThisMatch)
+            TrySaveMatchGold();
+    }
+
+    private void TrySaveMatchGold()
+    {
+        if (goldAwardedThisMatch) return;
+
+        MatchManager manager = MatchManager.Instance;
+        if (manager == null || !manager.MatchEnded) return;
+
+        PlayerMovement localMovement = PlayerMovement.LocalPlayer;
+        if (localMovement == null || !localMovement.HasInputAuthority) return;
+
+        PlayerHealth health = localMovement.GetComponent<PlayerHealth>();
+        if (health == null) return;
+
+        int goldEarned = Mathf.Max(0, health.Kills) * Mathf.Max(0, goldPerKill);
+        GoldWallet.AddGold(goldEarned);
+        goldAwardedThisMatch = true;
+
+        Debug.Log("[MatchStatsUI] Da luu " + goldEarned +
+                  " vang. Tong vang: " + GoldWallet.GetGold());
+    }
 
     // =========================================================
     // OPEN PANEL
@@ -206,9 +251,10 @@ public class MatchStatsUI : MonoBehaviour
 
 
         // =====================================================
-        // REFRESH DATA TRƯỚC
+        // LUU VANG 1 LAN VA CAP NHAT BANG THONG KE
         // =====================================================
 
+        TrySaveMatchGold();
         RefreshStats();
 
 
