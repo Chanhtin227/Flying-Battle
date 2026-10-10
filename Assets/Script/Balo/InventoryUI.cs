@@ -348,8 +348,6 @@ public class InventoryUI : MonoBehaviour
         // -----------------------------------------------------
 
         FindLocalPlayer();
-
-
         // -----------------------------------------------------
         // PLAYER ĐANG CHẾT / ĐANG CHỜ HỒI SINH
         //

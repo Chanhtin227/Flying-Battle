@@ -11664,13 +11664,15 @@ MonoBehaviour:
   jumpBufferTime: 0.18
   coyoteTime: 0.12
   jumpRepeatLockTime: 0.2
-  boostSpeed: 4
-  maxBoostHeight: 5
+  boostSpeed: 5
+  maxBoostHeight: 10
   maxBoostTime: 7
   jetpackRechargeTime: 4
   boostAcceleration: 18
   boostGravityScale: 0.2
   maxFallSpeed: 18
+  fuelRechargeDelay: 0.5
+  minFuelToIgnite: 0.5
   smallMedkitSpeed: 1
   mediumMedkitSpeed: 1
   largeMedkitSpeed: 1
@@ -11778,7 +11780,7 @@ MonoBehaviour:
   shovelDamage: 80
   batCooldown: 0.5
   shovelCooldown: 1.5
-  meleeRange: 5
+  meleeRange: 3
   meleeAOEAngle: 50
   meleeHeight: 1
   rifleMuzzleFlash: {fileID: 8303531603554854164}

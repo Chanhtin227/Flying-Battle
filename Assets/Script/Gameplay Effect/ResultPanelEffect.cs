@@ -19,8 +19,11 @@ public class ResultPanelEffect : MonoBehaviour
 
     private Coroutine effectCoroutine;
 
+    public GameObject matchHUDPanel;
+
     private void OnEnable()
     {
+        matchHUDPanel.SetActive(false);
         // HUD được ẩn tập trung trong MatchHUD, không xử lý ở đây.
         PlayEffect();
     }

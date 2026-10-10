@@ -49,21 +49,19 @@ public class JetpackHUD : MonoBehaviour
         }
 
         float maxFuel = Mathf.Max(0.1f, player.maxBoostTime);
-        float maxRecharge = Mathf.Max(0.01f, player.jetpackRechargeTime);
         float fuel = Mathf.Clamp(player.JetpackFuelRemaining, 0f, maxFuel);
-        float cooldown = Mathf.Max(0f, player.JetpackCooldownRemaining);
+        
+        bool flying = player.IsJetpackBoosting;
+        bool isFull = fuel >= (maxFuel - 0.01f);
 
-        if (cooldown > 0.01f)
-        {
-            SetLabels("RECHARGING", cooldown.ToString("0.0") + "s");
-            SetFill(1f - Mathf.Clamp01(cooldown / maxRecharge), rechargingColor);
-        }
-        else
-        {
-            bool flying = player.IsJetpackBoosting;
-            SetLabels(flying ? "FLYING" : "READY", fuel.ToString("0.0") + "s");
-            SetFill(fuel / maxFuel, readyAndFlyingColor);
-        }
+        // Hiển thị trạng thái tuỳ thuộc vào việc đang bay, đang đầy, hay đang nạp
+        string status = flying ? "FLYING" : (isFull ? "READY" : "RECHARGING");
+        
+        // Chuyển màu vàng nếu đang hồi, màu xanh nếu đang bay hoặc đã đầy
+        Color currentColor = (flying || isFull) ? readyAndFlyingColor : rechargingColor;
+
+        SetLabels(status, fuel.ToString("0.0") + "s");
+        SetFill(fuel / maxFuel, currentColor);
     }
 
     private void SetLabels(string status, string time)
