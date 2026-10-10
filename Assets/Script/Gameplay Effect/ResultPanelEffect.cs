@@ -19,13 +19,70 @@ public class ResultPanelEffect : MonoBehaviour
 
     private Coroutine effectCoroutine;
 
-    public GameObject matchHUDPanel;
+    public enum ResultType { Win, Lose }
+
+    [Header("Result Type")]
+    public ResultType resultType = ResultType.Win;
+
+    [Header("UI cần ẩn khi hiện Win / Lose")]
+    public GameObject weaponHUD;
+    public GameObject matchHUD;
+    public GameObject topLeftUI;
+    public GameObject jetpackHUD;
+
+    [Header("Result Audio")]
+    public AudioSource resultAudioSource;
+    public AudioClip winSound;
+    public AudioClip loseSound;
+    [Range(0f, 1f)] public float resultVolume = 1f;
+
+    private bool hasPlayedResultSound = false;
 
     private void OnEnable()
     {
-        matchHUDPanel.SetActive(false);
-        // HUD được ẩn tập trung trong MatchHUD, không xử lý ở đây.
+        HideGameplayUI();
+        if (!hasPlayedResultSound)
+        {
+            PlayResultSound();
+            hasPlayedResultSound = true;
+        }
         PlayEffect();
+    }
+
+    private void HideGameplayUI()
+    {
+        HideUIObject(weaponHUD);
+        HideUIObject(matchHUD);
+        HideUIObject(topLeftUI);
+        HideUIObject(jetpackHUD);
+    }
+
+    private void HideUIObject(GameObject uiObject)
+    {
+        if (uiObject == null || !uiObject.activeSelf) return;
+
+        // Không tắt object chứa chính ResultPanelEffect (hoặc cha của nó).
+        // Nếu không panel kết quả và coroutine hiệu ứng cũng bị tắt.
+        if (transform == uiObject.transform || transform.IsChildOf(uiObject.transform))
+        {
+            Debug.LogWarning("[ResultPanelEffect] Không thể ẩn '" + uiObject.name +
+                "' vì chứa panel kết quả. Hãy gán riêng GameObject chứa gameplay HUD.");
+            return;
+        }
+
+        uiObject.SetActive(false);
+    }
+
+    private void PlayResultSound()
+    {
+        AudioClip clip = resultType == ResultType.Win ? winSound : loseSound;
+        if (resultAudioSource == null || clip == null) return;
+
+        resultAudioSource.playOnAwake = false;
+        resultAudioSource.loop = false;
+        resultAudioSource.spatialBlend = 0f;
+        resultAudioSource.Stop();
+        resultAudioSource.PlayOneShot(clip, resultVolume);
     }
 
     public void PlayEffect()

@@ -6,68 +6,6 @@ using System.Collections.Generic;
 
 public class MatchHUD : MonoBehaviour
 {
-    // =========================================================
-    // HIDE GAMEPLAY UI WHEN MATCH ENDS
-    // =========================================================
-
-    [Header("UI cần ẩn khi kết thúc trận đấu")]
-    public GameObject weaponHUD;
-    public GameObject matchHUD;
-    public GameObject topLeftUI;
-    [Tooltip("Jetpack HUD in the scene Canvas. Hide during the end cinematic.")]
-    public GameObject jetpackHUD;
-
-    // Hide only combat HUD while the end-of-match cinematic plays.
-    // Keep the score/time MatchHUD visible until the result panel appears.
-    private void HideCinematicGameplayUI()
-    {
-        HideUIObject(weaponHUD);
-        HideUIObject(topLeftUI);
-        HideUIObject(jetpackHUD);
-    }
-
-    private void HideGameplayUI()
-    {
-        HideUIObject(weaponHUD);
-        HideUIObject(matchHUD);
-        HideUIObject(topLeftUI);
-        HideUIObject(jetpackHUD);
-    }
-
-    private void HideUIObject(GameObject uiObject)
-    {
-        if (uiObject == null || !uiObject.activeSelf)
-            return;
-
-        // Không tắt object đang chạy MatchHUD, hoặc cha của nó:
-        // nếu không coroutine cinematic sẽ bị dừng giữa chừng.
-        if (transform == uiObject.transform ||
-            transform.IsChildOf(uiObject.transform))
-        {
-            Debug.LogWarning(
-                "[MatchHUD] Không thể SetActive(false) UI '" +
-                uiObject.name +
-                "' vì đang chứa MatchHUD script. " +
-                "Hãy gán object con chỉ chứa hình ảnh/score vào ô Match HUD."
-            );
-            return;
-        }
-
-        // Không ẩn luôn Win/Lose Panel nếu chúng là con của HUD.
-        if ((winPanel != null && winPanel.transform.IsChildOf(uiObject.transform)) ||
-            (losePanel != null && losePanel.transform.IsChildOf(uiObject.transform)))
-        {
-            Debug.LogWarning(
-                "[MatchHUD] Không ẩn '" + uiObject.name +
-                "' vì Win/Lose Panel nằm bên trong. " +
-                "Hãy chọn một GameObject HUD riêng không chứa panel kết quả."
-            );
-            return;
-        }
-
-        uiObject.SetActive(false);
-    }
-
     [Header("Player 1")]
     public TMP_Text player1NameText;
     public TMP_Text player1KillText;
@@ -112,44 +50,17 @@ public class MatchHUD : MonoBehaviour
     // RESULT AUDIO
     // =========================================================
 
-    [Header("Result Audio")]
-
-    [Tooltip("AudioSource dùng để phát âm thanh thắng / thua")]
+    [Header("Cinematic Audio")]
+    [Tooltip("AudioSource chỉ phát âm thanh cinematic kết thúc trận.")]
     public AudioSource resultAudioSource;
-
-    [Tooltip("Âm thanh phát khi Local Player thắng")]
-    public AudioClip winSound;
-
-    [Tooltip("Âm thanh phát khi Local Player thua")]
-    public AudioClip loseSound;
-
-    [Tooltip("Âm thanh phát trong đoạn cinematic trước khi hiện Win/Lose")]
     public AudioClip matchEndCinematicSound;
-
-    [Range(0f, 1f)]
-    public float resultVolume = 1f;
-
-
-    // =========================================================
-    // MATCH END CINEMATIC SOUND
-    // =========================================================
+    [Range(0f, 1f)] public float resultVolume = 1f;
 
     private void PlayMatchEndCinematicSound()
     {
-        if (resultAudioSource == null)
-            return;
-
-        if (matchEndCinematicSound == null)
-            return;
-
-
+        if (resultAudioSource == null || matchEndCinematicSound == null) return;
         resultAudioSource.Stop();
-
-
-        resultAudioSource.PlayOneShot(
-            matchEndCinematicSound,
-            resultVolume
-        );
+        resultAudioSource.PlayOneShot(matchEndCinematicSound, resultVolume);
     }
 
 
@@ -567,10 +478,6 @@ public class MatchHUD : MonoBehaviour
             }
 
 
-            if (resultAudioSource != null)
-            {
-                resultAudioSource.Stop();
-            }
 
 
             Debug.Log(
@@ -678,9 +585,6 @@ public class MatchHUD : MonoBehaviour
         int localKills,
         int otherKills)
     {
-        // Hide WeaponHUD and TopLeftUI from the beginning of cinematic.
-        // MatchHUD is only hidden later, when Win/Lose is shown.
-        HideCinematicGameplayUI();
 
         // =====================================================
         // TÌM CAMERA
@@ -864,11 +768,6 @@ public class MatchHUD : MonoBehaviour
             );
 
 
-        // =====================================================
-        // CHỈ ẨN GAMEPLAY HUD NGAY KHI HIỆN WIN / LOSE
-        // Cinematic vẫn giữ nguyên giao diện trong thời gian chạy.
-        // =====================================================
-        HideGameplayUI();
 
         // =====================================================
         // SHOW WIN
@@ -892,7 +791,7 @@ public class MatchHUD : MonoBehaviour
             }
 
 
-            PlayWinSound();
+
 
 
             Debug.Log(
@@ -925,7 +824,7 @@ public class MatchHUD : MonoBehaviour
             }
 
 
-            PlayLoseSound();
+
 
 
             Debug.Log(
@@ -1147,52 +1046,6 @@ public class MatchHUD : MonoBehaviour
 
 
         backgroundMusicSource.UnPause();
-    }
-
-
-    // =========================================================
-    // WIN SOUND
-    // =========================================================
-
-    private void PlayWinSound()
-    {
-        if (resultAudioSource == null)
-            return;
-
-        if (winSound == null)
-            return;
-
-
-        resultAudioSource.Stop();
-
-
-        resultAudioSource.PlayOneShot(
-            winSound,
-            resultVolume
-        );
-    }
-
-
-    // =========================================================
-    // LOSE SOUND
-    // =========================================================
-
-    private void PlayLoseSound()
-    {
-        if (resultAudioSource == null)
-            return;
-
-        if (loseSound == null)
-            return;
-
-
-        resultAudioSource.Stop();
-
-
-        resultAudioSource.PlayOneShot(
-            loseSound,
-            resultVolume
-        );
     }
 
 

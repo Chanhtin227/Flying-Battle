@@ -148,6 +148,11 @@ public class PlayerMovement : NetworkBehaviour
     private float boostStartY;
     private float rechargeDelayTimer;
 
+    [Header("Match End Landing")]
+    [Tooltip("Độ dài kiểm tra mặt đất phía dưới khi trận kết thúc.")]
+    [Min(5f)] public float endLandingRayDistance = 500f;
+    private bool endLandingApplied;
+
     public float JetpackRechargeRemaining => Mathf.Max(0f, maxBoostTime - currentFuel);
 
     // =========================================================
@@ -188,6 +193,7 @@ public class PlayerMovement : NetworkBehaviour
         hasBoostStartY = false;
         jetpackHeldGraceRemaining = 0f;
         rechargeDelayTimer = 0f;
+        endLandingApplied = false;
 
         if (HasStateAuthority)
         {
@@ -287,9 +293,18 @@ public class PlayerMovement : NetworkBehaviour
         if (!HasStateAuthority) return;
 
         // --- DEAD / MATCH END ---
-        if ((playerHealth != null && playerHealth.IsDead) ||
-            (MatchManager.Instance != null && MatchManager.Instance.MatchEnded))
+        bool isDead = playerHealth != null && playerHealth.IsDead;
+        bool matchEnded = MatchManager.Instance != null && MatchManager.Instance.MatchEnded;
+        if (isDead || matchEnded)
         {
+            // Hạ nhân vật sống xuống đất đúng một lần, trước khi khóa chuyển động.
+            // Chỉ StateAuthority thực hiện, tránh lệch vị trí giữa các máy.
+            if (matchEnded && !isDead && !endLandingApplied)
+            {
+                endLandingApplied = true;
+                LandImmediatelyForMatchEnd();
+            }
+
             velocity = Vector3.zero;
             
             isJetpackActive = false;
@@ -523,6 +538,55 @@ public class PlayerMovement : NetworkBehaviour
     }
 
     // =========================================================
+    // MATCH END: INSTANT LANDING (STATE AUTHORITY ONLY)
+    // =========================================================
+
+    private void LandImmediatelyForMatchEnd()
+    {
+        if (characterController == null || !characterController.enabled) return;
+        if (IsGroundedReliable()) return;
+
+        Bounds bounds = characterController.bounds;
+        // Xuất phát ngay trên đáy capsule để không raycast trúng chân nhân vật.
+        Vector3 rayOrigin = new Vector3(bounds.center.x, bounds.min.y + 0.15f, bounds.center.z);
+        int count = Physics.RaycastNonAlloc(
+            rayOrigin, Vector3.down, groundHits,
+            Mathf.Max(5f, endLandingRayDistance), ~0,
+            QueryTriggerInteraction.Ignore);
+
+        float nearestDistance = float.MaxValue;
+        float groundY = 0f;
+        float minNormalY = Mathf.Cos(characterController.slopeLimit * Mathf.Deg2Rad);
+        for (int i = 0; i < count; i++)
+        {
+            RaycastHit hit = groundHits[i];
+            if (hit.collider == null) continue;
+            Transform hitTransform = hit.collider.transform;
+            if (hitTransform == transform || hitTransform.IsChildOf(transform)) continue;
+            if (hit.normal.y < minNormalY - 0.02f) continue;
+            if (hit.distance >= nearestDistance) continue;
+            nearestDistance = hit.distance;
+            groundY = hit.point.y;
+        }
+
+        if (nearestDistance == float.MaxValue)
+        {
+            Debug.LogWarning("[PlayerMovement] Không tìm thấy mặt đất để hạ player khi kết thúc trận.");
+            return;
+        }
+
+        float distanceToGround = bounds.min.y - groundY;
+        if (distanceToGround > 0.001f)
+        {
+            // CharacterController.Move giữ xử lý va chạm, không xuyên Terrain.
+            characterController.Move(Vector3.down * (distanceToGround + 0.05f));
+        }
+        hasBoostStartY = false;
+        jetpackHeldGraceRemaining = 0f;
+        ResetFootstepTracking();
+    }
+
+    // =========================================================
     // GROUND CHECK
     // =========================================================
 
@@ -663,6 +727,7 @@ public class PlayerMovement : NetworkBehaviour
         hasBoostStartY = false;
         jetpackHeldGraceRemaining = 0f;
         rechargeDelayTimer = 0f;
+        endLandingApplied = false;
 
         jumpQueued = false;
         jumpQueuedUntil = 0f;
