@@ -22262,24 +22262,51 @@ MonoBehaviour:
   equipmentItems:
   - itemID: helmet_01
     category: 0
+    equipmentObject: {fileID: 5663859059610881583, guid: cb671e670e141bd44b6f473d1122735a, type: 3}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: helmet_02
+    category: 0
+    equipmentObject: {fileID: 1420936486459844309, guid: 7940d0fff4b747a4dab628e5a14377b8, type: 3}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: helmet_03
+    category: 0
     equipmentObject: {fileID: 4247515503742652908, guid: 35649afcab3faa24daf0ab0b15117a35, type: 3}
-    skinMaterial: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: balo_01
+    category: 1
+    equipmentObject: {fileID: 7257150193123479359, guid: fdc8d7251fc237f4eaf0cc0b338d84c5, type: 3}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: balo_02
+    category: 1
+    equipmentObject: {fileID: 7339428430942886342, guid: 22e7d6fd9e3410d41a13be4bf032882d, type: 3}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: armor_01
+    category: 2
+    equipmentObject: {fileID: 3620284318552030194, guid: d30968cf4cd8f634bb6726fca4e5c6a4, type: 3}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
   - itemID: armor_02
     category: 2
     equipmentObject: {fileID: 1565257819781001899, guid: c59208c205aad8540aceff1a0849702c, type: 3}
-    skinMaterial: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
   - itemID: skin_01
     category: 3
     equipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: a2fcfbbaab16ce747b462e7c87f8af82, type: 2}
+    skinMaterial: {fileID: 2100000, guid: a16a043203c09824b8d3c1fc1d5ee6cd, type: 2}
   - itemID: skin_02
     category: 3
     equipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: a16a043203c09824b8d3c1fc1d5ee6cd, type: 2}
+    skinMaterial: {fileID: 2100000, guid: a2fcfbbaab16ce747b462e7c87f8af82, type: 2}
+  - itemID: skin_03
+    category: 3
+    equipmentObject: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: 5a456d4072d9ed74d8138ec0ecfcf3d3, type: 2}
   bodyRenderers:
   - {fileID: 8387336804663375310}
   - {fileID: 3097673033798303982}
   - {fileID: 7951273303464397020}
+  forceEnableEquipmentRenderers: 1
+  activateInactiveMeshChildren: 0
+  showDebugLogs: 1
   _HelmetID: 0
   _BaloID: 0
   _ArmorID: 0

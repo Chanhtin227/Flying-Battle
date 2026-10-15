@@ -197,7 +197,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -2.1259, y: 0.52502}
+  m_AnchoredPosition: {x: -2.1257324, y: 0.5250244}
   m_SizeDelta: {x: 4.2518, y: 1.0499}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3672553
@@ -5005,7 +5005,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Skin_Orange
+  m_text: Skin
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -6037,7 +6037,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Skin_Purple
+  m_text: Skin
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -7248,7 +7248,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 5,000
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -8357,7 +8357,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Balo_Aura
+  m_text: Balo
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9056,7 +9056,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Helmet_Aura
+  m_text: Helmet
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9407,7 +9407,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Armor_Aura
+  m_text: Armor
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9884,7 +9884,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 1,000
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -10341,9 +10341,9 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1761604185}
-  - {fileID: 373816347}
   - {fileID: 1202962069}
+  - {fileID: 373816347}
+  - {fileID: 1761604185}
   - {fileID: 753766214}
   - {fileID: 1159419508}
   - {fileID: 427759251}
@@ -11638,7 +11638,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Aura+999
+  m_text: Helmet
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -12952,8 +12952,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 978824128}
-  - {fileID: 718687859}
   - {fileID: 2067612231}
+  - {fileID: 718687859}
   - {fileID: 169875598}
   m_Father: {fileID: 1202962069}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -15697,7 +15697,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 555
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -17132,11 +17132,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1050479026}
   m_CullTransparentMesh: 1
---- !u!1 &1052380860 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1649263699674931787, guid: 01f08a6d86b62644a90f1d7ecc88c010, type: 3}
-  m_PrefabInstance: {fileID: 5993235235506138109}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1057773488
 GameObject:
   m_ObjectHideFlags: 0
@@ -19303,7 +19298,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 3,000
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -20145,11 +20140,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
   m_Padding: {x: -8, y: -5, z: -8, w: -5}
   m_Softness: {x: 0, y: 0}
---- !u!1 &1239240697 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7192887764472394386, guid: 01f08a6d86b62644a90f1d7ecc88c010, type: 3}
-  m_PrefabInstance: {fileID: 5993235235506138109}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1247107385
 GameObject:
   m_ObjectHideFlags: 0
@@ -22170,11 +22160,6 @@ MonoBehaviour:
   minAlpha: 0.65
   maxAlpha: 1
   showDebugLogs: 0
---- !u!1 &1387071419 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7198497532597727113, guid: 01f08a6d86b62644a90f1d7ecc88c010, type: 3}
-  m_PrefabInstance: {fileID: 5993235235506138109}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1398371853
 GameObject:
   m_ObjectHideFlags: 0
@@ -23677,7 +23662,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 1,000
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -26839,48 +26824,96 @@ MonoBehaviour:
   buyButton: {fileID: 933195123}
   buyButtonText: {fileID: 153104432}
   shopItems:
-  - itemID: armor_01
-    itemName: Armor
-    category: 2
-    price: 400
-    itemButton: {fileID: 1752043361}
-    itemIcon: {fileID: 21300000, guid: 934a9ef718e81d44e973fed94292611f, type: 3}
-    itemGoldText: {fileID: 1901996541}
-    itemNameText: {fileID: 2056690437}
-    goldenBorder: {fileID: 2096152746}
-    equipmentPrefab: {fileID: 1052380860}
-    existingEquipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
-  - itemID: balo_01
-    itemName: Balo
-    category: 1
-    price: 1000
-    itemButton: {fileID: 86494547}
-    itemIcon: {fileID: 21300000, guid: da9dbd488722b7e4390cc4cc50116f7e, type: 3}
-    itemGoldText: {fileID: 648460991}
-    itemNameText: {fileID: 1379318034}
-    goldenBorder: {fileID: 1291123135}
-    equipmentPrefab: {fileID: 1239240697}
-    existingEquipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
   - itemID: helmet_01
     itemName: Helmet
     category: 0
-    price: 555
+    price: 0
     itemButton: {fileID: 1966020057}
     itemIcon: {fileID: 21300000, guid: 1a49acef7ca1f1e43b3cf06148634c95, type: 3}
     itemGoldText: {fileID: 967926767}
     itemNameText: {fileID: 1802584233}
     goldenBorder: {fileID: 556301068}
-    equipmentPrefab: {fileID: 1738471203}
+    equipmentPrefab: {fileID: 5663859059610881583, guid: cb671e670e141bd44b6f473d1122735a, type: 3}
+    existingEquipmentObject: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: helmet_02
+    itemName: Helmet
+    category: 0
+    price: 0
+    itemButton: {fileID: 1911733079}
+    itemIcon: {fileID: 21300000, guid: 102bcc686f75e144681ec276b3fe2acf, type: 3}
+    itemGoldText: {fileID: 528922399}
+    itemNameText: {fileID: 594610804}
+    goldenBorder: {fileID: 595804877}
+    equipmentPrefab: {fileID: 1420936486459844309, guid: 7940d0fff4b747a4dab628e5a14377b8, type: 3}
+    existingEquipmentObject: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: helmet_03
+    itemName: Helmet
+    category: 0
+    price: 0
+    itemButton: {fileID: 809056267}
+    itemIcon: {fileID: 21300000, guid: 1b5ae814ee7a7344981e4bbd743f244f, type: 3}
+    itemGoldText: {fileID: 2067612232}
+    itemNameText: {fileID: 718687860}
+    goldenBorder: {fileID: 169875597}
+    equipmentPrefab: {fileID: 4247515503742652908, guid: 35649afcab3faa24daf0ab0b15117a35, type: 3}
+    existingEquipmentObject: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: balo_01
+    itemName: Balo
+    category: 1
+    price: 0
+    itemButton: {fileID: 86494547}
+    itemIcon: {fileID: 21300000, guid: 1b5ae814ee7a7344981e4bbd743f244f, type: 3}
+    itemGoldText: {fileID: 648460991}
+    itemNameText: {fileID: 1379318034}
+    goldenBorder: {fileID: 1291123135}
+    equipmentPrefab: {fileID: 7257150193123479359, guid: fdc8d7251fc237f4eaf0cc0b338d84c5, type: 3}
+    existingEquipmentObject: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: balo_02
+    itemName: Balo
+    category: 1
+    price: 0
+    itemButton: {fileID: 2009877191}
+    itemIcon: {fileID: 21300000, guid: da9dbd488722b7e4390cc4cc50116f7e, type: 3}
+    itemGoldText: {fileID: 1190562740}
+    itemNameText: {fileID: 566280455}
+    goldenBorder: {fileID: 1522706271}
+    equipmentPrefab: {fileID: 7339428430942886342, guid: 22e7d6fd9e3410d41a13be4bf032882d, type: 3}
+    existingEquipmentObject: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: armor_01
+    itemName: Armor
+    category: 2
+    price: 0
+    itemButton: {fileID: 1752043361}
+    itemIcon: {fileID: 21300000, guid: 934a9ef718e81d44e973fed94292611f, type: 3}
+    itemGoldText: {fileID: 1901996541}
+    itemNameText: {fileID: 2056690437}
+    goldenBorder: {fileID: 2096152746}
+    equipmentPrefab: {fileID: 3620284318552030194, guid: d30968cf4cd8f634bb6726fca4e5c6a4, type: 3}
+    existingEquipmentObject: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
+  - itemID: armor_02
+    itemName: Armor
+    category: 2
+    price: 0
+    itemButton: {fileID: 1424450904}
+    itemIcon: {fileID: 21300000, guid: ee271e9f0dbbede48bdb795b3eed71ad, type: 3}
+    itemGoldText: {fileID: 2125311699}
+    itemNameText: {fileID: 604145828}
+    goldenBorder: {fileID: 1968721862}
+    equipmentPrefab: {fileID: 1565257819781001899, guid: c59208c205aad8540aceff1a0849702c, type: 3}
     existingEquipmentObject: {fileID: 0}
     skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
   - itemID: skin_01
-    itemName: Skin_Red
+    itemName: Skin
     category: 3
-    price: 4000
+    price: 0
     itemButton: {fileID: 1025272172}
-    itemIcon: {fileID: 21300000, guid: 16fa3f782987f5242b098eed8a88df54, type: 3}
+    itemIcon: {fileID: 21300000, guid: 9f87f761872cab74e964616bd5ccd9a7, type: 3}
     itemGoldText: {fileID: 1982658975}
     itemNameText: {fileID: 2039322759}
     goldenBorder: {fileID: 1187646813}
@@ -26888,11 +26921,11 @@ MonoBehaviour:
     existingEquipmentObject: {fileID: 0}
     skinMaterial: {fileID: 2100000, guid: a16a043203c09824b8d3c1fc1d5ee6cd, type: 2}
   - itemID: skin_02
-    itemName: Skin_Purple
+    itemName: Skin
     category: 3
-    price: 1000
+    price: 0
     itemButton: {fileID: 48839091}
-    itemIcon: {fileID: 21300000, guid: 16fa3f782987f5242b098eed8a88df54, type: 3}
+    itemIcon: {fileID: 21300000, guid: e024781912ef8b94091a78e958e0cb9f, type: 3}
     itemGoldText: {fileID: 1466781044}
     itemNameText: {fileID: 381891252}
     goldenBorder: {fileID: 983048495}
@@ -26900,9 +26933,9 @@ MonoBehaviour:
     existingEquipmentObject: {fileID: 0}
     skinMaterial: {fileID: 2100000, guid: a2fcfbbaab16ce747b462e7c87f8af82, type: 2}
   - itemID: skin_03
-    itemName: Skin_Orange
+    itemName: Skin
     category: 3
-    price: 6000
+    price: 0
     itemButton: {fileID: 585687893}
     itemIcon: {fileID: 21300000, guid: 16fa3f782987f5242b098eed8a88df54, type: 3}
     itemGoldText: {fileID: 2049047096}
@@ -26911,54 +26944,6 @@ MonoBehaviour:
     equipmentPrefab: {fileID: 0}
     existingEquipmentObject: {fileID: 0}
     skinMaterial: {fileID: 2100000, guid: 5a456d4072d9ed74d8138ec0ecfcf3d3, type: 2}
-  - itemID: armor_02
-    itemName: Armor_Aura
-    category: 2
-    price: 4000
-    itemButton: {fileID: 1424450904}
-    itemIcon: {fileID: 21300000, guid: ee271e9f0dbbede48bdb795b3eed71ad, type: 3}
-    itemGoldText: {fileID: 2125311699}
-    itemNameText: {fileID: 604145828}
-    goldenBorder: {fileID: 1968721862}
-    equipmentPrefab: {fileID: 1565257819781001899, guid: c59208c205aad8540aceff1a0849702c, type: 3}
-    existingEquipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: f0cc5b442aece3944942ecd2afa4277f, type: 2}
-  - itemID: balo_02
-    itemName: Balo_Aura
-    category: 1
-    price: 3000
-    itemButton: {fileID: 2009877191}
-    itemIcon: {fileID: 21300000, guid: da9dbd488722b7e4390cc4cc50116f7e, type: 3}
-    itemGoldText: {fileID: 1190562740}
-    itemNameText: {fileID: 566280455}
-    goldenBorder: {fileID: 1522706271}
-    equipmentPrefab: {fileID: 1387071419}
-    existingEquipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: f0cc5b442aece3944942ecd2afa4277f, type: 2}
-  - itemID: helmet_02
-    itemName: Helmet_Aura
-    category: 0
-    price: 5000
-    itemButton: {fileID: 1911733079}
-    itemIcon: {fileID: 21300000, guid: 102bcc686f75e144681ec276b3fe2acf, type: 3}
-    itemGoldText: {fileID: 528922399}
-    itemNameText: {fileID: 594610804}
-    goldenBorder: {fileID: 595804877}
-    equipmentPrefab: {fileID: 1695854991}
-    existingEquipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: f0cc5b442aece3944942ecd2afa4277f, type: 2}
-  - itemID: helmet_03
-    itemName: Aura+999
-    category: 0
-    price: 9999
-    itemButton: {fileID: 809056267}
-    itemIcon: {fileID: 21300000, guid: 1b5ae814ee7a7344981e4bbd743f244f, type: 3}
-    itemGoldText: {fileID: 2067612232}
-    itemNameText: {fileID: 718687860}
-    goldenBorder: {fileID: 2067612230}
-    equipmentPrefab: {fileID: 4247515503742652908, guid: 35649afcab3faa24daf0ab0b15117a35, type: 3}
-    existingEquipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 7190862037011202983, guid: f2404cbc8318f1d4e9bb2e7de56f2b15, type: 3}
   animateGoldenBorder: 1
   goldenGlowSpeed: 2.5
   goldenMinAlpha: 1
@@ -27210,11 +27195,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Localization.LocalizedTMPText
   key: title3
---- !u!1 &1695854991 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1449552852653268597, guid: 01f08a6d86b62644a90f1d7ecc88c010, type: 3}
-  m_PrefabInstance: {fileID: 5993235235506138109}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1700565445
 GameObject:
   m_ObjectHideFlags: 0
@@ -27600,11 +27580,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1725232356}
   m_CullTransparentMesh: 1
---- !u!1 &1738471203 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6425678587581520685, guid: 01f08a6d86b62644a90f1d7ecc88c010, type: 3}
-  m_PrefabInstance: {fileID: 5993235235506138109}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1744743526
 GameObject:
   m_ObjectHideFlags: 0
@@ -31093,7 +31068,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 400
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -31852,7 +31827,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1943879207
 RectTransform:
   m_ObjectHideFlags: 0
@@ -32231,7 +32206,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 4,000
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -33131,7 +33106,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Skin_Red
+  m_text: Skin
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -33268,7 +33243,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 6,000
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -33961,7 +33936,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 9,999
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -35403,7 +35378,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 4,000
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
