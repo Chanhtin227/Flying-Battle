@@ -20547,11 +20547,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3583146166226504534, guid: 35649afcab3faa24daf0ab0b15117a35, type: 3}
   m_PrefabInstance: {fileID: 2390208223406281344}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2006790619901641580 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4247515503742652908, guid: 35649afcab3faa24daf0ab0b15117a35, type: 3}
-  m_PrefabInstance: {fileID: 2390208223406281344}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2522980294591049654
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -21743,9 +21738,6 @@ PrefabInstance:
       addedObject: {fileID: 1600288243756836947}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1649346872999168988}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 5845137765224247411}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
@@ -21759,6 +21751,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4631321935511271409}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3960816913412185449}
     - targetCorrespondingSourceObject: {fileID: -2577009113829051978, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7506623451534187696}
@@ -22058,67 +22053,6 @@ MonoBehaviour:
   deathCameraHoldDuration: 0.6
   deathCameraOffset: {x: 0, y: 0, z: -2}
   deathCameraLookHeight: 0.8
---- !u!114 &1649346872999168988
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8323938116521971073}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68d27101885667544a18e003f73ab599, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerEquipmentFusion
-  equipmentItems:
-  - itemID: helmet_01
-    category: 0
-    equipmentObject: {fileID: 5663859059610881583, guid: cb671e670e141bd44b6f473d1122735a, type: 3}
-    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
-  - itemID: helmet_02
-    category: 0
-    equipmentObject: {fileID: 1420936486459844309, guid: 7940d0fff4b747a4dab628e5a14377b8, type: 3}
-    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
-  - itemID: armor_01
-    category: 2
-    equipmentObject: {fileID: 3620284318552030194, guid: d30968cf4cd8f634bb6726fca4e5c6a4, type: 3}
-    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
-  - itemID: armor_02
-    category: 2
-    equipmentObject: {fileID: 1565257819781001899, guid: c59208c205aad8540aceff1a0849702c, type: 3}
-    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
-  - itemID: balo_01
-    category: 1
-    equipmentObject: {fileID: 7257150193123479359, guid: fdc8d7251fc237f4eaf0cc0b338d84c5, type: 3}
-    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
-  - itemID: balo_02
-    category: 1
-    equipmentObject: {fileID: 7339428430942886342, guid: 22e7d6fd9e3410d41a13be4bf032882d, type: 3}
-    skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
-  - itemID: skin_01
-    category: 3
-    equipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: a16a043203c09824b8d3c1fc1d5ee6cd, type: 2}
-  - itemID: skin_02
-    category: 3
-    equipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: a2fcfbbaab16ce747b462e7c87f8af82, type: 2}
-  - itemID: skin_03
-    category: 3
-    equipmentObject: {fileID: 0}
-    skinMaterial: {fileID: 2100000, guid: 5a456d4072d9ed74d8138ec0ecfcf3d3, type: 2}
-  - itemID: helmet_03
-    category: 0
-    equipmentObject: {fileID: 2006790619901641580}
-    skinMaterial: {fileID: 7190862037011202983, guid: f2404cbc8318f1d4e9bb2e7de56f2b15, type: 3}
-  bodyRenderers:
-  - {fileID: 8387336804663375310}
-  - {fileID: 3097673033798303982}
-  - {fileID: 7951273303464397020}
-  _HelmetID: 0
-  _BaloID: 0
-  _ArmorID: 0
-  _SkinID: 0
 --- !u!114 &5845137765224247411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22256,9 +22190,9 @@ MonoBehaviour:
   - {fileID: 4713323537150237153}
   - {fileID: 2270641106786434766}
   - {fileID: 1600288243756836947}
-  - {fileID: 1649346872999168988}
   - {fileID: 5845137765224247411}
   - {fileID: -2570491720007723357}
+  - {fileID: 3960816913412185449}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &-2570491720007723357
 MonoBehaviour:
@@ -22313,6 +22247,43 @@ MonoBehaviour:
     MinImpactfulCollisionAlignment: 0.3
     ImpactStartCorrectionTime: 0.1
     ImpactCorrectionTimeComplete: 0.3
+--- !u!114 &3960816913412185449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8323938116521971073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 486170c8d2c5c2744ac472b482a190f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerEquipmentFusion
+  equipmentItems:
+  - itemID: helmet_01
+    category: 0
+    equipmentObject: {fileID: 4247515503742652908, guid: 35649afcab3faa24daf0ab0b15117a35, type: 3}
+    skinMaterial: {fileID: 0}
+  - itemID: armor_02
+    category: 2
+    equipmentObject: {fileID: 1565257819781001899, guid: c59208c205aad8540aceff1a0849702c, type: 3}
+    skinMaterial: {fileID: 0}
+  - itemID: skin_01
+    category: 3
+    equipmentObject: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: a2fcfbbaab16ce747b462e7c87f8af82, type: 2}
+  - itemID: skin_02
+    category: 3
+    equipmentObject: {fileID: 0}
+    skinMaterial: {fileID: 2100000, guid: a16a043203c09824b8d3c1fc1d5ee6cd, type: 2}
+  bodyRenderers:
+  - {fileID: 8387336804663375310}
+  - {fileID: 3097673033798303982}
+  - {fileID: 7951273303464397020}
+  _HelmetID: 0
+  _BaloID: 0
+  _ArmorID: 0
+  _SkinID: 0
 --- !u!137 &8387336804663375310 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -8421671730809387746, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}

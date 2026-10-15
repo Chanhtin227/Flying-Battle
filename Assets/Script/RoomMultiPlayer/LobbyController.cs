@@ -71,6 +71,8 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     private int maxPlayers = 2;
     private Coroutine errorNotificationCoroutine;
 
+    public Button shopBtn;
+
     private void Start()
     {
         if (fadeImage != null) fadeImage.gameObject.SetActive(false);
@@ -178,7 +180,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             return;
 
         panelGameMode.SetActive(true);
-
+        shopBtn.gameObject.SetActive(false);
         gameModeBtn.gameObject.SetActive(false);
         settingBtn.gameObject.SetActive(false);
 
@@ -260,7 +262,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     private System.Collections.IEnumerator AnimateGameModeButtonsClose()
     {
         isGameModeAnimating = true;
-
+        shopBtn.gameObject.SetActive(true);
         btn1vs1.interactable = false;
         btn2vs2.interactable = false;
 
@@ -351,6 +353,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
     private void ResetUI()
     {
+        shopBtn.gameObject.SetActive(true);
         gameModeBtn.gameObject.SetActive(true);
         settingBtn.gameObject.SetActive(true);
         panelGameMode.SetActive(false);

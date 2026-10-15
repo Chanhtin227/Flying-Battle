@@ -147,6 +147,8 @@ public class ShopCategoryManager : MonoBehaviour
     // Gia tri rieng de ghi nho nguoi choi da THAO trang bi.
     private const string UnequippedValue = "__NONE__";
 
+    public Button shopBtn;
+
     // ==========================================
     // UNITY
     // ==========================================
@@ -321,6 +323,7 @@ public class ShopCategoryManager : MonoBehaviour
             return;
 
         shopPanel.SetActive(true);
+        shopBtn.gameObject.SetActive(false);
         HideMainUIForShop();
 
         // Mo Shop voi bo trang bi dang mac, khong reset ve do goc.
@@ -345,7 +348,7 @@ public class ShopCategoryManager : MonoBehaviour
 
         currentCategory = null;
         showingPurchasedItems = false;
-
+        shopBtn.gameObject.SetActive(true);
         if (shopPanel != null)
             shopPanel.SetActive(false);
 

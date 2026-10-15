@@ -197,8 +197,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 31.108154, y: -7.686035}
-  m_SizeDelta: {x: 70.72, y: 17.472}
+  m_AnchoredPosition: {x: -2.1259, y: 0.52502}
+  m_SizeDelta: {x: 4.2518, y: 1.0499}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3672553
 MonoBehaviour:
@@ -26962,6 +26962,7 @@ MonoBehaviour:
   animateGoldenBorder: 1
   goldenGlowSpeed: 2.5
   goldenMinAlpha: 1
+  shopBtn: {fileID: 11202830}
 --- !u!1 &1674329253
 GameObject:
   m_ObjectHideFlags: 0
@@ -28475,6 +28476,7 @@ MonoBehaviour:
   fadeImage: {fileID: 1129585059}
   gameModeSlideDistance: 700
   gameModeSlideDuration: 0.4
+  shopBtn: {fileID: 11202830}
 --- !u!4 &1763147154
 Transform:
   m_ObjectHideFlags: 0
@@ -31850,7 +31852,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1943879207
 RectTransform:
   m_ObjectHideFlags: 0
