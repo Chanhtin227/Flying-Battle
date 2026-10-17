@@ -48,6 +48,81 @@ public class MatchManager : NetworkBehaviour
 
 
     // =========================================================
+    // HIDE LOCAL HUD WHEN MATCH ENDS
+    // =========================================================
+
+    [Header("Hide gameplay HUD when match ends (each client)")]
+    public GameObject weaponHUD;
+    public GameObject matchHUD;
+    public GameObject topLeftUI;
+    public GameObject jetpackHUD;
+
+    private bool localEndHUDHidden;
+
+    // This runs on Host AND Clients. MatchEnded is networked, so
+    // local UIs are hidden as soon as each machine observes the result.
+    public override void Render()
+    {
+        CheckAndHideEndHUD();
+    }
+
+    private void Update()
+    {
+        // Fallback for render timing or UI initialized after replication.
+        CheckAndHideEndHUD();
+    }
+
+    private void CheckAndHideEndHUD()
+    {
+        if (!MatchEnded || localEndHUDHidden)
+            return;
+
+        // Avoid setting the flag until this scene's UI exists.
+        bool foundUI = weaponHUD != null || matchHUD != null ||
+                       topLeftUI != null || jetpackHUD != null;
+
+        if (!foundUI)
+            return;
+
+        HideGameplayHUDNow();
+        localEndHUDHidden = true;
+    }
+
+    // Call this from the script running the PRE-WIN / PRE-LOSE effect
+    // if that effect starts BEFORE MatchEnded is set.
+    public void HideGameplayHUDNow()
+    {
+        HideOneHUD(weaponHUD);
+        HideOneHUD(matchHUD);
+        HideOneHUD(topLeftUI);
+        HideOneHUD(jetpackHUD);
+
+    }
+
+    private void HideOneHUD(GameObject ui)
+    {
+        if (ui == null)
+            return;
+
+        // Never affect MatchManager or a parent containing it.
+        if (transform == ui.transform || transform.IsChildOf(ui.transform))
+        {
+            Debug.LogWarning("[MatchManager] Invalid HUD reference: " + ui.name, this);
+            return;
+        }
+
+        // IMPORTANT: Keep the GameObject active so MonoBehaviours,
+        // network updates and transition coroutines are not stopped.
+        CanvasGroup group = ui.GetComponent<CanvasGroup>();
+        if (group == null)
+            group = ui.AddComponent<CanvasGroup>();
+
+        group.alpha = 0f;
+        group.interactable = false;
+        group.blocksRaycasts = false;
+    }
+
+    // =========================================================
     // AWAKE
     // =========================================================
 
@@ -64,6 +139,7 @@ public class MatchManager : NetworkBehaviour
     public override void Spawned()
     {
         Instance = this;
+        localEndHUDHidden = false;
 
 
         if (!HasStateAuthority)
@@ -208,6 +284,9 @@ public class MatchManager : NetworkBehaviour
         MatchEnded =
             true;
 
+        // Hide HUD instantly for Host; Clients observe MatchEnded in Render.
+        CheckAndHideEndHUD();
+
 
         MatchStarted =
             false;
@@ -330,6 +409,9 @@ public class MatchManager : NetworkBehaviour
 
         MatchEnded =
             true;
+
+        // Hide HUD instantly for Host; Clients observe MatchEnded in Render.
+        CheckAndHideEndHUD();
 
 
         MatchStarted =

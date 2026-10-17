@@ -15,6 +15,9 @@ public class PlayerWeapon : NetworkBehaviour
     }
 
 
+    // Scope la hieu ung local; camera dung property nay de biet Rifle duoc ngam.
+    public bool CanUseSniperScope => CurrentWeapon == WeaponType.Rifle;
+
     // =========================================================
     // INTERACTION
     // =========================================================
@@ -2267,6 +2270,15 @@ public class PlayerWeapon : NetworkBehaviour
         Vector3 targetPoint,
         WeaponType weapon)
     {
+        // Recoil UI chi cho nguoi ban local, va chi khi server
+        // da xac nhan ban Rifle (RPC effects chay sau khi tru dan).
+        if (HasInputAuthority && weapon == WeaponType.Rifle)
+        {
+            ScopeUIController scope = FindFirstObjectByType<ScopeUIController>();
+            if (scope != null)
+                scope.PlayScopeRecoil();
+        }
+
         if (playerAnim != null)
         {
             playerAnim.Shoot();

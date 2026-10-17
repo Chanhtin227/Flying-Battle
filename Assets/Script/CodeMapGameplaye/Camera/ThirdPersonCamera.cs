@@ -69,6 +69,144 @@ public class ThirdPersonCamera : MonoBehaviour
 
 
     // =========================================================
+    // SNIPER SCOPE - LOCAL UI
+    // =========================================================
+
+    [Header("Sniper Scope (Local Player Only)")]
+    [Tooltip("Keo SniperScopeManager co ScopeUIController vao day. Camera se dieu khien UI qua component nay.")]
+    public ScopeUIController scopeController;
+    [Tooltip("Canvas Scope overlay o Map_True1. Tat Active mac dinh.")]
+    public GameObject sniperScopeUI;
+
+    [Tooltip("Tam ngam thuong an khi dang dung Scope")]
+    public GameObject normalCrosshair;
+
+    [Tooltip("Chi Rifle duoc dung Scope. Pistol luon Aim TPS binh thuong.")]
+    public bool scopeForPistol = false; // Giu field cu de khong mat serialized data; khong duoc su dung.
+
+    [Range(10f, 45f)] public float sniperScopeFOV = 20f;
+
+    [Tooltip("Offset tinh tu goc Player, trong he toa do huong nhin")]
+    public Vector3 sniperEyeOffset = new Vector3(0f, 1.55f, 0.45f);
+
+    [Tooltip("Chi keo Renderer cua nhan vat local che mat scope; khong an player remote.")]
+    public Renderer[] hideLocalRenderersWhileScoped;
+
+    private bool scopeActive;
+    private bool[] originalRendererEnabled;
+    private bool rendererStatesCaptured;
+    private bool originalCrosshairActive;
+    private bool crosshairStateSaved;
+
+    // Player la prefab runtime, nen khong the keo UI tu Scene vao Prefab Asset.
+    // Tu dong tim ScopeUIController trong Map_True1, va thu lai neu Canvas load muon.
+    private float nextScopeSearchTime;
+    private bool missingScopeWarningShown;
+
+    private void FindScopeController()
+    {
+        if (scopeController != null && scopeController.isActiveAndEnabled)
+            return;
+
+        scopeController = null;
+
+        if (Time.unscaledTime < nextScopeSearchTime)
+            return;
+
+        nextScopeSearchTime = Time.unscaledTime + 0.5f;
+        scopeController = FindFirstObjectByType<ScopeUIController>();
+
+        if (scopeController != null)
+        {
+            missingScopeWarningShown = false;
+            Debug.Log("[SNIPER] Connected to Scope UI: " + scopeController.name, this);
+        }
+        else if (!missingScopeWarningShown)
+        {
+            missingScopeWarningShown = true;
+            Debug.LogWarning(
+                "[SNIPER] Chua tim thay ScopeUIController dang Active trong Scene. " +
+                "Kiem tra SniperScopeManager va Canvas cua Map_True1.", this);
+        }
+    }
+
+    private void SetScopeVisual(bool active)
+    {
+        // Luon tim UI truoc khi kiem tra trang thai. Neu lan dau Scope ON
+        // nhung UI chua load, camera se ket noi lai trong cac frame sau.
+        FindScopeController();
+
+        // Day trang thai cho UI moi frame (controller tu bo qua neu khong doi).
+        // Nho vay khong bi mat su kien khi Scene/Canvas duoc load muon.
+        if (scopeController != null)
+            scopeController.SetScope(active);
+        else if (sniperScopeUI != null && sniperScopeUI.activeSelf != active)
+            sniperScopeUI.SetActive(active);
+
+        if (scopeActive == active)
+            return;
+
+        scopeActive = active;
+
+        // Cach gan truc tiep UI vao camera chi la du phong.
+        if (scopeController == null && normalCrosshair != null)
+        {
+            // Khong tat nham hinh kinh Scope neu Crosshair tro vao con cua no.
+            bool safeCrosshair = sniperScopeUI == null ||
+                (normalCrosshair != sniperScopeUI &&
+                 !normalCrosshair.transform.IsChildOf(sniperScopeUI.transform));
+
+            if (safeCrosshair)
+            {
+                if (active)
+                {
+                    originalCrosshairActive = normalCrosshair.activeSelf;
+                    crosshairStateSaved = true;
+                    normalCrosshair.SetActive(false);
+                }
+                else if (crosshairStateSaved)
+                {
+                    normalCrosshair.SetActive(originalCrosshairActive);
+                    crosshairStateSaved = false;
+                }
+            }
+        }
+
+        if (hideLocalRenderersWhileScoped == null)
+            return;
+
+        if (originalRendererEnabled == null ||
+            originalRendererEnabled.Length != hideLocalRenderersWhileScoped.Length)
+            originalRendererEnabled = new bool[hideLocalRenderersWhileScoped.Length];
+
+        if (active)
+        {
+            for (int i = 0; i < hideLocalRenderersWhileScoped.Length; i++)
+            {
+                Renderer r = hideLocalRenderersWhileScoped[i];
+                if (r == null) continue;
+                originalRendererEnabled[i] = r.enabled;
+                r.enabled = false;
+            }
+            rendererStatesCaptured = true;
+        }
+        else if (rendererStatesCaptured)
+        {
+            for (int i = 0; i < hideLocalRenderersWhileScoped.Length; i++)
+            {
+                Renderer r = hideLocalRenderersWhileScoped[i];
+                if (r != null) r.enabled = originalRendererEnabled[i];
+            }
+            rendererStatesCaptured = false;
+        }
+    }
+
+    private void OnDisable()
+    {
+        SetScopeVisual(false);
+    }
+
+    // =========================================================
     // CAMERA ANGLE
     // =========================================================
 
@@ -201,6 +339,13 @@ public class ThirdPersonCamera : MonoBehaviour
         }
 
 
+        // Tim UI Scene luc chay; neu chua co thi SetScopeVisual se thu lai.
+        FindScopeController();
+
+        // Khoi tao scope dung trang thai, ke ca object UI bi bat san.
+        scopeActive = true;
+        SetScopeVisual(false);
+
         // -----------------------------------------------------
         // CURSOR
         // -----------------------------------------------------
@@ -330,6 +475,7 @@ public class ThirdPersonCamera : MonoBehaviour
         )
         {
             isAiming = false;
+            SetScopeVisual(false);
             return;
         }
 
@@ -392,6 +538,13 @@ public class ThirdPersonCamera : MonoBehaviour
                 canAim &&
                 Input.GetMouseButton(1);
         }
+
+        // Scope chi cho Rifle. Pistol van isAiming va aimFOV nhu cu.
+        bool sniperEquipped = playerWeapon != null &&
+            playerWeapon.CurrentWeapon == PlayerWeapon.WeaponType.Rifle;
+
+        bool useSniperScope = isAiming && sniperEquipped;
+        SetScopeVisual(useSniperScope);
 
 
         // =====================================================
@@ -493,9 +646,8 @@ public class ThirdPersonCamera : MonoBehaviour
         // =====================================================
 
         float targetDistance =
-            isAiming
-            ? aimDistance
-            : normalDistance;
+            useSniperScope ? 0f :
+            (isAiming ? aimDistance : normalDistance);
 
 
         float distanceSmoothTime =
@@ -520,9 +672,8 @@ public class ThirdPersonCamera : MonoBehaviour
         // =====================================================
 
         float targetFOV =
-            isAiming
-            ? aimFOV
-            : normalFOV;
+            useSniperScope ? sniperScopeFOV :
+            (isAiming ? aimFOV : normalFOV);
 
 
         float fovLerp =
@@ -546,9 +697,8 @@ public class ThirdPersonCamera : MonoBehaviour
         // =====================================================
 
         Vector3 wantedOffset =
-            isAiming
-            ? aimShoulderOffset
-            : shoulderOffset;
+            useSniperScope ? sniperEyeOffset :
+            (isAiming ? aimShoulderOffset : shoulderOffset);
 
 
         float offsetLerp =
