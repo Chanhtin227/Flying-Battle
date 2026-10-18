@@ -202,6 +202,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 16727f544fe688f40b87244398897a66, type: 3}
       insertIndex: -1
       addedObject: {fileID: -8021982497833357962}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 16727f544fe688f40b87244398897a66, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -1554183270946210340}
   m_SourcePrefab: {fileID: 100100000, guid: 16727f544fe688f40b87244398897a66, type: 3}
 --- !u!1 &7137358674263555689 stripped
 GameObject:
@@ -309,6 +312,21 @@ MonoBehaviour:
     MinImpactfulCollisionAlignment: 0.3
     ImpactStartCorrectionTime: 0.1
     ImpactCorrectionTimeComplete: 0.3
+--- !u!114 &-1554183270946210340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7137358674263555689}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5acab73aeae95241ab17a591e6872e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickupPromptTarget
+  key: 102
+  actionText: Pick Up Hp
+  distance: 2
 --- !u!4 &7514024301368468691 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 16727f544fe688f40b87244398897a66, type: 3}

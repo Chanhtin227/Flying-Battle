@@ -100,6 +100,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5182427374050121100}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -8888308577116826119}
     - targetCorrespondingSourceObject: {fileID: 1188256223936568184, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8403092111715628920}
@@ -209,6 +212,21 @@ MonoBehaviour:
     MinImpactfulCollisionAlignment: 0.3
     ImpactStartCorrectionTime: 0.1
     ImpactCorrectionTimeComplete: 0.3
+--- !u!114 &-8888308577116826119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6982820968750013824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5acab73aeae95241ab17a591e6872e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickupPromptTarget
+  key: 102
+  actionText: Pick Up Rifle Ammo
+  distance: 2
 --- !u!4 &7833183845959426380 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -9181836567796383331, guid: 929e4e901ff8cbd4eab487d422794fc8, type: 3}

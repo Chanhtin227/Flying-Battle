@@ -189,6 +189,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2654655607332122900}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5981498899751058013}
   m_SourcePrefab: {fileID: 100100000, guid: 6a081ea24895ef84cb20821b2393f739, type: 3}
 --- !u!4 &8559592653235058698 stripped
 Transform:
@@ -317,3 +320,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponAutoDespawn
   despawnTime: 5
+--- !u!114 &5981498899751058013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9043817966670324400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5acab73aeae95241ab17a591e6872e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickupPromptTarget
+  key: 102
+  actionText: Pick Up Shovel
+  distance: 2

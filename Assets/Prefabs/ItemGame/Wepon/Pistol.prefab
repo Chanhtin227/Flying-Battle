@@ -189,6 +189,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 84dbf796528a54047bd1328613ef3dac, type: 3}
       insertIndex: -1
       addedObject: {fileID: 689974643628059109}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 84dbf796528a54047bd1328613ef3dac, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1113109997165530405}
   m_SourcePrefab: {fileID: 100100000, guid: 84dbf796528a54047bd1328613ef3dac, type: 3}
 --- !u!1 &2370236019523784336 stripped
 GameObject:
@@ -312,6 +315,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponAutoDespawn
   despawnTime: 5
+--- !u!114 &1113109997165530405
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2370236019523784336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5acab73aeae95241ab17a591e6872e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PickupPromptTarget
+  key: 102
+  actionText: Pick Up Pistol
+  distance: 2
 --- !u!4 &3147758538453767210 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 84dbf796528a54047bd1328613ef3dac, type: 3}

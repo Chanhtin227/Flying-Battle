@@ -158,6 +158,8 @@ public class WeaponChest : NetworkBehaviour
     private bool hasLanded = false;
     private bool opened = false;
 
+    public bool CanShowInteractionPrompt => hasLanded && !opened;
+
 
     // =========================================================
     // SPAWNED
