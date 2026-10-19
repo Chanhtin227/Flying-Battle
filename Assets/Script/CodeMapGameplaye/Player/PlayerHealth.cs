@@ -778,22 +778,19 @@ public class PlayerHealth : NetworkBehaviour
     // FIND TERRAIN
     // =========================================================
 
-    private void FindRespawnTerrain()
+    // Never use Terrain.activeTerrain: with two maps it may select Mapp.
+    // Resolve the battle terrain from the authoritative spawn configuration.
+    private bool FindRespawnTerrain()
     {
-        if (respawnTerrain != null)
-            return;
-
-
-        respawnTerrain = Terrain.activeTerrain;
-
-
-        // FIX:
-        // FindAnyObjectByType() phải có generic type
-        if (respawnTerrain == null)
+        SpawnPlayer spawner = FindFirstObjectByType<SpawnPlayer>();
+        Terrain battle;
+        if (spawner == null || !spawner.TryGetBattleRespawnTerrain(out battle))
         {
-            respawnTerrain =
-                FindAnyObjectByType<Terrain>();
+            respawnTerrain = null;
+            return false;
         }
+        respawnTerrain = battle;
+        return true;
     }
 
 
@@ -1273,6 +1270,11 @@ public class PlayerHealth : NetworkBehaviour
         }
 
 
+        // Waiting map is initial-spawn only; respawn is disabled until battle.
+        // If battle has not started, keep the player dead and retry next tick.
+        if (!FindRespawnTerrain())
+            return;
+
         // Tìm vị trí mới TRƯỚC khi đặt IsDead = false
         if (!TryGetRandomRespawnPosition(out Vector3 randomSpawnPosition))
         {
@@ -1367,9 +1369,8 @@ public class PlayerHealth : NetworkBehaviour
     {
         spawnPosition = transform.position;
 
-        FindRespawnTerrain();
-
-        if (respawnTerrain == null ||
+        if (!FindRespawnTerrain() ||
+            respawnTerrain == null ||
             respawnTerrain.terrainData == null)
         {
             Debug.LogError(
@@ -1438,6 +1439,22 @@ public class PlayerHealth : NetworkBehaviour
             centerZ +
             halfSpawnLength;
 
+
+        // Enforce SpawnPlayer's battle edge padding for health respawns too.
+        SpawnPlayer battleSpawner = FindFirstObjectByType<SpawnPlayer>();
+        if (battleSpawner != null)
+        {
+            float edge = Mathf.Max(0f, battleSpawner.battleEdgePadding);
+            minX = Mathf.Max(minX, terrainPosition.x + edge);
+            maxX = Mathf.Min(maxX, terrainPosition.x + terrainSize.x - edge);
+            minZ = Mathf.Max(minZ, terrainPosition.z + edge);
+            maxZ = Mathf.Min(maxZ, terrainPosition.z + terrainSize.z - edge);
+            if (minX >= maxX || minZ >= maxZ)
+            {
+                Debug.LogError("[PlayerHealth] Battle spawn area too small for centerRespawnPercent + edge padding.");
+                return false;
+            }
+        }
 
         Vector2 deathXZ =
             new Vector2(

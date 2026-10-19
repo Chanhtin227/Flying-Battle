@@ -15184,6 +15184,13 @@ MonoBehaviour:
   normalFOV: 60
   aimFOV: 40
   aimSpeed: 8
+  scopeController: {fileID: 0}
+  sniperScopeUI: {fileID: 0}
+  normalCrosshair: {fileID: 0}
+  scopeForPistol: 0
+  sniperScopeFOV: 20
+  sniperEyeOffset: {x: 0, y: 1.55, z: 0.45}
+  hideLocalRenderersWhileScoped: []
   minPitch: -30
   maxPitch: 60
   rotationSmoothTime: 0.06
@@ -20462,6 +20469,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: VFX_MuzzleFlash
       objectReference: {fileID: 0}
+    - target: {fileID: 7692336672675980230, guid: b9e4e185fe3d3674ab50aa2a10a663cc, type: 3}
+      propertyPath: looping
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7692336672675980230, guid: b9e4e185fe3d3674ab50aa2a10a663cc, type: 3}
+      propertyPath: InitialModule.size3D
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7951582856014658560, guid: b9e4e185fe3d3674ab50aa2a10a663cc, type: 3}
       propertyPath: m_Materials.Array.size
       value: 1
@@ -21120,9 +21135,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: VFX_MuzzleFlash
       objectReference: {fileID: 0}
+    - target: {fileID: 7692336672675980230, guid: b9e4e185fe3d3674ab50aa2a10a663cc, type: 3}
+      propertyPath: looping
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7951582856014658560, guid: b9e4e185fe3d3674ab50aa2a10a663cc, type: 3}
       propertyPath: m_Materials.Array.size
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7951582856014658560, guid: b9e4e185fe3d3674ab50aa2a10a663cc, type: 3}
+      propertyPath: 'm_VertexStreams.Array.data[3]'
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -21305,15 +21328,15 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
     - target: {fileID: -8679921383154817045, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 146.59
+      value: 22.46611
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 7.567382
+      value: -0.000000007377366
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 116.19
+      value: 808.1461
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       propertyPath: m_LocalRotation.w

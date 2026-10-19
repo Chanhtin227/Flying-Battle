@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 public class RespawnUI : MonoBehaviour
 {
@@ -19,6 +20,18 @@ public class RespawnUI : MonoBehaviour
     [Tooltip("Thanh tiến trình hồi sinh")]
     public Slider progressSlider;
 
+
+    // =========================================================
+    // UI AN KHI HOI SINH
+    // =========================================================
+
+    [Header("Hide Gameplay UI While Dead")]
+    [Tooltip("Keo WeaponHUD, MatchHUD, Minimap, HealthUI... vao day. KHONG keo Canvas tong hoac RespawnPanel.")]
+    public GameObject[] hideWhileRespawning;
+
+    // Chi khoi phuc nhung UI dang bat truoc khi Player chet.
+    private readonly Dictionary<GameObject, bool> savedGameplayUIStates = new();
+    private bool gameplayUIHidden;
 
     // =========================================================
     // AUDIO
@@ -477,20 +490,86 @@ public class RespawnUI : MonoBehaviour
 
     private void SetPanel(bool show)
     {
+        // Luon de RespawnUIManager/this GameObject dang hoat dong.
+        if (show)
+            SetGameplayUIHidden(true);
+        else if (gameplayUIHidden &&
+                 (MatchManager.Instance == null ||
+                  !MatchManager.Instance.MatchEnded))
+            SetGameplayUIHidden(false);
+
         if (respawnPanel == null)
             return;
-
 
         if (respawnPanel.activeSelf != show)
         {
             respawnPanel.SetActive(show);
-
-
-            Debug.Log(
-                show
-                    ? "[RespawnUI] HIỆN RESPAWN PANEL"
-                    : "[RespawnUI] ẨN RESPAWN PANEL"
-            );
+            Debug.Log(show
+                ? "[RespawnUI] HIEN RESPAWN PANEL"
+                : "[RespawnUI] AN RESPAWN PANEL");
         }
+    }
+
+    // =========================================================
+    // HIDE / RESTORE GAMEPLAY UI
+    // =========================================================
+
+    private void SetGameplayUIHidden(bool hidden)
+    {
+        if (hidden && !gameplayUIHidden)
+        {
+            savedGameplayUIStates.Clear();
+            gameplayUIHidden = true;
+
+            if (hideWhileRespawning != null)
+            {
+                foreach (GameObject ui in hideWhileRespawning)
+                {
+                    if (!IsSafeGameplayUI(ui) ||
+                        savedGameplayUIStates.ContainsKey(ui))
+                        continue;
+
+                    savedGameplayUIStates.Add(ui, ui.activeSelf);
+                }
+            }
+        }
+
+        if (hidden)
+        {
+            // Goi lai moi frame de UI khac khong tu bat trong khi chet.
+            foreach (var item in savedGameplayUIStates)
+            {
+                if (item.Key != null && item.Key.activeSelf)
+                    item.Key.SetActive(false);
+            }
+            return;
+        }
+
+        if (!gameplayUIHidden)
+            return;
+
+        gameplayUIHidden = false;
+        foreach (var item in savedGameplayUIStates)
+        {
+            if (item.Key != null)
+                item.Key.SetActive(item.Value);
+        }
+        savedGameplayUIStates.Clear();
+    }
+
+    private bool IsSafeGameplayUI(GameObject ui)
+    {
+        if (ui == null || ui == gameObject || ui == respawnPanel)
+            return false;
+
+        // Khong tat cha cua RespawnUIManager hoac RespawnPanel.
+        if (transform.IsChildOf(ui.transform))
+            return false;
+
+        if (respawnPanel != null &&
+            respawnPanel.transform.IsChildOf(ui.transform))
+            return false;
+
+        return true;
     }
 }
