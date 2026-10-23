@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Fusion;
 
@@ -19,6 +20,10 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         public string itemID;
         public EquipmentCategory category;
 
+        [Header("Balo Only - Explicit Model Slot")]
+        [Tooltip("0 = auto (old array order), 1 = Backpack 1, 2 = Backpack 2")]
+        [Range(0, 2)] public int baloSlot = 0;
+
         [Header("3D Model on Player Prefab")]
         public GameObject equipmentObject;
 
@@ -26,37 +31,46 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         public Material skinMaterial;
     }
 
-    // ==========================================
+    // =====================================================
     // INSPECTOR
-    // ==========================================
+    // =====================================================
 
     [Header("Equipment on Player Map")]
     public EquipmentEntry[] equipmentItems;
+
+    [Header("Two Jetpack Models")]
+    public GameObject baloModel1;
+    public GameObject baloModel2;
 
     [Header("Skin Body Renderers")]
     public Renderer[] bodyRenderers;
 
     [Header("3D Equipment Settings")]
     public bool forceEnableEquipmentRenderers = true;
-
-    [Tooltip("Chi bat neu cac Mesh con cua trang bi bi tat. Khong bat toan bo xương Player.")]
     public bool activateInactiveMeshChildren = false;
 
     [Header("Debug")]
     public bool showDebugLogs = true;
 
-    // ==========================================
-    // NETWORKED
-    // ==========================================
+    // =====================================================
+    // NETWORKED EQUIPMENT
+    // =====================================================
 
-    [Networked] public int HelmetID { get; set; }
-    [Networked] public int BaloID { get; set; }
-    [Networked] public int ArmorID { get; set; }
-    [Networked] public int SkinID { get; set; }
+    [Networked]
+    public int HelmetID { get; set; }
 
-    // ==========================================
-    // PLAYER PREFS
-    // ==========================================
+    [Networked]
+    public int BaloID { get; set; }
+
+    [Networked]
+    public int ArmorID { get; set; }
+
+    [Networked]
+    public int SkinID { get; set; }
+
+    // =====================================================
+    // SHOP PLAYER PREFS
+    // =====================================================
 
     private const string EquipPrefix =
         "FlyingBattle_ShopEquipped_";
@@ -66,9 +80,9 @@ public class PlayerEquipmentFusion : NetworkBehaviour
 
     private const string UnequippedValue = "__NONE__";
 
-    // ==========================================
+    // =====================================================
     // CACHE
-    // ==========================================
+    // =====================================================
 
     private Material[][] originalMaterials;
 
@@ -77,9 +91,16 @@ public class PlayerEquipmentFusion : NetworkBehaviour
     private int lastArmor = -1;
     private int lastSkin = -1;
 
-    // ==========================================
-    // UNITY
-    // ==========================================
+    [Header("Backpack Visual Safety")]
+    [Tooltip("Periodically restore the correct backpack if another script enables the old model.")]
+    public bool enforceBaloVisibility = true;
+    [Min(0.1f)] public float baloVisibilityCheckInterval = 0.35f;
+    private float nextBaloVisibilityCheck;
+    private int lastLoggedBaloSlot = int.MinValue;
+
+    // =====================================================
+    // AWAKE
+    // =====================================================
 
     private void Awake()
     {
@@ -99,9 +120,9 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         }
     }
 
-    // ==========================================
-    // FUSION SPAWN
-    // ==========================================
+    // =====================================================
+    // FUSION SPAWNED
+    // =====================================================
 
     public override void Spawned()
     {
@@ -117,6 +138,10 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         int balo = LoadSavedID(
             EquipmentCategory.Balo
         );
+        if (showDebugLogs)
+            Debug.Log("[Equipment] Shop saved Balo itemID='" +
+                PlayerPrefs.GetString(EquipPrefix + EquipmentCategory.Balo, "") +
+                "' | Equipment index=" + balo, this);
 
         int armor = LoadSavedID(
             EquipmentCategory.Armor
@@ -126,14 +151,17 @@ public class PlayerEquipmentFusion : NetworkBehaviour
             EquipmentCategory.Skin
         );
 
-        Debug.Log(
-            "[PlayerEquipmentFusion] LOCAL DATA" +
-            " | Helmet=" + helmet +
-            " | Balo=" + balo +
-            " | Armor=" + armor +
-            " | Skin=" + skin,
-            this
-        );
+        if (showDebugLogs)
+        {
+            Debug.Log(
+                "[Equipment] LOCAL DATA" +
+                " | Helmet=" + helmet +
+                " | Balo=" + balo +
+                " | Armor=" + armor +
+                " | Skin=" + skin,
+                this
+            );
+        }
 
         if (HasStateAuthority)
         {
@@ -155,9 +183,9 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         }
     }
 
-    // ==========================================
-    // LOAD SHOP EQUIPMENT
-    // ==========================================
+    // =====================================================
+    // LOAD EQUIPPED ITEM FROM SHOP
+    // =====================================================
 
     private int LoadSavedID(
         EquipmentCategory category)
@@ -182,6 +210,7 @@ public class PlayerEquipmentFusion : NetworkBehaviour
             return 0;
         }
 
+        // Ngan trang bi item chua duoc so huu.
         if (PlayerPrefs.GetInt(
             OwnedPrefix + id, 0) != 1)
         {
@@ -198,7 +227,8 @@ public class PlayerEquipmentFusion : NetworkBehaviour
 
         for (int i = 0; i < equipmentItems.Length; i++)
         {
-            EquipmentEntry entry = equipmentItems[i];
+            EquipmentEntry entry =
+                equipmentItems[i];
 
             if (entry == null)
                 continue;
@@ -211,8 +241,8 @@ public class PlayerEquipmentFusion : NetworkBehaviour
                     Debug.Log(
                         "[Equipment] FOUND " +
                         category +
-                        " | ID=" + id +
-                        " | Index=" + (i + 1),
+                        " | Item=" + id +
+                        " | Network Index=" + (i + 1),
                         this
                     );
                 }
@@ -222,20 +252,19 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         }
 
         Debug.LogWarning(
-            "[Equipment] KHONG TIM THAY ITEM: " +
+            "[Equipment] Khong tim thay Item ID: " +
             id +
             " | Category=" + category +
-            ". Kiem tra Item ID va Category " +
-            "trong PlayerEquipmentFusion.",
+            ". Kiem tra Equipment Items.",
             this
         );
 
         return 0;
     }
 
-    // ==========================================
+    // =====================================================
     // RPC
-    // ==========================================
+    // =====================================================
 
     [Rpc(
         RpcSources.InputAuthority,
@@ -255,9 +284,9 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         );
     }
 
-    // ==========================================
+    // =====================================================
     // SET NETWORK EQUIPMENT
-    // ==========================================
+    // =====================================================
 
     private void SetEquipment(
         int helmet,
@@ -296,6 +325,7 @@ public class PlayerEquipmentFusion : NetworkBehaviour
                 "[Equipment] NETWORK UPDATED" +
                 " | Helmet=" + HelmetID +
                 " | Balo=" + BaloID +
+                " | BaloSlot=" + GetEquippedBaloSlot() +
                 " | Armor=" + ArmorID +
                 " | Skin=" + SkinID,
                 this
@@ -303,23 +333,23 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         }
     }
 
+    // =====================================================
+    // VALIDATE EQUIPMENT INDEX
+    // =====================================================
+
     private int ValidateID(
         int index,
         EquipmentCategory category)
     {
-        if (index <= 0)
-            return 0;
-
-        int arrayIndex = index - 1;
-
-        if (equipmentItems == null ||
-            arrayIndex >= equipmentItems.Length)
+        if (index <= 0 ||
+            equipmentItems == null ||
+            index > equipmentItems.Length)
         {
             return 0;
         }
 
         EquipmentEntry entry =
-            equipmentItems[arrayIndex];
+            equipmentItems[index - 1];
 
         if (entry == null ||
             entry.category != category)
@@ -337,9 +367,9 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         return index;
     }
 
-    // ==========================================
+    // =====================================================
     // NETWORK RENDER
-    // ==========================================
+    // =====================================================
 
     public override void Render()
     {
@@ -350,11 +380,20 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         {
             ApplyAllEquipment();
         }
+
+        // Another script may re-enable a backpack after our initial Spawned().
+        // Recheck only the backpack models, not all equipment/skins.
+        if (enforceBaloVisibility && Time.time >= nextBaloVisibilityCheck)
+        {
+            nextBaloVisibilityCheck = Time.time +
+                Mathf.Max(0.1f, baloVisibilityCheckInterval);
+            ApplyBackpackModels(false);
+        }
     }
 
-    // ==========================================
+    // =====================================================
     // APPLY ALL EQUIPMENT
-    // ==========================================
+    // =====================================================
 
     private void ApplyAllEquipment()
     {
@@ -381,121 +420,403 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         lastSkin = SkinID;
     }
 
-    // ==========================================
-    // SHOW 3D EQUIPMENT
-    // ==========================================
+    // =====================================================
+    // APPLY EQUIPMENT CATEGORY
+    // =====================================================
 
-    private void ApplyCategory(EquipmentCategory category, int selectedID)
+    private void ApplyCategory(
+        EquipmentCategory category,
+        int selectedID)
     {
-        if (equipmentItems == null) return;
+        // Only one controller should toggle backpack models.
+        // The generic equipment loop must not re-enable an old backpack.
+        if (category == EquipmentCategory.Balo)
+        {
+            ApplyBackpackModels();
+            return;
+        }
+
+        if (equipmentItems == null)
+            return;
 
         for (int i = 0; i < equipmentItems.Length; i++)
         {
             EquipmentEntry entry = equipmentItems[i];
-            if (entry == null || entry.category != category) continue;
+            if (entry == null || entry.category != category)
+                continue;
 
-            bool shouldShow = i + 1 == selectedID;
-            GameObject model = ResolveEquipmentObject(entry);
+            bool shouldShow = (i + 1) == selectedID;
+            GameObject model = ResolveEquipmentObject(entry, i);
 
             if (model == null)
             {
                 if (shouldShow)
-                    Debug.LogError("[Equipment] Selected " + entry.itemID +
-                        " but its 3D model is missing from spawned Player. " +
-                        "Assign a CHILD GameObject on the gameplay Player Prefab.", this);
+                    Debug.LogWarning("[Equipment] Missing model: " + entry.itemID, this);
                 continue;
             }
 
-            // Only toggle the individual equipment mesh, never the shared attach point.
             model.SetActive(shouldShow);
-            if (!shouldShow) continue;
-
-            Renderer[] renderers = model.GetComponentsInChildren<Renderer>(true);
-            if (forceEnableEquipmentRenderers)
-            {
-                foreach (Renderer renderer in renderers)
-                {
-                    if (renderer == null) continue;
-                    if (activateInactiveMeshChildren)
-                    {
-                        Transform t = renderer.transform;
-                        while (t != null && t != model.transform)
-                        {
-                            t.gameObject.SetActive(true);
-                            t = t.parent;
-                        }
-                    }
-                    renderer.enabled = true;
-                }
-            }
-
-            if (!model.activeInHierarchy)
-                Debug.LogWarning("[Equipment] " + entry.itemID +
-                    " is inactive in hierarchy. Check parent/attach-point active state.", this);
-            if (renderers.Length == 0)
-                Debug.LogWarning("[Equipment] " + entry.itemID +
-                    " has no MeshRenderer/SkinnedMeshRenderer.", this);
-
-            if (showDebugLogs)
-                Debug.Log("[Equipment] SHOW " + entry.itemID +
-                    " | model=" + model.name +
-                    " | active=" + model.activeInHierarchy +
-                    " | renderers=" + renderers.Length +
-                    " | networkIndex=" + selectedID, this);
+            if (shouldShow)
+                EnableSelectedRenderers(model);
         }
     }
 
-    // Do not toggle a prefab asset or a model from SceneMain.
-    // The equipped model must be a child of the current spawned Fusion Player.
-    private GameObject ResolveEquipmentObject(EquipmentEntry entry)
+    private void EnableSelectedRenderers(GameObject model)
     {
-        if (entry.equipmentObject == null) return null;
+        if (!forceEnableEquipmentRenderers || model == null)
+            return;
 
-        Transform referenced = entry.equipmentObject.transform;
-        if (referenced.IsChildOf(transform) && referenced != transform)
-            return entry.equipmentObject;
-
-        // Recovery for a reference to a prefab/model outside the spawned player.
-        string wanted = entry.equipmentObject.name.Replace("(Clone)", "").Trim();
-        Transform[] children = GetComponentsInChildren<Transform>(true);
-        foreach (Transform child in children)
+        Renderer[] renderers = model.GetComponentsInChildren<Renderer>(true);
+        foreach (Renderer renderer in renderers)
         {
-            if (child == transform) continue;
-            string candidate = child.name.Replace("(Clone)", "").Trim();
-            if (string.Equals(candidate, wanted, StringComparison.Ordinal))
+            if (renderer == null) continue;
+            if (activateInactiveMeshChildren)
             {
-                if (showDebugLogs)
-                    Debug.LogWarning("[Equipment] " + entry.itemID +
-                        " was linked outside the Player. Found child " +
-                        child.name + " instead. Fix Inspector reference.", this);
-                return child.gameObject;
+                Transform child = renderer.transform;
+                while (child != null && child != model.transform)
+                {
+                    child.gameObject.SetActive(true);
+                    child = child.parent;
+                }
             }
+            renderer.enabled = true;
         }
+    }
+
+    // =====================================================
+    // GET EQUIPPED BACKPACK SLOT
+    // =====================================================
+
+    // BaloID la index trong toan bo equipmentItems.
+    // Ham nay tra ve thu tu Balo: 0 / 1 / 2.
+    public int GetEquippedBaloSlot()
+    {
+        if (BaloID <= 0 || equipmentItems == null ||
+            BaloID > equipmentItems.Length)
+            return 0;
+
+        int selectedIndex = BaloID - 1;
+        EquipmentEntry selected = equipmentItems[selectedIndex];
+
+        if (selected == null || selected.category != EquipmentCategory.Balo)
+            return 0;
+
+        // Explicit slot is independent of array order.
+        if (selected.baloSlot == 1 || selected.baloSlot == 2)
+            return selected.baloSlot;
+
+        // Backward-compatible fallback for older prefab configuration.
+        int ordinal = 0;
+        for (int i = 0; i <= selectedIndex; i++)
+        {
+            EquipmentEntry entry = equipmentItems[i];
+            if (entry != null && entry.category == EquipmentCategory.Balo)
+                ordinal++;
+        }
+        return ordinal;
+    }
+
+    // =====================================================
+    // GET EQUIPPED BACKPACK MODEL
+    // =====================================================
+
+    public GameObject GetEquippedBaloModel()
+    {
+        int slot = GetEquippedBaloSlot();
+        if (slot == 1 && IsSafeModel(baloModel1)) return baloModel1;
+        if (slot == 2 && IsSafeModel(baloModel2)) return baloModel2;
         return null;
     }
 
-    [ContextMenu("TEST - Check Player Equipment and Saved Data")]
-    public void CheckSavedEquipment()
+    // =====================================================
+    // APPLY BACKPACK MODELS - SHOP OBJECTS + JETPACK VISUALS
+    // =====================================================
+
+    // A single balo can have two separate scene objects:
+    // equipmentItems[].equipmentObject (the original Shop model),
+    // and baloModel1/2 (the jetpack model with thrusters).
+    // Both must obey the same slot. Never toggle asset prefabs.
+    private void ApplyBackpackModels()
     {
-        foreach (EquipmentCategory category in Enum.GetValues(typeof(EquipmentCategory)))
-        {
-            string id = PlayerPrefs.GetString(EquipPrefix + category, "");
-            int owned = string.IsNullOrEmpty(id) ? 0 :
-                PlayerPrefs.GetInt(OwnedPrefix + id, 0);
-            Debug.Log("[Equipment CHECK] " + category +
-                " saved=" + id + " owned=" + owned, this);
-        }
-        Debug.Log("[Equipment CHECK] network Helmet=" + HelmetID +
-            " Balo=" + BaloID + " Armor=" + ArmorID +
-            " Skin=" + SkinID + " inputAuthority=" + HasInputAuthority +
-            " stateAuthority=" + HasStateAuthority, this);
-        CheckEquipmentSetup();
+        ApplyBackpackModels(true);
     }
 
-    // ==========================================
-    // ==========================================
+    private void ApplyBackpackModels(bool logChanges)
+    {
+        int selectedSlot = GetEquippedBaloSlot();
+        Dictionary<GameObject, int> models = new Dictionary<GameObject, int>();
+
+        // Main models are the objects containing the rocket engines.
+        AddBaloModel(models, baloModel1, 1, "Jetpack Balo 1");
+        AddBaloModel(models, baloModel2, 2, "Jetpack Balo 2");
+
+        // Equipment Items may point to different visual objects (or prefab assets).
+        if (equipmentItems != null)
+        {
+            for (int i = 0; i < equipmentItems.Length; i++)
+            {
+                EquipmentEntry entry = equipmentItems[i];
+                if (entry == null || entry.category != EquipmentCategory.Balo)
+                    continue;
+
+                int slot = GetBaloSlotForEntry(i);
+                // ResolveEquipmentObject never directly changes prefab assets.
+                AddBaloModel(models, ResolveEquipmentObject(entry, i),
+                    slot, "Equipment Item '" + entry.itemID + "'");
+            }
+        }
+
+        // Avoid disabling a parent shared by models of different slots.
+        HashSet<GameObject> sharedParents = new HashSet<GameObject>();
+        foreach (KeyValuePair<GameObject, int> parent in models)
+        {
+            foreach (KeyValuePair<GameObject, int> child in models)
+            {
+                if (parent.Value == child.Value) continue;
+                if (child.Key.transform.IsChildOf(parent.Key.transform))
+                    sharedParents.Add(parent.Key);
+            }
+        }
+
+        // A parent from the inactive slot can contain the selected model.
+        // In that case leave the parent active; switch its renderer branches instead.
+        List<GameObject> roots = new List<GameObject>(models.Keys);
+        roots.Sort((a, b) => GetHierarchyDepth(a.transform)
+            .CompareTo(GetHierarchyDepth(b.transform)));
+
+        bool changed = false;
+        foreach (GameObject model in roots)
+        {
+            if (sharedParents.Contains(model)) continue;
+            bool visible = selectedSlot != 0 && models[model] == selectedSlot;
+
+            // A container that holds the selected model must stay enabled.
+            if (!visible)
+            {
+                foreach (GameObject possibleChild in roots)
+                {
+                    if (models[possibleChild] == selectedSlot &&
+                        possibleChild != model &&
+                        possibleChild.transform.IsChildOf(model.transform))
+                    {
+                        visible = true;
+                        break;
+                    }
+                }
+            }
+
+            if (model.activeSelf != visible)
+            {
+                model.SetActive(visible);
+                changed = true;
+            }
+            if (visible && models[model] == selectedSlot)
+                EnableSelectedRenderers(model);
+        }
+
+        if (logChanges || changed || lastLoggedBaloSlot != selectedSlot)
+        {
+            lastLoggedBaloSlot = selectedSlot;
+            if (showDebugLogs)
+            {
+                string item = BaloID > 0 && equipmentItems != null &&
+                    BaloID <= equipmentItems.Length && equipmentItems[BaloID - 1] != null
+                    ? equipmentItems[BaloID - 1].itemID : "NONE";
+                Debug.Log("[Equipment] APPLY BACKPACK | Item=" + item +
+                    " | BaloID=" + BaloID + " | Slot=" + selectedSlot +
+                    " | Jetpack1=" + ModelStatus(baloModel1) +
+                    " | Jetpack2=" + ModelStatus(baloModel2) +
+                    " | Visual1=" + CountBaloModels(models, 1) +
+                    " | Visual2=" + CountBaloModels(models, 2), this);
+            }
+        }
+    }
+
+    private string ModelStatus(GameObject model)
+    {
+        return model == null ? "NULL" :
+            model.name + "(self=" + model.activeSelf +
+            ",hierarchy=" + model.activeInHierarchy + ")";
+    }
+
+    private int GetBaloSlotForEntry(int index)
+    {
+        if (equipmentItems == null || index < 0 ||
+            index >= equipmentItems.Length) return 0;
+        EquipmentEntry entry = equipmentItems[index];
+        if (entry == null || entry.category != EquipmentCategory.Balo)
+            return 0;
+        if (entry.baloSlot > 0) return entry.baloSlot;
+        int ordinal = 0;
+        for (int i = 0; i <= index; i++)
+        {
+            EquipmentEntry candidate = equipmentItems[i];
+            if (candidate != null && candidate.category == EquipmentCategory.Balo)
+                ordinal++;
+        }
+        return ordinal;
+    }
+
+    private void AddBaloModel(Dictionary<GameObject, int> models,
+        GameObject model, int slot, string source)
+    {
+        if (model == null || slot <= 0) return;
+        if (!IsSafeModel(model))
+        {
+            if (showDebugLogs)
+                Debug.LogWarning("[Equipment] Cannot toggle " + source +
+                    " ('" + model.name + "'). Assign a scene child that " +
+                    "does not contain JetpackVFX/Player.", this);
+            return;
+        }
+        int existingSlot;
+        if (models.TryGetValue(model, out existingSlot))
+        {
+            if (existingSlot != slot)
+                Debug.LogError("[Equipment] SAME model '" + model.name +
+                    "' mapped to balo slots " + existingSlot + " and " +
+                    slot + " (" + source + "). Fix Inspector references.", this);
+            return;
+        }
+        models.Add(model, slot);
+    }
+
+    private int GetHierarchyDepth(Transform t)
+    {
+        int depth = 0;
+        while (t != null) { depth++; t = t.parent; }
+        return depth;
+    }
+
+    private int CountBaloModels(Dictionary<GameObject, int> models, int slot)
+    {
+        int count = 0;
+        foreach (int value in models.Values)
+            if (value == slot) count++;
+        return count;
+    }
+
+    // =====================================================
+    // SAFE MODEL CHECK
+    // =====================================================
+
+    private bool IsSafeModel(GameObject obj)
+    {
+        if (obj == null)
+            return false;
+
+        // Chi chap nhan model con cua Player.
+        if (obj.transform == transform ||
+            !obj.transform.IsChildOf(transform))
+        {
+            return false;
+        }
+
+        // Tuyet doi khong tat GameObject
+        // chua JetpackVFX.
+        JetpackVFX[] effects =
+            GetComponentsInChildren<JetpackVFX>(true);
+
+        foreach (JetpackVFX effect in effects)
+        {
+            if (effect == null)
+                continue;
+
+            if (effect.transform == obj.transform ||
+                effect.transform.IsChildOf(obj.transform))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // =====================================================
+    // RESOLVE EQUIPMENT MODEL
+    // =====================================================
+
+    private GameObject ResolveEquipmentObject(
+        EquipmentEntry entry,
+        int arrayIndex)
+    {
+        if (entry == null)
+            return null;
+
+        if (IsSafeModel(entry.equipmentObject))
+        {
+            return entry.equipmentObject;
+        }
+
+        // Neu reference la prefab ngoai,
+        // tim child trung ten trong Player.
+        if (entry.equipmentObject != null)
+        {
+            string wanted =
+                entry.equipmentObject.name
+                    .Replace("(Clone)", "")
+                    .Trim();
+
+            GameObject found = null;
+
+            Transform[] children =
+                GetComponentsInChildren<Transform>(true);
+
+            foreach (Transform child in children)
+            {
+                if (child == transform)
+                    continue;
+
+                string childName =
+                    child.name
+                        .Replace("(Clone)", "")
+                        .Trim();
+
+                if (!string.Equals(
+                    childName,
+                    wanted,
+                    StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (!IsSafeModel(child.gameObject))
+                    continue;
+
+                if (found != null)
+                {
+                    // Khong tu doan neu trung ten.
+                    found = null;
+                    break;
+                }
+
+                found = child.gameObject;
+            }
+
+            if (found != null)
+                return found;
+        }
+
+        // Du phong cho 2 balo dau tien.
+        if (entry.category == EquipmentCategory.Balo &&
+            equipmentItems != null)
+        {
+            int slot = GetBaloSlotForEntry(arrayIndex);
+            GameObject fallback =
+                slot == 1 ? baloModel1 :
+                slot == 2 ? baloModel2 :
+                null;
+
+            if (IsSafeModel(fallback))
+                return fallback;
+        }
+
+        return null;
+    }
+
+    // =====================================================
     // APPLY SKIN
-    // ==========================================
+    // =====================================================
 
     private void ApplySkin(int selectedID)
     {
@@ -510,8 +831,7 @@ public class PlayerEquipmentFusion : NetworkBehaviour
                 equipmentItems[index];
 
             if (entry != null &&
-                entry.category ==
-                EquipmentCategory.Skin)
+                entry.category == EquipmentCategory.Skin)
             {
                 skin = entry.skinMaterial;
             }
@@ -553,9 +873,60 @@ public class PlayerEquipmentFusion : NetworkBehaviour
         }
     }
 
-    // ==========================================
-    // TEST CONFIGURATION
-    // ==========================================
+    // =====================================================
+    // DEBUG - CHECK SAVED DATA
+    // =====================================================
+
+    [ContextMenu(
+        "TEST - Check Player Equipment and Saved Data"
+    )]
+    public void CheckSavedEquipment()
+    {
+        foreach (
+            EquipmentCategory category
+            in Enum.GetValues(
+                typeof(EquipmentCategory)
+            ))
+        {
+            string id =
+                PlayerPrefs.GetString(
+                    EquipPrefix + category,
+                    ""
+                );
+
+            int owned =
+                string.IsNullOrEmpty(id)
+                ? 0
+                : PlayerPrefs.GetInt(
+                    OwnedPrefix + id,
+                    0
+                );
+
+            Debug.Log(
+                "[Equipment CHECK] " +
+                category +
+                " | Saved=" + id +
+                " | Owned=" + owned,
+                this
+            );
+        }
+
+        Debug.Log(
+            "[Equipment CHECK] NETWORK" +
+            " | Helmet=" + HelmetID +
+            " | Balo=" + BaloID +
+            " | BaloSlot=" + GetEquippedBaloSlot() +
+            " | Armor=" + ArmorID +
+            " | Skin=" + SkinID,
+            this
+        );
+
+        CheckEquipmentSetup();
+    }
+
+    // =====================================================
+    // DEBUG - CHECK INSPECTOR
+    // =====================================================
 
     [ContextMenu("TEST - Check Equipment Setup")]
     public void CheckEquipmentSetup()
@@ -566,6 +937,7 @@ public class PlayerEquipmentFusion : NetworkBehaviour
                 "[Equipment] Equipment Items is NULL!",
                 this
             );
+
             return;
         }
 
@@ -578,10 +950,11 @@ public class PlayerEquipmentFusion : NetworkBehaviour
                 continue;
 
             Debug.Log(
-                "[Equipment CHECK] " +
-                "Index=" + (i + 1) +
+                "[Equipment CHECK]" +
+                " | Index=" + (i + 1) +
                 " | ID=" + entry.itemID +
                 " | Category=" + entry.category +
+                " | BaloSlot=" + entry.baloSlot +
                 " | Object=" +
                 (entry.equipmentObject != null
                     ? entry.equipmentObject.name
@@ -589,5 +962,17 @@ public class PlayerEquipmentFusion : NetworkBehaviour
                 this
             );
         }
+
+        Debug.Log(
+            "[Equipment CHECK] BaloModel1=" +
+            (baloModel1 != null
+                ? baloModel1.name
+                : "NONE") +
+            " | BaloModel2=" +
+            (baloModel2 != null
+                ? baloModel2.name
+                : "NONE"),
+            this
+        );
     }
 }

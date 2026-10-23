@@ -70695,14 +70695,14 @@ MonoBehaviour:
   finalScale: {x: 1, y: 1, z: 1}
   resultType: 0
   weaponHUD: {fileID: 91899100}
-  matchHUD: {fileID: 1686930482}
+  matchHUD: {fileID: 297074672}
   topLeftUI: {fileID: 1217855514}
   jetpackHUD: {fileID: 475334701}
   extraUIToHide: []
   hideHUDOnResult: 1
   resultAudioSource: {fileID: 296013030}
   winSound: {fileID: 8300000, guid: 6b25d1268391b8a489b9564bf11181eb, type: 3}
-  loseSound: {fileID: 0}
+  loseSound: {fileID: 8300000, guid: 7a1e168bee2825443bc72e0b57d42741, type: 3}
   resultVolume: 1
 --- !u!225 &296013029
 CanvasGroup:
@@ -300184,13 +300184,13 @@ MonoBehaviour:
   finalScale: {x: 1, y: 1, z: 1}
   resultType: 0
   weaponHUD: {fileID: 91899100}
-  matchHUD: {fileID: 1686930482}
+  matchHUD: {fileID: 297074672}
   topLeftUI: {fileID: 1217855514}
   jetpackHUD: {fileID: 475334701}
   extraUIToHide: []
   hideHUDOnResult: 1
   resultAudioSource: {fileID: 1221168810}
-  winSound: {fileID: 0}
+  winSound: {fileID: 8300000, guid: 7a1e168bee2825443bc72e0b57d42741, type: 3}
   loseSound: {fileID: 8300000, guid: 7a1e168bee2825443bc72e0b57d42741, type: 3}
   resultVolume: 1
 --- !u!225 &1221168809
@@ -503772,8 +503772,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59259b24e7158434e86c17e8b0418704, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkHealthUI
-  healthSlider: {fileID: 555555062}
-  hpText: {fileID: 0}
+  healthSlider: {fileID: 1958591303}
+  hpText: {fileID: 2123351053}
 --- !u!114 &2057660689
 MonoBehaviour:
   m_ObjectHideFlags: 0
