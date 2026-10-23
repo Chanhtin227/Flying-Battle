@@ -235,3 +235,8 @@ MonoBehaviour:
     English: Choose the aiming point
     Japanese: "\u7167\u6E96\u3092\u9078\u3076"
     Chinese: "\u9009\u62E9\u7784\u51C6\u70B9"
+  - Key: Shop
+    Vietnamese: "C\u1EEDa h\xE0ng"
+    English: Shop
+    Japanese: "\u5E97"
+    Chinese: "\u5546\u5E97"

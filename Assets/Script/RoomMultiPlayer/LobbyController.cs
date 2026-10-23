@@ -104,19 +104,28 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         gameModeBtn.onClick.AddListener(OpenGameModePanel);
         btnBack.onClick.AddListener(CloseGameModePanel);
 
-        settingBtn.onClick.AddListener(() => 
+        settingBtn.onClick.AddListener(() =>
         {
             panelSetting.SetActive(true);
+
             settingBtn.gameObject.SetActive(false);
             gameModeBtn.gameObject.SetActive(false);
+
+            if (shopBtn != null)
+                shopBtn.gameObject.SetActive(false);
         });
-        
-        closeSettingBtn.onClick.AddListener(() => 
+
+        closeSettingBtn.onClick.AddListener(() =>
         {
             SavePlayerSettingName();
+
             panelSetting.SetActive(false);
+
             settingBtn.gameObject.SetActive(true);
             gameModeBtn.gameObject.SetActive(true);
+
+            if (shopBtn != null)
+                shopBtn.gameObject.SetActive(true);
         });
 
         btn1vs1.onClick.AddListener(() =>
@@ -262,7 +271,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     private System.Collections.IEnumerator AnimateGameModeButtonsClose()
     {
         isGameModeAnimating = true;
-        shopBtn.gameObject.SetActive(true);
         btn1vs1.interactable = false;
         btn2vs2.interactable = false;
 
@@ -346,6 +354,8 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
         gameModeBtn.gameObject.SetActive(true);
         settingBtn.gameObject.SetActive(true);
+        if (shopBtn != null)
+        shopBtn.gameObject.SetActive(true);
 
         isGameModeAnimating = false;
         gameModeAnimationCoroutine = null;

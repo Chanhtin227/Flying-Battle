@@ -43,7 +43,7 @@ public class JetpackHUD : MonoBehaviour
 
         if (player == null || player.Object == null || !player.Object.IsValid)
         {
-            SetLabels("READY", "7.0s");
+            SetLabels("Ready...", "7.0s");
             SetFill(1f, readyAndFlyingColor);
             return;
         }
@@ -55,7 +55,7 @@ public class JetpackHUD : MonoBehaviour
         bool isFull = fuel >= (maxFuel - 0.01f);
 
         // Hiển thị trạng thái tuỳ thuộc vào việc đang bay, đang đầy, hay đang nạp
-        string status = flying ? "FLYING" : (isFull ? "READY" : "RECHARGING");
+        string status = flying ? "Flying..." : (isFull ? "Ready..." : "Recharging...");
         
         // Chuyển màu vàng nếu đang hồi, màu xanh nếu đang bay hoặc đã đầy
         Color currentColor = (flying || isFull) ? readyAndFlyingColor : rechargingColor;
