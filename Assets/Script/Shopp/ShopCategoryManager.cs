@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -118,6 +119,13 @@ public class ShopCategoryManager : MonoBehaviour
     public TMP_Text priceText;
     public TMP_Text notificationText;
     public Image selectedItemImage;
+
+    [Header("Notification - Not Enough Gold")]
+    [Min(0.1f)] public float insufficientGoldNotificationSeconds = 2f;
+    private Coroutine insufficientGoldNotificationCoroutine;
+
+    // LobbyController uses this exact key when saving the player name in Settings.
+    private const string PlayerNamePrefsKey = "MyPlayerName";
 
     [Header("Shared Buy / Equip Button")]
     public Button buyButton;
@@ -286,6 +294,10 @@ public class ShopCategoryManager : MonoBehaviour
             if (obj == null || previousMainUIStates.ContainsKey(obj))
                 continue;
 
+            // ShopBtn is managed by OpenShop/CloseShop, not by the state snapshot.
+            if (shopBtn != null && obj == shopBtn.gameObject)
+                continue;
+
             // Never disable the Shop or its ancestors (including this manager).
             if (obj == shopPanel ||
                 (shopPanel != null && shopPanel.transform.IsChildOf(obj.transform)) ||
@@ -323,8 +335,11 @@ public class ShopCategoryManager : MonoBehaviour
             return;
 
         shopPanel.SetActive(true);
-        shopBtn.gameObject.SetActive(false);
+        // Luu trang thai UI truoc khi an ShopBtn.
         HideMainUIForShop();
+
+        if (shopBtn != null)
+            shopBtn.gameObject.SetActive(false);
 
         // Mo Shop voi bo trang bi dang mac, khong reset ve do goc.
         ApplySavedEquipment();
@@ -348,11 +363,16 @@ public class ShopCategoryManager : MonoBehaviour
 
         currentCategory = null;
         showingPurchasedItems = false;
-        shopBtn.gameObject.SetActive(true);
+
         if (shopPanel != null)
             shopPanel.SetActive(false);
 
+        // Khoi phuc UI truoc, roi bat ShopBtn CUOI CUNG
+        // de khong bi RestoreMainUIAfterShop() tat lai.
         RestoreMainUIAfterShop();
+
+        if (shopBtn != null)
+            shopBtn.gameObject.SetActive(true);
     }
 
     public void ToggleShop()
@@ -656,7 +676,7 @@ public class ShopCategoryManager : MonoBehaviour
             );
         }
 
-        ShowMessage("");
+        HideNotification();
         RefreshSelectedItem();
         RefreshGoldenBorders();
     }
@@ -679,7 +699,7 @@ public class ShopCategoryManager : MonoBehaviour
     {
         selectedItem = null;
 
-        ShowMessage("");
+        HideNotification();
         RefreshSelectedItem();
         RefreshGoldenBorders();
     }
@@ -862,12 +882,24 @@ public class ShopCategoryManager : MonoBehaviour
     // SELECTED ITEM UI
     // ==========================================
 
+    private void RefreshPlayerNameText()
+    {
+        if (selectedItemText == null) return;
+
+        string playerName = PlayerPrefs.GetString(PlayerNamePrefsKey, "").Trim();
+        selectedItemText.text = string.IsNullOrEmpty(playerName)
+            ? "Player"
+            : playerName;
+    }
+
     private void RefreshSelectedItem()
     {
+        // This label is permanently reserved for the name saved in Settings,
+        // even when the selected Shop item changes.
+        RefreshPlayerNameText();
+
         if (selectedItem == null)
         {
-            if (selectedItemText != null)
-                selectedItemText.text = "Select an item";
 
             if (priceText != null)
                 priceText.text = "";
@@ -883,9 +915,6 @@ public class ShopCategoryManager : MonoBehaviour
 
             return;
         }
-
-        if (selectedItemText != null)
-            selectedItemText.text = selectedItem.itemName;
 
         if (selectedItemImage != null)
         {
@@ -936,14 +965,14 @@ public class ShopCategoryManager : MonoBehaviour
 
         if (selectedItem == null)
         {
-            ShowMessage("Please select an item!");
+            Debug.LogWarning("[SHOP] Please select an item first.", this);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(selectedItem.itemID) ||
             selectedItem.price < 0)
         {
-            ShowMessage("Invalid item!");
+            Debug.LogWarning("[SHOP] Invalid item data.", this);
             return;
         }
 
@@ -954,7 +983,7 @@ public class ShopCategoryManager : MonoBehaviour
             if (IsEquipped(selectedItem))
             {
                 UnequipCategory(selectedItem.category);
-                ShowMessage("Unequipped: " + selectedItem.itemName);
+                HideNotification();
             }
             else
             {
@@ -964,7 +993,7 @@ public class ShopCategoryManager : MonoBehaviour
                 );
                 PlayerPrefs.Save();
                 ApplySavedEquipment();
-                ShowMessage("Equipped: " + selectedItem.itemName);
+                HideNotification();
             }
 
             RefreshSelectedItem();
@@ -976,11 +1005,7 @@ public class ShopCategoryManager : MonoBehaviour
 
         if (currentGold < price)
         {
-            ShowMessage(
-                "Not enough Gold! (" +
-                currentGold.ToString("N0") + "/" +
-                price.ToString("N0") + ")"
-            );
+            ShowInsufficientGoldNotification(currentGold, price);
 
             RefreshShopGold();
             return;
@@ -988,7 +1013,14 @@ public class ShopCategoryManager : MonoBehaviour
 
         if (!GoldWallet.SpendGold(price))
         {
-            ShowMessage("Payment failed!");
+            // Gold may have changed since the check above.
+            // Only show a UI message when there is actually not enough Gold.
+            int updatedGold = GoldWallet.GetGold();
+            if (updatedGold < price)
+                ShowInsufficientGoldNotification(updatedGold, price);
+            else
+                Debug.LogWarning("[SHOP] Payment failed (not due to insufficient Gold).", this);
+
             RefreshShopGold();
             return;
         }
@@ -1000,9 +1032,7 @@ public class ShopCategoryManager : MonoBehaviour
 
         PlayerPrefs.Save();
 
-        ShowMessage(
-            "Purchased: " + selectedItem.itemName
-        );
+        HideNotification();
 
         RefreshShopGold();
         RefreshItemPrices(); // Gia tren o vua mua chuyen thanh DA MUA.
@@ -1069,11 +1099,7 @@ public class ShopCategoryManager : MonoBehaviour
         if (showingPurchasedItems)
             RebuildPurchasedItems();
 
-        ShowMessage(
-            resetGoldWithShop
-                ? "Shop and Gold reset!"
-                : "Purchased items reset!"
-        );
+        HideNotification();
     }
 
     // ==========================================
@@ -1363,9 +1389,45 @@ public class ShopCategoryManager : MonoBehaviour
     // NOTIFICATION
     // ==========================================
 
-    private void ShowMessage(string message)
+    // NotificationText is exclusively for purchase attempts with insufficient Gold.
+    private void ShowInsufficientGoldNotification(int availableGold, int requiredGold)
     {
+        if (notificationText == null) return;
+
+        HideNotification();
+        notificationText.text =
+            "Not enough Gold! (" + availableGold.ToString("N0") +
+            "/" + requiredGold.ToString("N0") + ")";
+        notificationText.gameObject.SetActive(true);
+
+        insufficientGoldNotificationCoroutine =
+            StartCoroutine(HideInsufficientGoldNotificationAfterDelay());
+    }
+
+    private IEnumerator HideInsufficientGoldNotificationAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(insufficientGoldNotificationSeconds);
+        insufficientGoldNotificationCoroutine = null;
+
         if (notificationText != null)
-            notificationText.text = message;
+        {
+            notificationText.text = string.Empty;
+            notificationText.gameObject.SetActive(false);
+        }
+    }
+
+    private void HideNotification()
+    {
+        if (insufficientGoldNotificationCoroutine != null)
+        {
+            StopCoroutine(insufficientGoldNotificationCoroutine);
+            insufficientGoldNotificationCoroutine = null;
+        }
+
+        if (notificationText != null)
+        {
+            notificationText.text = string.Empty;
+            notificationText.gameObject.SetActive(false);
+        }
     }
 }

@@ -468,10 +468,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb3d53922cd74d04ea09b2b6487f8e0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameCore.LoadingSceneController
-  fillBarImage: {fileID: 250444972}
-  progressText: {fileID: 938925603}
-  minimumLoadingTime: 10
-  fallbackSceneName: SceneMain
 --- !u!1 &250444970
 GameObject:
   m_ObjectHideFlags: 0
