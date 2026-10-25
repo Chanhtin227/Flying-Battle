@@ -380,14 +380,9 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             return;
         }
 
-        if (!currentRunner.IsServer)
-        {
-            Debug.LogWarning("[Lobby] Chỉ Host mới được Start Match!");
-            return;
-        }
+        if (!currentRunner.IsServer) return;
 
         int currentPlayers = currentRunner.SessionInfo.PlayerCount;
-
         if (currentPlayers < maxPlayers)
         {
             ShowErrorNotification("Not enough players, please wait...");
@@ -399,9 +394,8 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             currentRunner.SessionInfo.IsOpen = false;
         }
 
-        // Lưu Index của Scene Map thực sự và yêu cầu NetworkRunner tải Scene Loading trước
-        TargetGameplaySceneIndex = gameplaySceneIndex;
-        currentRunner.LoadScene(SceneRef.FromIndex(loadingSceneIndex));
+        // Load thẳng sang Scene Gameplay, không qua Loading nữa
+        currentRunner.LoadScene(SceneRef.FromIndex(gameplaySceneIndex));
     }
 
     private void ShowErrorNotification(string message = "Room ID not correct! Again please")

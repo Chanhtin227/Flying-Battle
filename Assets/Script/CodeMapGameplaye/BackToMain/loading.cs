@@ -62,7 +62,6 @@ public class LoadingManager : MonoBehaviour
     {
         float timer = 0f;
 
-        // Chạy thanh giả lập
         while (timer < minimumLoadingTime)
         {
             timer += Time.unscaledDeltaTime;
@@ -76,27 +75,8 @@ public class LoadingManager : MonoBehaviour
             yield return null;
         }
 
-        // Kiểm tra xem game đang Online (có Fusion) hay Offline
-        NetworkRunner runner = FindObjectOfType<NetworkRunner>();
-
-        if (runner != null)
-        {
-            // ----------------------------------------------------
-            // TRƯỜNG HỢP ONLINE: Chờ Host load Map cho cả phòng
-            // ----------------------------------------------------
-            if (runner.IsServer)
-            {
-                runner.LoadScene(SceneRef.FromIndex(LobbyController.TargetGameplaySceneIndex));
-            }
-        }
-        else
-        {
-            // ----------------------------------------------------
-            // TRƯỜNG HỢP OFFLINE: Load scene thông thường (từ Intro -> MainMenu)
-            // ----------------------------------------------------
-            SceneManager.LoadSceneAsync(offlineSceneToLoad);
-        }
-
+        // Hoàn thành thời gian chờ thì chuyển sang SceneMain
+        SceneManager.LoadSceneAsync(offlineSceneToLoad);
         isLoading = false;
     }
 
