@@ -240,3 +240,38 @@ MonoBehaviour:
     English: Shop
     Japanese: "\u5E97"
     Chinese: "\u5546\u5E97"
+  - Key: textload
+    Vietnamese: "Ch\u1EA1m \u0111\u1EC3 v\xE0o game"
+    English: Tap to enter the game
+    Japanese: "\u30B2\u30FC\u30E0\u3092\u59CB\u3081\u308B\u306B\u306F\u30BF\u30C3\u30D7\u3057\u3066\u306D"
+    Chinese: "\u70B9\u51FB\u8FDB\u5165\u6E38\u620F"
+  - Key: shop1
+    Vietnamese: "\xC1o gi\xE1p"
+    English: Armor
+    Japanese: "\u93A7"
+    Chinese: "\u76D4\u7532"
+  - Key: shop2
+    Vietnamese: "T\xFAi"
+    English: Balo
+    Japanese: "\u30D0\u30C3\u30B0"
+    Chinese: "\u5305"
+  - Key: shop3
+    Vietnamese: "M\u0169"
+    English: Helmet
+    Japanese: "\u5E3D\u5B50"
+    Chinese: "\u5E3D\u5B50"
+  - Key: shop4
+    Vietnamese: Da
+    English: Skin
+    Japanese: "\u808C"
+    Chinese: "\u76AE\u80A4"
+  - Key: shop5
+    Vietnamese: "\u0110\xE3 mua"
+    English: Bought
+    Japanese: "\u3082\u3046\u8CB7\u3063\u305F"
+    Chinese: "\u5DF2\u7ECF\u4E70\u4E86"
+  - Key: shop6
+    Vietnamese: "C\u1EEDa h\xE0ng"
+    English: Shop
+    Japanese: "\u5E97"
+    Chinese: "\u5546\u5E97"

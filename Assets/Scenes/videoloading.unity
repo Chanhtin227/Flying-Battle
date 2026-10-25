@@ -131,6 +131,7 @@ GameObject:
   - component: {fileID: 7300059}
   - component: {fileID: 7300058}
   - component: {fileID: 7300060}
+  - component: {fileID: 7300061}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -269,6 +270,19 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &7300061
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7300056}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 402d92e2199b1744d87c0afafbb2bf95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Localization.LocalizedTMPText
+  key: textload
 --- !u!1 &121256137
 GameObject:
   m_ObjectHideFlags: 0
