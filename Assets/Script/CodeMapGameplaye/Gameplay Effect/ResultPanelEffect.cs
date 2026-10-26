@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using System.Collections;
 using UnityEngine.SceneManagement;
@@ -59,6 +58,10 @@ public class ResultPanelEffect : MonoBehaviour
     public GameObject matchHUD;
     public GameObject topLeftUI;
     public GameObject jetpackHUD;
+    public GameObject equipmentHUD; // HUD mu va giap
+
+    [Tooltip("Tu tim EquipmentHUD trong scene neu chua gan trong Inspector.")]
+    public bool autoFindEquipmentHUD = true;
 
     [Header("Optional Extra UI")]
     public GameObject[] extraUIToHide;
@@ -83,7 +86,7 @@ public class ResultPanelEffect : MonoBehaviour
 
     [Header("Scene Transition")]
     [Tooltip("Tên của Scene Loading trong Build Settings")]
-    public string loadingSceneName = "LoadingScene"; 
+    public string loadingSceneName = "LoadingScene";
 
     // Gọi hàm này khi người chơi bấm nút "Back to Main" hoặc "Continue"
     public void LoadMainViaLoadingScene()
@@ -144,6 +147,19 @@ public class ResultPanelEffect : MonoBehaviour
         HideUIObject(matchHUD);
         HideUIObject(topLeftUI);
         HideUIObject(jetpackHUD);
+
+        // Tu tim UI mu va giap ke ca khi chua gan reference.
+        if (equipmentHUD == null && autoFindEquipmentHUD)
+        {
+            EquipmentHUD hud = FindFirstObjectByType<EquipmentHUD>(
+                FindObjectsInactive.Include
+            );
+
+            if (hud != null)
+                equipmentHUD = hud.gameObject;
+        }
+
+        HideUIObject(equipmentHUD);
 
         if (extraUIToHide != null)
         {

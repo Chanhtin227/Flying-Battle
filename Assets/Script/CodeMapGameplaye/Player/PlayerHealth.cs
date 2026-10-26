@@ -15,6 +15,41 @@ public class PlayerHealth : NetworkBehaviour
     [Networked] public PlayerRef LastAttacker { get; set; }
 
 
+    // =========================================================
+    // SHOP EQUIPMENT DAMAGE REDUCTION (STATE AUTHORITY)
+    // =========================================================
+
+    [Header("Equipment Defense - Helmet / Armor")]
+    [Tooltip("PlayerEquipmentFusion tren cung Player. Co the de trong de tu tim.")]
+    public PlayerEquipmentFusion equipmentFusion;
+
+    [Range(0f, 1f)] public float helmetDamageReduction = 0.10f;
+    [Range(0f, 1f)] public float armorDamageReduction = 0.15f;
+    [Range(0f, 0.95f)] public float maxEquipmentReduction = 0.60f;
+
+    // Lay trang bi da duoc Photon Fusion dong bo, khong doc PlayerPrefs tren server.
+    public float GetEquipmentDamageReduction()
+    {
+        if (equipmentFusion == null)
+            equipmentFusion = GetComponent<PlayerEquipmentFusion>();
+
+        if (equipmentFusion == null ||
+            equipmentFusion.Object == null ||
+            !equipmentFusion.Object.IsValid)
+            return 0f;
+
+        float reduction = 0f;
+
+        if (equipmentFusion.HelmetID > 0)
+            reduction += helmetDamageReduction;
+
+        if (equipmentFusion.ArmorID > 0)
+            reduction += armorDamageReduction;
+
+        return Mathf.Clamp(reduction, 0f, maxEquipmentReduction);
+    }
+
+
     [Header("Medkit Inventory")]
     [Networked] public int SmallMedkitCount { get; set; }
     [Networked] public int MediumMedkitCount { get; set; }
@@ -192,10 +227,14 @@ public class PlayerHealth : NetworkBehaviour
             return;
 
 
-        // Khi trận đã kết thúc thì không heal / không respawn nữa.
+        // Khi tran ket thuc: huy Medkit dang dung,
+        // khong heal va khong respawn nua.
         if (MatchManager.Instance != null &&
             MatchManager.Instance.MatchEnded)
         {
+            if (UsingMedkitType != 0)
+                CancelMedkit();
+
             return;
         }
 
@@ -434,6 +473,11 @@ public class PlayerHealth : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
+        // Khong bat dau hoi mau sau khi tran ket thuc.
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
+            return;
+
         if (IsDead)
             return;
 
@@ -544,6 +588,11 @@ public class PlayerHealth : NetworkBehaviour
     private void RequestUseSpecificMedkitRpc(int medkitType)
     {
         if (!HasStateAuthority || IsDead)
+            return;
+
+        // Chan su dung binh tu Inventory sau WIN / LOSE.
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
             return;
 
         if (UsingMedkitType != 0)
@@ -736,6 +785,9 @@ public class PlayerHealth : NetworkBehaviour
 
     public override void Spawned()
     {
+        if (equipmentFusion == null)
+            equipmentFusion = GetComponent<PlayerEquipmentFusion>();
+
         FindRespawnTerrain();
 
 
@@ -863,11 +915,15 @@ public class PlayerHealth : NetworkBehaviour
                 attacker;
         }
 
-        // APPLY DAMAGE
+        // DAMAGE REDUCTION: CHI TINH MOT LAN TREN STATE AUTHORITY.
+        // Helmet 10%, Armor 15% (co the chinh trong Inspector).
+        float equipmentReduction = GetEquipmentDamageReduction();
+        float finalDamage = damage * (1f - equipmentReduction);
 
+        // APPLY DAMAGE
         CurrentHealth =
             Mathf.Clamp(
-                CurrentHealth - damage,
+                CurrentHealth - finalDamage,
                 0f,
                 maxHealth
             );
@@ -885,6 +941,26 @@ public class PlayerHealth : NetworkBehaviour
                 healthBeforeDamage -
                 CurrentHealth
             );
+
+        // DAMAGE NUMBER: Host gui sat thuong thuc te cho nguoi danh.
+        if (actualDamage > 0f &&
+            attacker != PlayerRef.None &&
+            attacker != Object.InputAuthority)
+        {
+            Rpc_ShowDamageNumber(
+                attacker,
+                actualDamage,
+                transform.position + Vector3.up * 1.8f
+            );
+        }
+        else if (actualDamage > 0f && attacker == PlayerRef.None)
+        {
+            Debug.LogWarning(
+                "[DamageNumber] Attacker = None. " +
+                "PlayerWeapon phai truyen PlayerRef attacker vao TakeDamage.",
+                this
+            );
+        }
 
         // =====================================================
         // ADD DAMAGE TAKEN TO VICTIM STATS
@@ -924,8 +1000,12 @@ public class PlayerHealth : NetworkBehaviour
             Object.InputAuthority +
             " | Attacker = " +
             attacker +
-            " | Damage = " +
-            damage.ToString("F0") +
+            " | Raw = " +
+            damage.ToString("F1") +
+            " | Reduction = " +
+            (equipmentReduction * 100f).ToString("F0") + "%" +
+            " | AfterDefense = " +
+            finalDamage.ToString("F1") +
             " | Actual = " +
             actualDamage.ToString("F0") +
             " | HP = " +
@@ -1045,6 +1125,42 @@ public class PlayerHealth : NetworkBehaviour
             " | PlayerRef = " +
             attackerRef
         );
+    }
+
+    // =========================================================
+    // DAMAGE NUMBER RPC - ONLY ATTACKER SEES NUMBER
+    // =========================================================
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_ShowDamageNumber(
+        PlayerRef attacker,
+        float actualDamage,
+        Vector3 worldPosition)
+    {
+        if (Runner == null || Runner.LocalPlayer != attacker)
+            return;
+
+        DamageNumberUI damageUI = DamageNumberUI.Instance;
+
+        if (damageUI == null)
+            damageUI = FindFirstObjectByType<DamageNumberUI>();
+
+        if (damageUI == null)
+        {
+            Debug.LogWarning(
+                "[DamageNumber] Khong tim thay DamageNumberUI trong scene Map_True1."
+            );
+            return;
+        }
+
+        Debug.Log(
+            "[DamageNumber] RPC received. Damage=" +
+            actualDamage.ToString("F1") +
+            " | Attacker=" + attacker,
+            this
+        );
+
+        damageUI.ShowDamage(actualDamage, worldPosition);
     }
 
     // HIT RPC

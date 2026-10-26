@@ -21804,6 +21804,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3960816913412185449}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 914684972042559397}
     - targetCorrespondingSourceObject: {fileID: -2577009113829051978, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7506623451534187696}
@@ -21946,6 +21949,7 @@ MonoBehaviour:
   coyoteTime: 0.12
   jumpRepeatLockTime: 0.2
   boostSpeed: 5
+  jetpackMoveSpeed: 6
   maxBoostHeight: 10
   maxBoostTime: 7
   jetpackRechargeTime: 4
@@ -22099,6 +22103,10 @@ MonoBehaviour:
   _IsDead:
     RawValue: 0
   _Kills: 0
+  equipmentFusion: {fileID: 3960816913412185449}
+  helmetDamageReduction: 0.1
+  armorDamageReduction: 0.15
+  maxEquipmentReduction: 0.6
   _SmallMedkitCount: 0
   _MediumMedkitCount: 0
   _LargeMedkitCount: 0
@@ -22403,6 +22411,22 @@ MonoBehaviour:
   _SkinID: 0
   enforceBaloVisibility: 1
   baloVisibilityCheckInterval: 0.35
+--- !u!114 &914684972042559397
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8323938116521971073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1303846f01a306a45a08653867cc8b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EquipmentDefense
+  equipmentFusion: {fileID: 3960816913412185449}
+  helmetReduction: 0.1
+  armorReduction: 0.15
+  maxReduction: 0.6
 --- !u!137 &8387336804663375310 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -8421671730809387746, guid: 5406df8dad37aa14982f87af57b70d23, type: 3}
