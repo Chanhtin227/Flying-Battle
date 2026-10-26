@@ -57,6 +57,10 @@ public class MatchManager : NetworkBehaviour
     public GameObject topLeftUI;
     public GameObject jetpackHUD;
 
+    [Header("Equipment HUD - Helmet / Armor")]
+    public GameObject equipmentHUD;
+    public bool autoFindEquipmentHUD = true;
+
     private bool localEndHUDHidden;
 
     // This runs on Host AND Clients. MatchEnded is networked, so
@@ -74,12 +78,20 @@ public class MatchManager : NetworkBehaviour
 
     private void CheckAndHideEndHUD()
     {
-        if (!MatchEnded || localEndHUDHidden)
+        if (!MatchEnded)
             return;
 
-        // Avoid setting the flag until this scene's UI exists.
+        // UI co the duoc tao sau khi MatchEnded da duoc dong bo.
+        // Tiep tuc an EquipmentHUD du da an cac HUD khac truoc do.
+        TryFindEquipmentHUD();
+        HideOneHUD(equipmentHUD);
+
+        if (localEndHUDHidden)
+            return;
+
         bool foundUI = weaponHUD != null || matchHUD != null ||
-                       topLeftUI != null || jetpackHUD != null;
+                       topLeftUI != null || jetpackHUD != null ||
+                       equipmentHUD != null;
 
         if (!foundUI)
             return;
@@ -97,6 +109,23 @@ public class MatchManager : NetworkBehaviour
         HideOneHUD(topLeftUI);
         HideOneHUD(jetpackHUD);
 
+        TryFindEquipmentHUD();
+        HideOneHUD(equipmentHUD);
+    }
+
+    // Tim EquipmentHUD trong scene, ke ca khi GameObject inactive.
+    // Chi tim lai khi chua co reference, khong tim moi frame neu da gan.
+    private void TryFindEquipmentHUD()
+    {
+        if (equipmentHUD != null || !autoFindEquipmentHUD)
+            return;
+
+        EquipmentHUD hud = FindFirstObjectByType<EquipmentHUD>(
+            FindObjectsInactive.Include
+        );
+
+        if (hud != null)
+            equipmentHUD = hud.gameObject;
     }
 
     private void HideOneHUD(GameObject ui)
