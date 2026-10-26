@@ -33,6 +33,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     public TextMeshProUGUI namePlayer1_1v1;
     public TextMeshProUGUI namePlayer2_1v1;
     public Button startBtn_1vs1;
+    public Button quitBtn_1vs1;
 
     [Header("Panel Room 2vs2")]
     public GameObject panelRoom2vs2;
@@ -42,6 +43,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     public TextMeshProUGUI namePlayer3_2v2;
     public TextMeshProUGUI namePlayer4_2v2;
     public Button startBtn_2vs2;
+    public Button quitBtn_2vs2;
 
     [Header("Settings Panel")]
     public Button settingBtn;
@@ -73,6 +75,90 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
     public Button shopBtn;
 
+    [Header("Button Bounce Effect")]
+    [SerializeField, Range(1.02f, 1.2f)] private float buttonBounceScale = 1.07f;
+    [SerializeField, Min(0.03f)] private float buttonBounceDuration = 0.16f;
+
+    private readonly Dictionary<Button, Coroutine> buttonBounceCoroutines = new Dictionary<Button, Coroutine>();
+    private readonly Dictionary<Button, Vector3> buttonOriginalScales = new Dictionary<Button, Vector3>();
+
+    private void RegisterButtonBounce(Button button)
+    {
+        if (button == null) return;
+
+        RectTransform rect = button.GetComponent<RectTransform>();
+        if (rect == null) return;
+
+        if (!buttonOriginalScales.ContainsKey(button))
+            buttonOriginalScales.Add(button, rect.localScale);
+
+        // Gắn trước listener gameplay để hiệu ứng vẫn khởi chạy khi nút bị ẩn sau click.
+        button.onClick.AddListener(() => PlayButtonBounce(button));
+    }
+
+    private void PlayButtonBounce(Button button)
+    {
+        if (button == null) return;
+
+        if (buttonBounceCoroutines.TryGetValue(button, out Coroutine running) && running != null)
+            StopCoroutine(running);
+
+        buttonBounceCoroutines[button] = StartCoroutine(ButtonBounceCoroutine(button));
+    }
+
+    private System.Collections.IEnumerator ButtonBounceCoroutine(Button button)
+    {
+        if (button == null) yield break;
+
+        RectTransform rect = button.GetComponent<RectTransform>();
+        if (rect == null) yield break;
+
+        if (!buttonOriginalScales.TryGetValue(button, out Vector3 originalScale))
+            originalScale = rect.localScale;
+
+        float halfDuration = Mathf.Max(0.015f, buttonBounceDuration * 0.5f);
+        Vector3 peakScale = originalScale * buttonBounceScale;
+        float time = 0f;
+
+        while (time < halfDuration)
+        {
+            if (rect == null) yield break;
+            time += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(time / halfDuration);
+            t = 1f - Mathf.Pow(1f - t, 3f);
+            rect.localScale = Vector3.LerpUnclamped(originalScale, peakScale, t);
+            yield return null;
+        }
+
+        time = 0f;
+        while (time < halfDuration)
+        {
+            if (rect == null) yield break;
+            time += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(time / halfDuration);
+            t = t * t * (3f - 2f * t);
+            rect.localScale = Vector3.LerpUnclamped(peakScale, originalScale, t);
+            yield return null;
+        }
+
+        if (rect != null) rect.localScale = originalScale;
+        buttonBounceCoroutines.Remove(button);
+    }
+
+    private System.Collections.IEnumerator DelayAction(float delay, Action action)
+    {
+        yield return new WaitForSecondsRealtime(Mathf.Max(0f, delay));
+        action?.Invoke();
+    }
+
+    private void OpenSettingsPanel()
+    {
+        if (panelSetting != null) panelSetting.SetActive(true);
+        if (settingBtn != null) settingBtn.gameObject.SetActive(false);
+        if (gameModeBtn != null) gameModeBtn.gameObject.SetActive(false);
+        if (shopBtn != null) shopBtn.gameObject.SetActive(false);
+    }
+
     private void Start()
     {
         if (fadeImage != null) fadeImage.gameObject.SetActive(false);
@@ -101,19 +187,24 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             settingNameInput.text = PlayerPrefs.GetString("MyPlayerName", "");
         }
 
-        gameModeBtn.onClick.AddListener(OpenGameModePanel);
+        // Hiệu ứng nảy nhẹ khi click các nút được yêu cầu.
+        RegisterButtonBounce(settingBtn);
+        RegisterButtonBounce(shopBtn);
+        RegisterButtonBounce(gameModeBtn);
+        RegisterButtonBounce(btnBack);
+        RegisterButtonBounce(btn1vs1);
+        RegisterButtonBounce(btn2vs2);
+        RegisterButtonBounce(quitBtn_1vs1);
+        RegisterButtonBounce(quitBtn_2vs2);
+        RegisterButtonBounce(startBtn_1vs1);
+        RegisterButtonBounce(startBtn_2vs2);
+
+        // Đợi hiệu ứng nảy xong rồi mới ẩn nút và mở panel.
+        gameModeBtn.onClick.AddListener(() => StartCoroutine(DelayAction(buttonBounceDuration, OpenGameModePanel)));
         btnBack.onClick.AddListener(CloseGameModePanel);
 
-        settingBtn.onClick.AddListener(() =>
-        {
-            panelSetting.SetActive(true);
-
-            settingBtn.gameObject.SetActive(false);
-            gameModeBtn.gameObject.SetActive(false);
-
-            if (shopBtn != null)
-                shopBtn.gameObject.SetActive(false);
-        });
+        // Đợi hiệu ứng nảy xong rồi mới ẩn các nút và mở Settings.
+        settingBtn.onClick.AddListener(() => StartCoroutine(DelayAction(buttonBounceDuration, OpenSettingsPanel)));
 
         closeSettingBtn.onClick.AddListener(() =>
         {
@@ -146,6 +237,13 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         // Bất kể nút Start của 1vs1 hay 2vs2 đều gọi chung hàm StartMatch
         startBtn_1vs1.onClick.AddListener(StartMatch);
         startBtn_2vs2.onClick.AddListener(StartMatch);
+
+        // Quit trong cả hai loại phòng đều thoát phiên hiện tại và quay lại chọn chế độ.
+        if (quitBtn_1vs1 != null)
+            quitBtn_1vs1.onClick.AddListener(QuitRoomAndReturnToGameMode);
+
+        if (quitBtn_2vs2 != null)
+            quitBtn_2vs2.onClick.AddListener(QuitRoomAndReturnToGameMode);
     }
 
     private void Update()
@@ -472,6 +570,60 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
                 ShowErrorNotification(); // Thông báo mặc định
             }
         }
+    }
+
+    /// <summary>
+    /// Thoát phòng 1v1/2v2, ngắt phiên Fusion hiện tại rồi quay lại PanelGameMode.
+    /// Dùng chung cho nút Quit của cả Host và Client.
+    /// </summary>
+    private async void QuitRoomAndReturnToGameMode()
+    {
+        // Tránh nhấn Quit nhiều lần trong lúc đang chuyển cảnh/giao diện.
+        if (isGameModeAnimating)
+            return;
+
+        HideErrorNotification();
+
+        // Làm tối màn hình trước khi đóng phòng.
+        await Fade(1f, 0.35f);
+
+        if (panelRoom1vs1 != null)
+            panelRoom1vs1.SetActive(false);
+
+        if (panelRoom2vs2 != null)
+            panelRoom2vs2.SetActive(false);
+
+        if (startBtn_1vs1 != null)
+            startBtn_1vs1.gameObject.SetActive(false);
+
+        if (startBtn_2vs2 != null)
+            startBtn_2vs2.gameObject.SetActive(false);
+
+        // Shutdown phiên Fusion để người chơi thực sự rời phòng.
+        // OnShutdown hiện có sẽ dọn NetworkRunner và đặt currentRunner = null.
+        NetworkRunner runnerToShutdown = currentRunner;
+        if (runnerToShutdown != null)
+        {
+            try
+            {
+                await runnerToShutdown.Shutdown();
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Lobby] Lỗi khi thoát phòng Fusion: " + e.Message);
+            }
+        }
+
+        // Mở lại panel chọn chế độ và bỏ lớp fade.
+        if (panelGameMode != null)
+            panelGameMode.SetActive(false);
+
+        await Fade(0f, 0.35f);
+
+        // Tận dụng hiệu ứng mở panel hiện có để hai nút trượt vào từ hai phía.
+        OpenGameModePanel();
+
+        Debug.Log("[Lobby] Đã thoát phòng và quay lại PanelGameMode.");
     }
 
     private void StartMatch()
