@@ -276091,7 +276091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MatchManager
   killLimit: 3
-  matchDuration: 900
+  matchDuration: 600
   _MatchStarted:
     RawValue: 0
   _MatchEnded:
@@ -378812,7 +378812,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1551506506}
   m_Layer: 0
-  m_Name: BackGruondMap
+  m_Name: BackGroundMap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

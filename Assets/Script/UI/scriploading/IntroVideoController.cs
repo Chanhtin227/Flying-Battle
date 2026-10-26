@@ -109,6 +109,7 @@ public class IntroVideoController : MonoBehaviour
         group.alpha = to;
     }
 
+    // Gán hàm này vào OnClick của vùng chạm / nút bấm
     public void GoToNextScene()
     {
         if (isGoingNext) return;
@@ -119,6 +120,7 @@ public class IntroVideoController : MonoBehaviour
         tapAreaGroup.interactable = false;
         tapAreaGroup.blocksRaycasts = false;
 
+        // Chuyển thẳng sang scene được cấu hình
         SceneManager.LoadScene(nextSceneName);
     }
 }

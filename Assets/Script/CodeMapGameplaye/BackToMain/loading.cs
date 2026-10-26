@@ -1,9 +1,8 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement; // Khai báo thêm thư viện này
+using UnityEngine.SceneManagement;
 using TMPro;
-using Fusion;
 
 public class LoadingManager : MonoBehaviour
 {
@@ -17,14 +16,12 @@ public class LoadingManager : MonoBehaviour
     public TextMeshProUGUI tipText;
 
     [Header("Settings")]
+    public string sceneToLoad;
     public float loadingTextSpeed = 0.35f;
     public float tipChangeInterval = 2f;
     
-    [Tooltip("Thời gian chờ mô phỏng thanh loading (giây)")]
+    [Tooltip("Thời gian chờ tối thiểu trước khi chuyển scene (giây)")]
     public float minimumLoadingTime = 3f; 
-
-    [Tooltip("Tên scene sẽ load nếu đang ở chế độ Offline (VD: từ Intro vào MainMenu)")]
-    public string offlineSceneToLoad = "SceneMain";
 
     [Header("Random Loading Tips")]
     [TextArea]
@@ -60,29 +57,46 @@ public class LoadingManager : MonoBehaviour
 
     private IEnumerator LoadAsyncOperation()
     {
+        AsyncOperation gameLevel = SceneManager.LoadSceneAsync(sceneToLoad);
+        
+        // Ngăn Unity tự động chuyển scene khi load xong 90%
+        gameLevel.allowSceneActivation = false;
+
         float timer = 0f;
 
-        while (timer < minimumLoadingTime)
+        // Vòng lặp chạy cho đến khi đạt đủ thời gian chờ VÀ scene đã load xong
+        while (timer < minimumLoadingTime || gameLevel.progress < 0.9f)
         {
             timer += Time.unscaledDeltaTime;
-            float progress = Mathf.Clamp01(timer / minimumLoadingTime);
+
+            // Tính toán tiến trình dựa trên cả thời gian chờ 3s và dữ liệu load thực tế
+            float timeProgress = Mathf.Clamp01(timer / minimumLoadingTime);
+            float loadProgress = Mathf.Clamp01(gameLevel.progress / 0.9f);
+            
+            // Thanh xanh sẽ chạy theo tiến trình nào chậm hơn để tránh việc thanh chạy xong nhưng vẫn phải đứng chờ
+            float displayProgress = Mathf.Min(timeProgress, loadProgress);
 
             if (progressFill != null)
             {
-                progressFill.fillAmount = progress;
+                progressFill.fillAmount = displayProgress;
+            }
+
+            // Nếu thời gian đã đủ 3s và scene ngầm đã tải xong
+            if (timer >= minimumLoadingTime && gameLevel.progress >= 0.9f)
+            {
+                gameLevel.allowSceneActivation = true;
             }
 
             yield return null;
         }
 
-        // Hoàn thành thời gian chờ thì chuyển sang SceneMain
-        SceneManager.LoadSceneAsync(offlineSceneToLoad);
         isLoading = false;
     }
 
     private IEnumerator LoadingTextEffect()
     {
         int dotCount = 0;
+
         while (isLoading)
         {
             if (loadingTitle != null)
@@ -92,7 +106,10 @@ public class LoadingManager : MonoBehaviour
             }
 
             dotCount++;
-            if (dotCount > 3) dotCount = 0;
+            if (dotCount > 3)
+            {
+                dotCount = 0;
+            }
 
             yield return new WaitForSecondsRealtime(loadingTextSpeed);
         }
@@ -109,7 +126,8 @@ public class LoadingManager : MonoBehaviour
 
     private void ShowRandomTip()
     {
-        if (tipText == null || tips == null || tips.Length == 0) return;
+        if (tipText == null || tips == null || tips.Length == 0)
+            return;
 
         if (tips.Length == 1)
         {

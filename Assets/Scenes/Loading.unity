@@ -471,10 +471,10 @@ MonoBehaviour:
   loadingTitle: {fileID: 1575470389}
   progressFill: {fileID: 2053537861}
   tipText: {fileID: 1986619416}
+  sceneToLoad: SceneMain
   loadingTextSpeed: 0.35
-  tipChangeInterval: 1.5
+  tipChangeInterval: 2
   minimumLoadingTime: 5
-  offlineSceneToLoad: SceneMain
   tips:
   - 'Tip: Press F to pick up items.'
   - 'Tip: Reload before entering a fight.'

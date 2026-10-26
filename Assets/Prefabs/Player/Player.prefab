@@ -21938,7 +21938,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0d3c8d2026969f47aa878e0f92ca6f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  walkSpeed: 3
+  walkSpeed: 4
   runSpeed: 5
   gravity: -20
   jumpHeight: 2

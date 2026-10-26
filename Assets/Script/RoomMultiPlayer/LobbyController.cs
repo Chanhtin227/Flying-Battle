@@ -56,26 +56,21 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private float gameModeSlideDistance = 700f;
     [SerializeField] private float gameModeSlideDuration = 0.4f;
 
-    [Header("Scene Transition Settings")]
-    [Tooltip("Index của scene Loading trong Build Settings")]
-    public int loadingSceneIndex = 1;
-    
-    [Tooltip("Index của scene Gameplay (Map) trong Build Settings")]
-    public int gameplaySceneIndex = 2;
-
-    // Biến static để truyền thông tin scene đích sang cho LoadingManager
-    public static int TargetGameplaySceneIndex;
-
     private RectTransform btn1vs1Rect;
     private RectTransform btn2vs2Rect;
+
     private Vector2 btn1vs1OriginalPos;
     private Vector2 btn2vs2OriginalPos;
+
     private CanvasGroup btn1vs1CanvasGroup;
     private CanvasGroup btn2vs2CanvasGroup;
+
     private Coroutine gameModeAnimationCoroutine;
     private bool isGameModeAnimating = false;
+
     private int maxPlayers = 2;
     private Coroutine errorNotificationCoroutine;
+
     public Button shopBtn;
 
     private void Start()
@@ -89,16 +84,18 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         btn2vs2OriginalPos = btn2vs2Rect.anchoredPosition;
 
         btn1vs1CanvasGroup = btn1vs1.GetComponent<CanvasGroup>();
+
         if (btn1vs1CanvasGroup == null)
             btn1vs1CanvasGroup = btn1vs1.gameObject.AddComponent<CanvasGroup>();
 
         btn2vs2CanvasGroup = btn2vs2.GetComponent<CanvasGroup>();
+
         if (btn2vs2CanvasGroup == null)
             btn2vs2CanvasGroup = btn2vs2.gameObject.AddComponent<CanvasGroup>();
 
         btn1vs1CanvasGroup.alpha = 1f;
         btn2vs2CanvasGroup.alpha = 1f;
-        
+        // Tải lại tên đã lưu trước đó lên ô InputField trong cài đặt (nếu có)
         if (settingNameInput != null)
         {
             settingNameInput.text = PlayerPrefs.GetString("MyPlayerName", "");
@@ -110,24 +107,43 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         settingBtn.onClick.AddListener(() =>
         {
             panelSetting.SetActive(true);
+
             settingBtn.gameObject.SetActive(false);
             gameModeBtn.gameObject.SetActive(false);
-            if (shopBtn != null) shopBtn.gameObject.SetActive(false);
+
+            if (shopBtn != null)
+                shopBtn.gameObject.SetActive(false);
         });
 
         closeSettingBtn.onClick.AddListener(() =>
         {
             SavePlayerSettingName();
+
             panelSetting.SetActive(false);
+
             settingBtn.gameObject.SetActive(true);
             gameModeBtn.gameObject.SetActive(true);
-            if (shopBtn != null) shopBtn.gameObject.SetActive(true);
+
+            if (shopBtn != null)
+                shopBtn.gameObject.SetActive(true);
         });
 
-        btn1vs1.onClick.AddListener(() => CreateRoom(2, panelRoom1vs1, roomID_1vs1));
-        btn2vs2.onClick.AddListener(() => CreateRoom(4, panelRoom2vs2, roomID_2vs2));
-        inputID.onSubmit.AddListener((text) => JoinRoom());
+        btn1vs1.onClick.AddListener(() =>
+        {
+            CreateRoom(2, panelRoom1vs1, roomID_1vs1);
+        });
 
+        btn2vs2.onClick.AddListener(() =>
+        {
+            CreateRoom(4, panelRoom2vs2, roomID_2vs2);
+        });
+
+        inputID.onSubmit.AddListener((text) =>
+        {
+            JoinRoom();
+        });
+
+        // Bất kể nút Start của 1vs1 hay 2vs2 đều gọi chung hàm StartMatch
         startBtn_1vs1.onClick.AddListener(StartMatch);
         startBtn_2vs2.onClick.AddListener(StartMatch);
     }
@@ -140,6 +156,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     private void UpdateRoomUI()
     {
         if (RoomData.Instance == null) return;
+
         var syncNames = RoomData.Instance.SyncPlayerNames;
 
         if (panelRoom1vs1.activeSelf)
@@ -162,58 +179,93 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         {
             PlayerPrefs.SetString("MyPlayerName", settingNameInput.text.Trim());
             PlayerPrefs.Save();
+            Debug.Log("[Settings] Đã lưu tên: " + settingNameInput.text.Trim());
         }
     }
 
     private void OpenGameModePanel()
     {
-        if (isGameModeAnimating) return;
+        if (isGameModeAnimating)
+            return;
+
         panelGameMode.SetActive(true);
         shopBtn.gameObject.SetActive(false);
         gameModeBtn.gameObject.SetActive(false);
         settingBtn.gameObject.SetActive(false);
 
-        btn1vs1Rect.anchoredPosition = btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
-        btn2vs2Rect.anchoredPosition = btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
+        // Đặt button ra ngoài 2 phía
+        btn1vs1Rect.anchoredPosition =
+            btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
+
+        btn2vs2Rect.anchoredPosition =
+            btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
+
+        // Khi mở panel thì hiện đầy đủ
         btn1vs1CanvasGroup.alpha = 1f;
         btn2vs2CanvasGroup.alpha = 1f;
 
-        gameModeAnimationCoroutine = StartCoroutine(AnimateGameModeButtonsOpen());
+        gameModeAnimationCoroutine =
+            StartCoroutine(AnimateGameModeButtonsOpen());
     }
 
     private System.Collections.IEnumerator AnimateGameModeButtonsOpen()
     {
         isGameModeAnimating = true;
+
         btn1vs1.interactable = false;
         btn2vs2.interactable = false;
 
-        Vector2 startPos1 = btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
-        Vector2 startPos2 = btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
+        Vector2 startPos1 =
+            btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
+
+        Vector2 startPos2 =
+            btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
+
         float time = 0f;
 
         while (time < gameModeSlideDuration)
         {
             time += Time.unscaledDeltaTime;
+
             float t = Mathf.Clamp01(time / gameModeSlideDuration);
+
+            // Ease Out Cubic
             float smoothT = 1f - Mathf.Pow(1f - t, 3f);
 
-            btn1vs1Rect.anchoredPosition = Vector2.LerpUnclamped(startPos1, btn1vs1OriginalPos, smoothT);
-            btn2vs2Rect.anchoredPosition = Vector2.LerpUnclamped(startPos2, btn2vs2OriginalPos, smoothT);
+            btn1vs1Rect.anchoredPosition =
+                Vector2.LerpUnclamped(
+                    startPos1,
+                    btn1vs1OriginalPos,
+                    smoothT
+                );
+
+            btn2vs2Rect.anchoredPosition =
+                Vector2.LerpUnclamped(
+                    startPos2,
+                    btn2vs2OriginalPos,
+                    smoothT
+                );
+
             yield return null;
         }
 
         btn1vs1Rect.anchoredPosition = btn1vs1OriginalPos;
         btn2vs2Rect.anchoredPosition = btn2vs2OriginalPos;
+
         btn1vs1.interactable = true;
         btn2vs2.interactable = true;
+
         isGameModeAnimating = false;
         gameModeAnimationCoroutine = null;
     }
 
     private void CloseGameModePanel()
     {
-        if (isGameModeAnimating) return;
-        gameModeAnimationCoroutine = StartCoroutine(AnimateGameModeButtonsClose());
+        if (isGameModeAnimating)
+            return;
+
+        gameModeAnimationCoroutine =
+            StartCoroutine(AnimateGameModeButtonsClose());
     }
 
     private System.Collections.IEnumerator AnimateGameModeButtonsClose()
@@ -222,43 +274,88 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         btn1vs1.interactable = false;
         btn2vs2.interactable = false;
 
+        // Vị trí hiện tại
         Vector2 startPos1 = btn1vs1Rect.anchoredPosition;
         Vector2 startPos2 = btn2vs2Rect.anchoredPosition;
-        Vector2 targetPos1 = btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
-        Vector2 targetPos2 = btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
+
+        // Vị trí sẽ bay ra ngoài
+        Vector2 targetPos1 =
+            btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
+
+        Vector2 targetPos2 =
+            btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
+
         float startAlpha1 = btn1vs1CanvasGroup.alpha;
         float startAlpha2 = btn2vs2CanvasGroup.alpha;
+
         float time = 0f;
 
         while (time < gameModeSlideDuration)
         {
             time += Time.unscaledDeltaTime;
+
             float t = Mathf.Clamp01(time / gameModeSlideDuration);
+
+            // Ease In Cubic:
+            // ban đầu đi chậm, sau đó nhanh dần ra ngoài
             float smoothT = t * t * t;
 
-            btn1vs1Rect.anchoredPosition = Vector2.LerpUnclamped(startPos1, targetPos1, smoothT);
-            btn2vs2Rect.anchoredPosition = Vector2.LerpUnclamped(startPos2, targetPos2, smoothT);
-            btn1vs1CanvasGroup.alpha = Mathf.Lerp(startAlpha1, 0f, t);
-            btn2vs2CanvasGroup.alpha = Mathf.Lerp(startAlpha2, 0f, t);
+            // =============================
+            // Di chuyển ra 2 cạnh
+            // =============================
+            btn1vs1Rect.anchoredPosition =
+                Vector2.LerpUnclamped(
+                    startPos1,
+                    targetPos1,
+                    smoothT
+                );
+
+            btn2vs2Rect.anchoredPosition =
+                Vector2.LerpUnclamped(
+                    startPos2,
+                    targetPos2,
+                    smoothT
+                );
+
+            // =============================
+            // Mờ dần
+            // =============================
+            btn1vs1CanvasGroup.alpha =
+                Mathf.Lerp(startAlpha1, 0f, t);
+
+            btn2vs2CanvasGroup.alpha =
+                Mathf.Lerp(startAlpha2, 0f, t);
+
             yield return null;
         }
 
+        // Đảm bảo kết thúc chính xác
         btn1vs1Rect.anchoredPosition = targetPos1;
         btn2vs2Rect.anchoredPosition = targetPos2;
+
         btn1vs1CanvasGroup.alpha = 0f;
         btn2vs2CanvasGroup.alpha = 0f;
+
+        // Sau khi animation xong mới đóng panel
         panelGameMode.SetActive(false);
+
+        // =============================
+        // RESET để lần mở sau hoạt động bình thường
+        // =============================
 
         btn1vs1Rect.anchoredPosition = btn1vs1OriginalPos;
         btn2vs2Rect.anchoredPosition = btn2vs2OriginalPos;
+
         btn1vs1CanvasGroup.alpha = 1f;
         btn2vs2CanvasGroup.alpha = 1f;
+
         btn1vs1.interactable = true;
         btn2vs2.interactable = true;
 
         gameModeBtn.gameObject.SetActive(true);
         settingBtn.gameObject.SetActive(true);
-        if (shopBtn != null) shopBtn.gameObject.SetActive(true);
+        if (shopBtn != null)
+        shopBtn.gameObject.SetActive(true);
 
         isGameModeAnimating = false;
         gameModeAnimationCoroutine = null;
@@ -266,7 +363,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
     private void ResetUI()
     {
-        if (shopBtn != null) shopBtn.gameObject.SetActive(true);
+        shopBtn.gameObject.SetActive(true);
         gameModeBtn.gameObject.SetActive(true);
         settingBtn.gameObject.SetActive(true);
         panelGameMode.SetActive(false);
@@ -284,6 +381,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         await Fade(1f, 0.5f);
         panelGameMode.SetActive(false);
         roomIDText.text = "ID: " + randomID;
+        Debug.Log($"[Lobby] Create Room\nRoom ID: {randomID}\nMax Players: {maxPlayers}");
         StartSession(GameMode.Host, randomID);
     }
 
@@ -292,11 +390,13 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         string roomID = inputID.text.Trim();
         if (string.IsNullOrEmpty(roomID) || roomID.Length != 4)
         {
-            ShowErrorNotification(); 
+            Debug.LogWarning("[Lobby] ID phòng không hợp lệ!");
+            ShowErrorNotification(); // Sẽ dùng câu thông báo mặc định
             return;
         }
 
         HideErrorNotification();
+        Debug.Log($"[Lobby] Joining Room: {roomID}");
         await Fade(1f, 0.5f);
         panelGameMode.SetActive(false);
         StartSession(GameMode.Client, roomID);
@@ -330,6 +430,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
         if (result.Ok)
         {
+            Debug.Log($"[Fusion] StartGame SUCCESS\nSession: {sessionName}\nMode: {mode}");
             await System.Threading.Tasks.Task.Delay(1000);
             if (currentRunner.IsServer)
             {
@@ -363,11 +464,12 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
         else
         {
+            Debug.LogError($"[Fusion] StartGame FAILED\nSession: {sessionName}\nMode: {mode}\nReason: {result.ShutdownReason}");
             if (mode == GameMode.Client)
             {
                 panelGameMode.SetActive(true);
                 await Fade(0f, 0.5f);
-                ShowErrorNotification();
+                ShowErrorNotification(); // Thông báo mặc định
             }
         }
     }
@@ -380,24 +482,53 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             return;
         }
 
-        if (!currentRunner.IsServer) return;
+        if (!currentRunner.IsServer)
+        {
+            Debug.LogWarning("[Lobby] Chỉ Host mới được Start Match!");
+            return;
+        }
 
         int currentPlayers = currentRunner.SessionInfo.PlayerCount;
+
+        // KIỂM TRA SỐ LƯỢNG NGƯỜI CHƠI (Tự động áp dụng cho 1v1 hoặc 2v2 dựa trên maxPlayers)
         if (currentPlayers < maxPlayers)
         {
+            Debug.LogWarning($"[Lobby] Chưa đủ người chơi!\nCurrent: {currentPlayers}\nRequired: {maxPlayers}");
+            
+            // Hiện thông báo sử dụng UI errorText hiện tại
             ShowErrorNotification("Not enough players, please wait...");
             return;
         }
 
+        Debug.Log(
+     "[Lobby] Đủ người chơi. Starting Match..."
+ );
+
+
+        // =========================================================
+        // KHÓA ROOM TRƯỚC KHI VÀO GAME
+        // =========================================================
+
         if (currentRunner.SessionInfo.IsValid)
         {
-            currentRunner.SessionInfo.IsOpen = false;
+            currentRunner.SessionInfo.IsOpen =
+                false;
+
+
+            Debug.Log(
+                "[Lobby] ROOM LOCKED BEFORE MATCH" +
+                " | ID = " +
+                currentRunner.SessionInfo.Name
+            );
         }
 
-        // Load thẳng sang Scene Gameplay, không qua Loading nữa
-        currentRunner.LoadScene(SceneRef.FromIndex(gameplaySceneIndex));
+
+        currentRunner.LoadScene(
+            SceneRef.FromIndex(3)
+        );
     }
 
+    // Đã thêm tham số "message" với giá trị mặc định
     private void ShowErrorNotification(string message = "Room ID not correct! Again please")
     {
         HideErrorNotification();
@@ -411,14 +542,16 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             StopCoroutine(errorNotificationCoroutine);
             errorNotificationCoroutine = null;
         }
-        if (errorText != null) errorText.gameObject.SetActive(false);
+
+        if (errorText != null)
+            errorText.gameObject.SetActive(false);
     }
 
     private System.Collections.IEnumerator ShowErrorNotificationCoroutine(string message)
     {
         if (errorText != null)
         {
-            errorText.text = message; 
+            errorText.text = message; // Đưa message mới vào UI
             errorText.gameObject.SetActive(true);
             yield return new WaitForSeconds(1.5f);
             errorText.gameObject.SetActive(false);
@@ -429,7 +562,9 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     private async System.Threading.Tasks.Task Fade(float targetAlpha, float duration)
     {
         if (fadeImage == null) return;
+        
         fadeImage.gameObject.SetActive(true);
+        
         float startAlpha = fadeImage.color.a;
         float time = 0;
         
@@ -442,19 +577,73 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
         
         fadeImage.color = new Color(0, 0, 0, targetAlpha);
-        if (targetAlpha == 0) fadeImage.gameObject.SetActive(false);
+        
+        if (targetAlpha == 0) 
+        {
+            fadeImage.gameObject.SetActive(false);
+        }
     }
 
-    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
-    {
-        if (!runner.IsServer || !runner.SessionInfo.IsValid) return;
+    // ==========================================
+    // CÁC CALLBACK CỦA FUSION NETWORK RUNNER
+    // ==========================================
 
-        int currentPlayers = runner.SessionInfo.PlayerCount;
-        int roomMaxPlayers = runner.SessionInfo.MaxPlayers;
+    public void OnPlayerJoined(
+     NetworkRunner runner,
+     PlayerRef player)
+    {
+        // Chỉ Host / Server được thay đổi trạng thái phòng
+        if (!runner.IsServer)
+            return;
+
+
+        if (!runner.SessionInfo.IsValid)
+            return;
+
+
+        int currentPlayers =
+            runner.SessionInfo.PlayerCount;
+
+
+        int roomMaxPlayers =
+            runner.SessionInfo.MaxPlayers;
+
+
+        Debug.Log(
+            "[Lobby] Player Joined" +
+            " | Current = " +
+            currentPlayers +
+            " | Max = " +
+            roomMaxPlayers
+        );
+
+
+        // =====================================================
+        // ĐỦ NGƯỜI -> KHÓA PHÒNG VĨNH VIỄN
+        //
+        // Ví dụ 1v1:
+        // 2/2 -> IsOpen = false
+        //
+        // Sau đó dù 1 người rời:
+        // 1/2 nhưng IsOpen vẫn false
+        // => không thể nhập ID để vào lại.
+        // =====================================================
 
         if (currentPlayers >= roomMaxPlayers)
         {
-            runner.SessionInfo.IsOpen = false;
+            runner.SessionInfo.IsOpen =
+                false;
+
+
+            Debug.Log(
+                "[Lobby] ROOM FULL - LOCKED" +
+                " | Room ID = " +
+                runner.SessionInfo.Name +
+                " | Players = " +
+                currentPlayers +
+                "/" +
+                roomMaxPlayers
+            );
         }
     }
 

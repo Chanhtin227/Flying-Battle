@@ -39,6 +39,8 @@ public class PlayerMovement : NetworkBehaviour
 
     [Header("Jump Boost (nhấn Space 2 lần, giữ lần 2 để bay)")]
     public float boostSpeed = 4f;
+    [Tooltip("Tốc độ di chuyển ngang khi đang bay bằng Jetpack")]
+    public float jetpackMoveSpeed = 6f;
     [Tooltip("Do cao toi da tinh tu vi tri bat dau nhay (met). Den gioi han se lu lung cho den khi het thoi gian boost.")]
     [Min(0.1f)] public float maxBoostHeight = 6f;
     [Min(0.1f)] public float maxBoostTime = 7f;
@@ -489,7 +491,8 @@ public class PlayerMovement : NetworkBehaviour
 
         if (characterController != null && characterController.enabled)
         {
-            Vector3 horizontal = Vector3.ClampMagnitude(data.moveDirection, 1f) * speed;
+            float currentHorizontalSpeed = isBoosting ? jetpackMoveSpeed : speed;
+            Vector3 horizontal = Vector3.ClampMagnitude(data.moveDirection, 1f) * currentHorizontalSpeed;
             float verticalStep = velocity.y * dt;
 
             if (isBoosting)
