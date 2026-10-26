@@ -1,6 +1,7 @@
 
 using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class ResultPanelEffect : MonoBehaviour
 {
@@ -79,6 +80,17 @@ public class ResultPanelEffect : MonoBehaviour
     public float resultVolume = 1f;
 
     private bool hasPlayedResultSound = false;
+
+    [Header("Scene Transition")]
+    [Tooltip("Tên của Scene Loading trong Build Settings")]
+    public string loadingSceneName = "LoadingScene"; 
+
+    // Gọi hàm này khi người chơi bấm nút "Back to Main" hoặc "Continue"
+    public void LoadMainViaLoadingScene()
+    {
+        // Chuyển trực tiếp sang Scene Loading
+        SceneManager.LoadScene(loadingSceneName);
+    }
 
     // =====================================================
     // ON ENABLE
@@ -362,8 +374,6 @@ public class ResultPanelEffect : MonoBehaviour
 
         if (panelRect != null)
             panelRect.localScale = finalScale;
-
-        hasPlayedResultSound = false;
 
         // Khong bat lai HUD o day.
         // Khi tran ket thuc HUD can giu an.

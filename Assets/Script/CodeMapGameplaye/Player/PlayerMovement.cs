@@ -532,12 +532,24 @@ public class PlayerMovement : NetworkBehaviour
         IsJetpackBoosting = isBoosting && characterController != null && 
                             characterController.enabled && !characterController.isGrounded;
 
+        // --- KHOÁ SHIFT KHI ĐANG BAY ---
+        if (IsJetpackBoosting)
+        {
+            // Ép tốc độ animation chân về mức đi bộ (0.5) thay vì chạy, tránh hiện tượng quạt chân quá nhanh
+            if (data.moveDirection.sqrMagnitude > 0.001f)
+                animationSpeed = data.moveDirection.magnitude * 0.5f;
+            else
+                animationSpeed = 0f;
+        }
+
         NetworkedAnimSpeed = animationSpeed;
         NetworkedGrounded = characterController != null &&
                             characterController.enabled &&
                             characterController.isGrounded;
         NetworkedMoving = data.moveDirection.sqrMagnitude > 0.001f;
-        NetworkedRunning = data.isRunning && speed > walkSpeed + 0.1f;
+        
+        // Thêm điều kiện !IsJetpackBoosting để huỷ bỏ trạng thái Running trên server/network
+        NetworkedRunning = data.isRunning && speed > walkSpeed + 0.1f && !IsJetpackBoosting;
     }
 
     // =========================================================
