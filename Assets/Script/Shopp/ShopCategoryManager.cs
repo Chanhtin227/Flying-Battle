@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -89,6 +88,16 @@ public class ShopCategoryManager : MonoBehaviour
     public Button resetShopButton;
     public bool resetGoldWithShop = false;
 
+    [Header("Reset Purchases For New Build Version")]
+    [Tooltip("Only in standalone builds. Resets purchases once when Shop Data Version changes.")]
+    public bool resetPurchasesOnNewBuild = true;
+
+    [Min(1)]
+    [Tooltip("Increase this number before building a new version to reset purchases once.")]
+    public int shopDataVersion = 1;
+
+    private const string ShopVersionKey = "FlyingBattle_ShopDataVersion";
+
     [Header("Purchased Items")]
     public Button purchasedItemsButton;
     public GameObject purchasedItemsPanel;
@@ -163,6 +172,12 @@ public class ShopCategoryManager : MonoBehaviour
 
     private void Start()
     {
+        // Only standalone builds perform automatic version-based reset.
+        // Must run before reading owned/equipped state or applying 3D previews.
+#if !UNITY_EDITOR
+        ResetShopForNewBuildVersion();
+#endif
+
         if (openShopButton != null)
             openShopButton.onClick.AddListener(OpenShop);
 
@@ -1043,63 +1058,116 @@ public class ShopCategoryManager : MonoBehaviour
     }
 
     // ==========================================
-    // RESET SHOP
+    // RESET PURCHASES ON NEW BUILD VERSION
     // ==========================================
 
-    [ContextMenu("TEST - Reset Purchased Items")]
-    public void ResetShopData()
+    private void ResetShopForNewBuildVersion()
     {
-        if (!Application.isPlaying)
-        {
-            Debug.LogWarning(
-                "[SHOP] Enter Play Mode before resetting!"
-            );
+        if (!resetPurchasesOnNewBuild)
             return;
-        }
 
-        if (equipmentPreview != null)
-            equipmentPreview.ResetPreview();
+        int targetVersion = Mathf.Max(1, shopDataVersion);
+        int previousVersion = PlayerPrefs.GetInt(ShopVersionKey, 0);
 
-        HashSet<string> ids = new HashSet<string>();
+        // Same version => preserve purchases on subsequent game launches.
+        if (previousVersion == targetVersion)
+            return;
 
-        foreach (ShopItem item in shopItems)
+        HashSet<string> removedIDs = new HashSet<string>();
+        if (shopItems != null)
         {
-            if (item == null ||
-                string.IsNullOrWhiteSpace(item.itemID))
-                continue;
-
-            if (ids.Add(item.itemID))
+            foreach (ShopItem item in shopItems)
             {
-                PlayerPrefs.DeleteKey(
-                    OwnedPrefix + item.itemID
-                );
+                if (item == null || string.IsNullOrWhiteSpace(item.itemID))
+                    continue;
+
+                if (removedIDs.Add(item.itemID))
+                    PlayerPrefs.DeleteKey(OwnedPrefix + item.itemID);
             }
         }
 
-        foreach (ShopCategory category in
-                 Enum.GetValues(typeof(ShopCategory)))
+        // Explicitly unequip all categories so preview does not restore
+        // existing Helmet/Balo/Armor objects on the C01 character.
+        foreach (ShopCategory category in Enum.GetValues(typeof(ShopCategory)))
         {
-            PlayerPrefs.DeleteKey(
-                EquipPrefix + category
-            );
+            PlayerPrefs.SetString(EquipPrefix + category, UnequippedValue);
+        }
+
+        // Record version only after shop keys have been updated.
+        PlayerPrefs.SetInt(ShopVersionKey, targetVersion);
+        PlayerPrefs.Save();
+
+        // Never touch Gold, player name, or unrelated PlayerPrefs here.
+        Debug.Log("[SHOP] Build shop data version " + previousVersion +
+                  " -> " + targetVersion + ". Purchases reset once.", this);
+    }
+
+    // ==========================================
+    // RESET SHOP
+    // ==========================================
+
+    // Can reset trong Play Mode hoac tu Inspector (Edit Mode).
+    // Chi xoa du lieu so huu + trang bi cua nhung item duoc khai bao trong Shop Items.
+    // Khong xoa cac PlayerPrefs khac nhu ten Player, cai dat va Gold.
+    [ContextMenu("RESET ALL SHOP PURCHASES (Keep Gold)")]
+    public void ResetShopData()
+    {
+        HashSet<string> ids = new HashSet<string>();
+        int removedCount = 0;
+
+        if (shopItems != null)
+        {
+            foreach (ShopItem item in shopItems)
+            {
+                if (item == null || string.IsNullOrWhiteSpace(item.itemID))
+                    continue;
+
+                string id = item.itemID;
+                if (!ids.Add(id))
+                    continue;
+
+                string ownedKey = OwnedPrefix + id;
+                if (PlayerPrefs.HasKey(ownedKey))
+                {
+                    PlayerPrefs.DeleteKey(ownedKey);
+                    removedCount++;
+                }
+            }
+        }
+
+        // Ghi ro UNEQUIP cho moi danh muc, tranh ResetPreview bat lai
+        // mu / balo / giap mac dinh khi nguoi choi chua mua gi.
+        foreach (ShopCategory category in Enum.GetValues(typeof(ShopCategory)))
+        {
+            PlayerPrefs.SetString(EquipPrefix + category, UnequippedValue);
         }
 
         PlayerPrefs.Save();
 
+        // Tuy chon, mac dinh la false de giu nguyen Gold.
         if (resetGoldWithShop)
             GoldWallet.SetGold(0);
 
-        // Sau khi xoa trang bi da mua, quay ve trang thai goc.
-        ApplySavedEquipment();
+        // Khong thao tac UI/3D preview khi Edit Mode, de tranh thay doi Scene.
+        if (Application.isPlaying)
+        {
+            ApplySavedEquipment();
+            ClearSelection();
+            RefreshItemPrices();
+            RefreshShopGold();
 
-        ClearSelection();
-        RefreshItemPrices();
-        RefreshShopGold();
+            if (showingPurchasedItems)
+                RebuildPurchasedItems();
 
-        if (showingPurchasedItems)
-            RebuildPurchasedItems();
+            HideNotification();
+        }
 
-        HideNotification();
+        Debug.Log(
+            "[SHOP RESET] Da xoa " + removedCount +
+            " trang thai mua. Tat ca danh muc da UNEQUIP. " +
+            (resetGoldWithShop ? "Gold = 0." : "Gold duoc giu nguyen."),
+            this
+        );
     }
 
     // ==========================================

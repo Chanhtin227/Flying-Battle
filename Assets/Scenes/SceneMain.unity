@@ -7238,7 +7238,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 100
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -9902,7 +9902,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 200
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -11651,7 +11651,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Helmet
+  m_text: VIETNAM
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -15724,7 +15724,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 100
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -19325,7 +19325,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 100
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -23765,7 +23765,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 100
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -26931,7 +26931,7 @@ MonoBehaviour:
   - itemID: helmet_01
     itemName: Helmet
     category: 0
-    price: 0
+    price: 100
     itemButton: {fileID: 1966020057}
     itemIcon: {fileID: 21300000, guid: 1a49acef7ca1f1e43b3cf06148634c95, type: 3}
     itemGoldText: {fileID: 967926767}
@@ -26943,7 +26943,7 @@ MonoBehaviour:
   - itemID: helmet_02
     itemName: Helmet
     category: 0
-    price: 0
+    price: 100
     itemButton: {fileID: 1911733079}
     itemIcon: {fileID: 21300000, guid: 102bcc686f75e144681ec276b3fe2acf, type: 3}
     itemGoldText: {fileID: 528922399}
@@ -26953,9 +26953,9 @@ MonoBehaviour:
     existingEquipmentObject: {fileID: 0}
     skinMaterial: {fileID: 2100000, guid: 912f2578cb86a0e4c9c457c863f6a7a8, type: 2}
   - itemID: helmet_03
-    itemName: Helmet
+    itemName: VIETNAM
     category: 0
-    price: 0
+    price: 100
     itemButton: {fileID: 809056267}
     itemIcon: {fileID: 21300000, guid: 1b5ae814ee7a7344981e4bbd743f244f, type: 3}
     itemGoldText: {fileID: 2067612232}
@@ -26967,7 +26967,7 @@ MonoBehaviour:
   - itemID: balo_01
     itemName: Balo
     category: 1
-    price: 0
+    price: 200
     itemButton: {fileID: 86494547}
     itemIcon: {fileID: 21300000, guid: 1b5ae814ee7a7344981e4bbd743f244f, type: 3}
     itemGoldText: {fileID: 648460991}
@@ -26979,7 +26979,7 @@ MonoBehaviour:
   - itemID: balo_02
     itemName: Balo
     category: 1
-    price: 0
+    price: 100
     itemButton: {fileID: 2009877191}
     itemIcon: {fileID: 21300000, guid: da9dbd488722b7e4390cc4cc50116f7e, type: 3}
     itemGoldText: {fileID: 1190562740}
@@ -26991,7 +26991,7 @@ MonoBehaviour:
   - itemID: armor_01
     itemName: Armor
     category: 2
-    price: 0
+    price: 200
     itemButton: {fileID: 1752043361}
     itemIcon: {fileID: 21300000, guid: 934a9ef718e81d44e973fed94292611f, type: 3}
     itemGoldText: {fileID: 1901996541}
@@ -27003,7 +27003,7 @@ MonoBehaviour:
   - itemID: armor_02
     itemName: Armor
     category: 2
-    price: 0
+    price: 100
     itemButton: {fileID: 1424450904}
     itemIcon: {fileID: 21300000, guid: ee271e9f0dbbede48bdb795b3eed71ad, type: 3}
     itemGoldText: {fileID: 2125311699}
@@ -27015,7 +27015,7 @@ MonoBehaviour:
   - itemID: skin_01
     itemName: Skin
     category: 3
-    price: 0
+    price: 100
     itemButton: {fileID: 1025272172}
     itemIcon: {fileID: 21300000, guid: 9f87f761872cab74e964616bd5ccd9a7, type: 3}
     itemGoldText: {fileID: 1982658975}
@@ -27027,7 +27027,7 @@ MonoBehaviour:
   - itemID: skin_02
     itemName: Skin
     category: 3
-    price: 0
+    price: 100
     itemButton: {fileID: 48839091}
     itemIcon: {fileID: 21300000, guid: e024781912ef8b94091a78e958e0cb9f, type: 3}
     itemGoldText: {fileID: 1466781044}
@@ -27039,7 +27039,7 @@ MonoBehaviour:
   - itemID: skin_03
     itemName: Skin
     category: 3
-    price: 0
+    price: 100
     itemButton: {fileID: 585687893}
     itemIcon: {fileID: 21300000, guid: 16fa3f782987f5242b098eed8a88df54, type: 3}
     itemGoldText: {fileID: 2049047096}
@@ -31172,7 +31172,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 200
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -32310,7 +32310,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0110\xC3 MUA"
+  m_text: 100
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -33347,7 +33347,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 100
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -34040,7 +34040,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 0
+  m_text: 100
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -35482,7 +35482,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0110\xC3 MUA"
+  m_text: 100
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
