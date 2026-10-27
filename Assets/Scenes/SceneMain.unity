@@ -27728,7 +27728,7 @@ MonoBehaviour:
   baloButton: {fileID: 1365242255}
   armorButton: {fileID: 350232753}
   skinButton: {fileID: 1825455915}
-  resetShopButton: {fileID: 0}
+  resetShopButton: {fileID: 2121776117}
   resetGoldWithShop: 0
   resetPurchasesOnNewBuild: 1
   shopDataVersion: 2
@@ -29377,9 +29377,13 @@ MonoBehaviour:
   closeSettingBtn: {fileID: 770223678}
   panelSetting: {fileID: 3672551}
   settingNameInput: {fileID: 355192592}
+  generalSettingsPanel: {fileID: 0}
+  otherSettingsPanels: []
+  chungBtn: {fileID: 2121776117}
   fadeImage: {fileID: 1129585059}
   gameModeSlideDistance: 700
   gameModeSlideDuration: 0.4
+  waitingTextSpeed: 0.35
   shopBtn: {fileID: 11202830}
   buttonBounceScale: 1.07
   buttonBounceDuration: 0.16
@@ -32772,7 +32776,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1943879207
 RectTransform:
   m_ObjectHideFlags: 0
@@ -32792,10 +32796,10 @@ RectTransform:
   - {fileID: 654258888}
   m_Father: {fileID: 707071691}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 1920, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1943879208
 MonoBehaviour:
