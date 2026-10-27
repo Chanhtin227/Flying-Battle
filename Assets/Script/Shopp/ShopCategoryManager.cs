@@ -78,6 +78,11 @@ public class ShopCategoryManager : MonoBehaviour
     [Header("Settings")]
     public bool closeWithEscape = true;
 
+    [Header("Shop Button Bounce Timing")]
+    [Tooltip("Thoi gian cho hieu ung nay cua LobbyController chay xong truoc khi an ShopBtn.")]
+    [Min(0f)] public float shopButtonBounceDelay = 0.17f;
+    private Coroutine openShopAfterBounceCoroutine;
+
     [Header("Category Buttons")]
     public Button helmetButton;
     public Button baloButton;
@@ -179,7 +184,7 @@ public class ShopCategoryManager : MonoBehaviour
 #endif
 
         if (openShopButton != null)
-            openShopButton.onClick.AddListener(OpenShop);
+            openShopButton.onClick.AddListener(HandleOpenShopButtonClicked);
 
         if (closeShopButton != null)
             closeShopButton.onClick.AddListener(CloseShop);
@@ -342,6 +347,25 @@ public class ShopCategoryManager : MonoBehaviour
 
         previousMainUIStates.Clear();
         mainUIHiddenByShop = false;
+    }
+
+    // Cho LobbyController chay xong hieu ung bounce cua ShopBtn
+    // roi moi mo Shop/an cac nut UI chinh.
+    private void HandleOpenShopButtonClicked()
+    {
+        if (IsShopOpen() || openShopAfterBounceCoroutine != null)
+            return;
+
+        openShopAfterBounceCoroutine = StartCoroutine(OpenShopAfterBounce());
+    }
+
+    private IEnumerator OpenShopAfterBounce()
+    {
+        if (shopButtonBounceDelay > 0f)
+            yield return new WaitForSecondsRealtime(shopButtonBounceDelay);
+
+        openShopAfterBounceCoroutine = null;
+        OpenShop();
     }
 
     public void OpenShop()

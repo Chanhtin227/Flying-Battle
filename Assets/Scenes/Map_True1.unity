@@ -275745,7 +275745,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86202f16c62082e429b8e362434012c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MatchManager
-  killLimit: 1
+  killLimit: 3
   matchDuration: 600
   _MatchStarted:
     RawValue: 0
