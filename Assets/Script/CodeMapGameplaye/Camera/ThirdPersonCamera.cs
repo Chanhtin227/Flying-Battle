@@ -2,6 +2,7 @@ using UnityEngine;
 using Fusion;
 using GameSettings;
 
+[DefaultExecutionOrder(-100)]
 public class ThirdPersonCamera : MonoBehaviour
 {
     // =========================================================
@@ -26,6 +27,18 @@ public class ThirdPersonCamera : MonoBehaviour
 
     [Header("Mouse")]
     public float mouseSensitivity = 150f;
+
+    // =====================================================
+    // PRECISION AIM SETTINGS
+    // =====================================================
+
+    [Header("Precision Aim")]
+
+    [Range(0.1f, 1f)]
+    public float aimSensitivityMultiplier = 0.65f;
+
+    [Range(0.1f, 1f)]
+    public float scopeSensitivityMultiplier = 0.40f;
 
 
     // =========================================================
@@ -551,56 +564,48 @@ public class ThirdPersonCamera : MonoBehaviour
         // CAMERA ROTATION
         // =====================================================
 
+        // =====================================================
+        // SMOOTH PRECISION CAMERA ROTATION
+        // =====================================================
+
         if (!inventoryOpen)
         {
-            // -------------------------------------------------
-            // MOUSE INPUT
-            // -------------------------------------------------
-
-            float mouseX =
-                Input.GetAxis("Mouse X");
-
-
-            float mouseY =
-                Input.GetAxis("Mouse Y");
-
-
-            // -------------------------------------------------
-            // GAME SETTINGS
-            // -------------------------------------------------
+            float mouseX = Input.GetAxis("Mouse X");
+            float mouseY = Input.GetAxis("Mouse Y");
 
             float sensitivityScale =
                 GameplaySettings.MouseSensitivity;
 
+            // Giam do nhay khi ngam.
+            float aimMultiplier = 1f;
 
-            // -------------------------------------------------
-            // YAW
-            // -------------------------------------------------
+            if (useSniperScope)
+            {
+                aimMultiplier = scopeSensitivityMultiplier;
+            }
+            else if (isAiming)
+            {
+                aimMultiplier = aimSensitivityMultiplier;
+            }
 
-            yaw +=
-                mouseX *
+            float finalSensitivity =
                 mouseSensitivity *
                 sensitivityScale *
-                Time.deltaTime;
+                aimMultiplier;
 
+            yaw += mouseX *
+                   finalSensitivity *
+                   Time.deltaTime;
 
-            // -------------------------------------------------
-            // PITCH
-            // -------------------------------------------------
+            pitch -= mouseY *
+                     finalSensitivity *
+                     Time.deltaTime;
 
-            pitch -=
-                mouseY *
-                mouseSensitivity *
-                sensitivityScale *
-                Time.deltaTime;
-
-
-            pitch =
-                Mathf.Clamp(
-                    pitch,
-                    minPitch,
-                    maxPitch
-                );
+            pitch = Mathf.Clamp(
+                pitch,
+                minPitch,
+                maxPitch
+            );
         }
 
 

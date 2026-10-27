@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Fusion;
 
+[DefaultExecutionOrder(100)]
 public class PlayerWeapon : NetworkBehaviour
 {
     public enum WeaponType
@@ -213,6 +214,22 @@ public class PlayerWeapon : NetworkBehaviour
     [Header("Gun Settings")]
 
     public Camera fpsCamera;
+
+    // =====================================================
+    // ACCURATE SHOOTING
+    // =====================================================
+
+    [Header("Accurate Shooting")]
+
+    [Tooltip("Layer cua tuong, dia hinh va Player.")]
+    public LayerMask shootingLayers = ~0;
+
+    [Tooltip("Ban kinh ho tro trung Player. 0 = tat.")]
+    [Range(0f, 0.3f)]
+    public float playerHitAssistRadius = 0.12f;
+
+    [Tooltip("Bo qua collider cua chinh Player.")]
+    public bool ignoreOwnColliders = true;
 
 
     // =========================================================
@@ -565,14 +582,6 @@ public class PlayerWeapon : NetworkBehaviour
         // =====================================================
 
         SmoothRotateToCamera();
-
-
-        // =====================================================
-        // SHOOT
-        // =====================================================
-
-        ShootInput();
-
 
         // =====================================================
         // MELEE
@@ -1897,6 +1906,204 @@ public class PlayerWeapon : NetworkBehaviour
     // SHOOT INPUT
     // =========================================================
 
+    // =====================================================
+    // CHECK OWN COLLIDER
+    // =====================================================
+
+    private bool IsOwnCollider(Collider collider)
+    {
+        if (!ignoreOwnColliders || collider == null)
+            return false;
+
+        return collider.transform == transform ||
+               collider.transform.IsChildOf(transform);
+    }
+
+
+    // =====================================================
+    // RAYCAST - IGNORE OWN PLAYER
+    // =====================================================
+
+    private bool TryRaycastWithoutSelf(
+        Ray ray,
+        float maxDistance,
+        out RaycastHit closestHit)
+    {
+        closestHit = default;
+
+        RaycastHit[] hits = Physics.RaycastAll(
+            ray,
+            maxDistance,
+            shootingLayers,
+            QueryTriggerInteraction.Ignore
+        );
+
+        float nearestDistance = float.MaxValue;
+        bool found = false;
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.collider == null)
+                continue;
+
+            if (IsOwnCollider(hit.collider))
+                continue;
+
+            if (hit.distance < nearestDistance)
+            {
+                nearestDistance = hit.distance;
+                closestHit = hit;
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
+
+    // =====================================================
+    // PLAYER HIT ASSIST
+    // =====================================================
+
+    private bool TryFindAssistedPlayerHit(
+        Ray ray,
+        float maxDistance,
+        out RaycastHit assistedHit)
+    {
+        assistedHit = default;
+
+        if (playerHitAssistRadius <= 0f)
+            return false;
+
+        RaycastHit[] hits = Physics.SphereCastAll(
+            ray,
+            playerHitAssistRadius,
+            maxDistance,
+            shootingLayers,
+            QueryTriggerInteraction.Ignore
+        );
+
+        float nearestDistance = float.MaxValue;
+        bool found = false;
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.collider == null)
+                continue;
+
+            if (IsOwnCollider(hit.collider))
+                continue;
+
+            PlayerHealth target =
+                hit.collider.GetComponentInParent<PlayerHealth>();
+
+            if (target == null ||
+                target == playerHealth ||
+                target.IsDead)
+            {
+                continue;
+            }
+
+            if (hit.distance < nearestDistance)
+            {
+                nearestDistance = hit.distance;
+                assistedHit = hit;
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
+
+    // =====================================================
+    // GET SHOOT HIT
+    // =====================================================
+
+    private bool TryGetShootHit(
+    Ray ray,
+    float maxDistance,
+    out RaycastHit finalHit)
+    {
+        finalHit = default;
+
+        bool hasNormalHit = TryRaycastWithoutSelf(
+            ray,
+            maxDistance,
+            out RaycastHit normalHit
+        );
+
+        if (playerHitAssistRadius <= 0f)
+        {
+            finalHit = normalHit;
+            return hasNormalHit;
+        }
+
+        RaycastHit[] hits = Physics.SphereCastAll(
+            ray,
+            playerHitAssistRadius,
+            maxDistance,
+            shootingLayers,
+            QueryTriggerInteraction.Ignore
+        );
+
+        // Tìm vật cản gần nhất trên đường quét mở rộng.
+        float blockingDistance = hasNormalHit
+            ? normalHit.distance
+            : maxDistance;
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.collider == null ||
+                IsOwnCollider(hit.collider))
+                continue;
+
+            PlayerHealth target =
+                hit.collider.GetComponentInParent<PlayerHealth>();
+
+            if (target == null &&
+                hit.distance < blockingDistance)
+            {
+                blockingDistance = hit.distance;
+            }
+        }
+
+        // Chỉ hỗ trợ trúng đối thủ trước vật cản.
+        bool foundPlayer = false;
+        float nearestDistance = blockingDistance;
+        RaycastHit playerHit = default;
+
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.collider == null ||
+                IsOwnCollider(hit.collider))
+                continue;
+
+            PlayerHealth target =
+                hit.collider.GetComponentInParent<PlayerHealth>();
+
+            if (target == null ||
+                target == playerHealth ||
+                target.IsDead)
+                continue;
+
+            if (hit.distance < nearestDistance)
+            {
+                nearestDistance = hit.distance;
+                playerHit = hit;
+                foundPlayer = true;
+            }
+        }
+
+        if (foundPlayer)
+        {
+            finalHit = playerHit;
+            return true;
+        }
+
+        finalHit = normalHit;
+        return hasNormalHit;
+    }
     private void ShootInput()
     {
         if (
@@ -1920,6 +2127,15 @@ public class PlayerWeapon : NetworkBehaviour
 
         if (fpsCamera == null)
             return;
+
+        if (firePoint == null)
+        {
+            Debug.LogWarning(
+                "[PlayerWeapon] FirePoint is missing!",
+                this
+            );
+            return;
+        }
 
 
         // =====================================================
@@ -2007,59 +2223,50 @@ public class PlayerWeapon : NetworkBehaviour
         // CROSSHAIR
         // =====================================================
 
-        Vector3 screenCenter =
-            new Vector3(
-                Screen.width * 0.5f,
-                Screen.height * 0.5f,
-                0f
-            );
+        // =====================================================
+        // ACCURATE CAMERA AIM
+        // =====================================================
 
+        float range = CurrentWeapon == WeaponType.Rifle
+            ? rifleRange
+            : pistolRange;
 
-        Ray cameraRay =
-            fpsCamera.ScreenPointToRay(
-                screenCenter
-            );
+        Vector3 screenCenter = new Vector3(
+            fpsCamera.pixelWidth * 0.5f,
+            fpsCamera.pixelHeight * 0.5f,
+            0f
+        );
 
+        Ray cameraRay = fpsCamera.ScreenPointToRay(
+            screenCenter
+        );
 
+        // Lay diem dang ngam tu Camera.
         Vector3 targetPoint;
 
-
-        if (
-            Physics.Raycast(
-                cameraRay,
-                out RaycastHit hit,
-                1000f,
-                ~0,
-                QueryTriggerInteraction.Ignore
-            )
-        )
+        if (TryRaycastWithoutSelf(
+            cameraRay,
+            range,
+            out RaycastHit cameraHit))
         {
-            targetPoint =
-                hit.point;
+            targetPoint = cameraHit.point;
         }
         else
         {
             targetPoint =
                 cameraRay.origin +
-                cameraRay.direction *
-                1000f;
+                cameraRay.direction * range;
         }
 
+        // Huong ban tu nong sung den diem Camera dang ngam.
+        Vector3 direction = targetPoint - firePoint.position;
 
-        if (firePoint == null)
+        if (direction.sqrMagnitude <= 0.0001f)
             return;
 
+        Vector3 shootDirection = direction.normalized;
 
-        Vector3 shootDirection =
-            (
-                targetPoint -
-                firePoint.position
-            ).normalized;
-
-
-        RequestShootRpc(
-            shootDirection
-        );
+        RequestShootRpc(shootDirection);
     }
 
 
@@ -2140,94 +2347,69 @@ public class PlayerWeapon : NetworkBehaviour
     }
 
 
-    // =========================================================
-    // SERVER SHOOT
-    // =========================================================
+    // =====================================================
+    // SERVER SHOOT - ACCURATE HIT DETECTION
+    // =====================================================
 
     private void ServerShoot(
         Vector3 shootDirection,
         float damage,
         float range)
     {
-        if (
-            !HasStateAuthority ||
+        if (!HasStateAuthority ||
             IsPlayerDead() ||
-            firePoint == null
-        )
+            firePoint == null)
         {
             return;
         }
 
+        if (shootDirection.sqrMagnitude <= 0.0001f)
+            return;
 
         shootDirection.Normalize();
 
+        Vector3 origin = firePoint.position;
 
-        Vector3 origin =
-            firePoint.position;
-
+        Ray ray = new Ray(
+            origin,
+            shootDirection
+        );
 
         Vector3 targetPoint =
-            origin +
-            shootDirection *
-            range;
+            origin + shootDirection * range;
 
-
-        Ray ray =
-            new Ray(
-                origin,
-                shootDirection
-            );
-
-
-        if (
-            Physics.Raycast(
-                ray,
-                out RaycastHit hit,
-                range,
-                ~0,
-                QueryTriggerInteraction.Ignore
-            )
-        )
+        // Kiem tra va cham, co ho tro hitbox.
+        if (TryGetShootHit(
+            ray,
+            range,
+            out RaycastHit hit))
         {
-            targetPoint =
-                hit.point;
-
+            targetPoint = hit.point;
 
             PlayerHealth target =
                 hit.collider.GetComponentInParent<PlayerHealth>();
 
-
-            if (target != null)
+            if (target != null &&
+                target != playerHealth &&
+                !target.IsDead)
             {
-                PlayerHealth ownHealth =
-                    GetComponentInParent<PlayerHealth>();
+                float healthBefore = target.CurrentHealth;
 
+                target.TakeDamage(
+                    damage,
+                    origin,
+                    Object.InputAuthority
+                );
 
-                if (
-                    target != ownHealth &&
-                    !target.IsDead
-                )
+                // Chi hien hitmarker khi sat thuong duoc ghi nhan.
+                if (target.CurrentHealth < healthBefore)
                 {
-                    // Chỉ hiển thị Hit Marker khi đạn gây sát thương thật.
-                    // Player đang bất tử không mất máu -> không hiện marker.
-                    float healthBefore = target.CurrentHealth;
-
-                    target.TakeDamage(
-                        damage,
-                        origin,
-                        Object.InputAuthority
-                    );
-
-                    if (target.CurrentHealth < healthBefore)
-                    {
-                        // Player chết vì phát bắn này -> marker đỏ.
-                        Rpc_ShowHitMarker(target.IsDead);
-                    }
+                    Rpc_ShowHitMarker(target.IsDead);
                 }
             }
         }
 
-
+        // Giu nguyen hieu ung, tracer va am thanh.
         Rpc_PlayShootEffects(
             origin,
             targetPoint,
@@ -4040,6 +4222,24 @@ public class PlayerWeapon : NetworkBehaviour
                 effect.enabled = false;
             }
         }
+    }
+
+    private void LateUpdate()
+    {
+        if (!HasInputAuthority)
+            return;
+
+        if (InventoryUI.IsInventoryOpen)
+            return;
+
+        if (IsPlayerDead() || IsReloading)
+            return;
+
+        if (MatchManager.Instance != null &&
+            MatchManager.Instance.MatchEnded)
+            return;
+
+        ShootInput();
     }
 
 }

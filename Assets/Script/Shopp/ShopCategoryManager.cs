@@ -101,6 +101,14 @@ public class ShopCategoryManager : MonoBehaviour
     [Tooltip("Increase this number before building a new version to reset purchases once.")]
     public int shopDataVersion = 1;
 
+    [Header("Starting Gold For New Build")]
+    [Tooltip("Reset Gold together with purchased items when Shop Data Version changes.")]
+    public bool resetGoldOnNewBuild = true;
+
+    [Min(0)]
+    [Tooltip("Gold granted once on a new build data version.")]
+    public int startingGoldOnNewBuild = 500;
+
     private const string ShopVersionKey = "FlyingBattle_ShopDataVersion";
 
     [Header("Purchased Items")]
@@ -269,6 +277,7 @@ public class ShopCategoryManager : MonoBehaviour
 
         // Khi vao Scene Main, mac lai do da EQUIP tu lan truoc.
         ApplySavedEquipment();
+        RefreshShopGold();
     }
 
     private void Update()
@@ -374,20 +383,47 @@ public class ShopCategoryManager : MonoBehaviour
             return;
 
         shopPanel.SetActive(true);
+
         // Luu trang thai UI truoc khi an ShopBtn.
         HideMainUIForShop();
 
         if (shopBtn != null)
             shopBtn.gameObject.SetActive(false);
 
-        // Mo Shop voi bo trang bi dang mac, khong reset ve do goc.
+        // Giu lai cac trang bi da EQUIP; khong tu mua hay trang bi Skin.
         ApplySavedEquipment();
 
-        currentCategory = null;
-        showingPurchasedItems = false;
+        // Moi lan mo Shop, tu dong hien tab Skin.
+        OpenSkin();
 
-        HideAllPanels();
-        ClearSelection();
+        // Chon Skin dau tien hop le theo thu tu Shop Items trong Inspector.
+        // SelectItem se cap nhat preview, GoldenBorder, gia va nut BUY/EQUIP.
+        ShopItem firstSkin = null;
+        if (shopItems != null)
+        {
+            foreach (ShopItem item in shopItems)
+            {
+                if (item == null ||
+                    item.category != ShopCategory.Skin ||
+                    item.itemButton == null ||
+                    string.IsNullOrWhiteSpace(item.itemID))
+                    continue;
+
+                firstSkin = item;
+                break;
+            }
+        }
+
+        if (firstSkin != null)
+        {
+            SelectItem(firstSkin);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[SHOP] Chua co Skin hop le trong Shop Items de chon mac dinh.", this);
+        }
+
         RefreshItemPrices();
         RefreshShopGold();
     }
@@ -1117,13 +1153,22 @@ public class ShopCategoryManager : MonoBehaviour
             PlayerPrefs.SetString(EquipPrefix + category, UnequippedValue);
         }
 
-        // Record version only after shop keys have been updated.
+        // Reset starting Gold on this new data version only.
+        // Do not reset on subsequent launches with the same version.
+        if (resetGoldOnNewBuild)
+        {
+            GoldWallet.SetGold(Mathf.Max(0, startingGoldOnNewBuild));
+        }
+
+        // Record version only after purchases/equipment/Gold have been updated.
         PlayerPrefs.SetInt(ShopVersionKey, targetVersion);
         PlayerPrefs.Save();
 
-        // Never touch Gold, player name, or unrelated PlayerPrefs here.
         Debug.Log("[SHOP] Build shop data version " + previousVersion +
-                  " -> " + targetVersion + ". Purchases reset once.", this);
+                  " -> " + targetVersion + ". Purchases reset once. " +
+                  (resetGoldOnNewBuild
+                      ? "Starting Gold = " + Mathf.Max(0, startingGoldOnNewBuild)
+                      : "Gold preserved"), this);
     }
 
     // ==========================================
