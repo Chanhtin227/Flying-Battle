@@ -51,18 +51,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     public GameObject panelSetting;
     public TMP_InputField settingNameInput;
 
-    [Header("Settings - Default General Tab")]
-    [Tooltip("Keo Panel General (Chung) ben trong PanelSetting vao day.")]
-    public GameObject generalSettingsPanel;
-
-    [Tooltip("Keo cac tab Settings khac (Audio, Graphics, Controls...) vao day. Khong keo panelSetting cha.")]
-    public GameObject[] otherSettingsPanels;
-
-    [Header("Settings - Auto Select Chung Button")]
-    [Tooltip("Keo ChungBtn vao day. Neu de trong, script tu tim ChungBtn trong PanelSetting.")]
-    public Button chungBtn;
-
-
     [Header("Transition Effect")]
     public Image fadeImage;
 
@@ -72,13 +60,10 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
     private RectTransform btn1vs1Rect;
     private RectTransform btn2vs2Rect;
-
     private Vector2 btn1vs1OriginalPos;
     private Vector2 btn2vs2OriginalPos;
-
     private CanvasGroup btn1vs1CanvasGroup;
     private CanvasGroup btn2vs2CanvasGroup;
-
     private Coroutine gameModeAnimationCoroutine;
     private bool isGameModeAnimating = false;
 
@@ -87,7 +72,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
     [Header("Waiting Text Animation")]
     [SerializeField] private float waitingTextSpeed = 0.35f;
-
     private float waitingTextTimer = 0f;
     private int waitingDotCount = 0;
 
@@ -170,70 +154,19 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
     private void OpenSettingsPanel()
     {
-        // Moi lan mo Settings: luon hien tab General (Chung) dau tien.
-        if (panelSetting != null)
-            panelSetting.SetActive(true);
-
-        // Hien tab Chung va goi dung su kien cua nut ChungBtn,
-        // de cac script Settings dang dung duoc cap nhat nhu khi bam tay.
-        ShowGeneralSettingsTab();
-        SelectChungButtonOnOpen();
-
+        if (panelSetting != null) panelSetting.SetActive(true);
         if (settingBtn != null) settingBtn.gameObject.SetActive(false);
         if (gameModeBtn != null) gameModeBtn.gameObject.SetActive(false);
         if (shopBtn != null) shopBtn.gameObject.SetActive(false);
-    }
-
-    private void SelectChungButtonOnOpen()
-    {
-        if (chungBtn == null && panelSetting != null)
-        {
-            // Scene hien tai co child ten "ChungBtn" trong PanelSetting.
-            foreach (Button button in panelSetting.GetComponentsInChildren<Button>(true))
-            {
-                if (button != null &&
-                    string.Equals(button.gameObject.name, "ChungBtn", StringComparison.OrdinalIgnoreCase))
-                {
-                    chungBtn = button;
-                    break;
-                }
-            }
-        }
-
-        if (chungBtn != null)
-        {
-            // Goi OnClick cua ChungBtn: dung luong logic tab co san.
-            chungBtn.onClick.Invoke();
-        }
-        else if (generalSettingsPanel == null)
-        {
-            Debug.LogWarning("[Settings] Khong tim thay ChungBtn. Gan ChungBtn hoac General Settings Panel trong Inspector.", this);
-        }
-    }
-
-    public void ShowGeneralSettingsTab()
-    {
-        if (otherSettingsPanels != null)
-        {
-            foreach (GameObject tab in otherSettingsPanels)
-            {
-                if (tab != null && tab != panelSetting && tab != generalSettingsPanel)
-                    tab.SetActive(false);
-            }
-        }
-
-        if (generalSettingsPanel != null)
-            generalSettingsPanel.SetActive(true);
-        // Neu khong gan General Settings Panel, ChungBtn se xu ly viec hien tab.
     }
 
     private void Start()
     {
         if (fadeImage != null) fadeImage.gameObject.SetActive(false);
         ResetUI();
+
         btn1vs1Rect = btn1vs1.GetComponent<RectTransform>();
         btn2vs2Rect = btn2vs2.GetComponent<RectTransform>();
-
         btn1vs1OriginalPos = btn1vs1Rect.anchoredPosition;
         btn2vs2OriginalPos = btn2vs2Rect.anchoredPosition;
 
@@ -249,9 +182,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         btn2vs2CanvasGroup.alpha = 1f;
 
         if (settingNameInput != null)
-        {
             settingNameInput.text = PlayerPrefs.GetString("MyPlayerName", "");
-        }
 
         RegisterButtonBounce(settingBtn);
         RegisterButtonBounce(shopBtn);
@@ -266,7 +197,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
         gameModeBtn.onClick.AddListener(() => StartCoroutine(DelayAction(buttonBounceDuration, OpenGameModePanel)));
         btnBack.onClick.AddListener(CloseGameModePanel);
-
         settingBtn.onClick.AddListener(() => StartCoroutine(DelayAction(buttonBounceDuration, OpenSettingsPanel)));
 
         closeSettingBtn.onClick.AddListener(() =>
@@ -280,7 +210,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
         btn1vs1.onClick.AddListener(() => CreateRoom(2, panelRoom1vs1, roomID_1vs1));
         btn2vs2.onClick.AddListener(() => CreateRoom(4, panelRoom2vs2, roomID_2vs2));
-
         inputID.onSubmit.AddListener((text) => JoinRoom());
 
         startBtn_1vs1.onClick.AddListener(StartMatch);
@@ -290,18 +219,15 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         if (quitBtn_2vs2 != null) quitBtn_2vs2.onClick.AddListener(QuitRoomAndReturnToGameMode);
     }
 
-    private void Update()
-    {
-        UpdateRoomUI();
-    }
+    private void Update() => UpdateRoomUI();
 
     private void UpdateRoomUI()
     {
         if (RoomData.Instance == null) return;
 
         var syncNames = RoomData.Instance.SyncPlayerNames;
-
         waitingTextTimer += Time.unscaledDeltaTime;
+
         if (waitingTextTimer >= waitingTextSpeed)
         {
             waitingTextTimer = 0f;
@@ -340,13 +266,12 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         if (isGameModeAnimating) return;
 
         panelGameMode.SetActive(true);
-        shopBtn.gameObject.SetActive(false);
-        gameModeBtn.gameObject.SetActive(false);
-        settingBtn.gameObject.SetActive(false);
+        if (shopBtn != null) shopBtn.gameObject.SetActive(false);
+        if (gameModeBtn != null) gameModeBtn.gameObject.SetActive(false);
+        if (settingBtn != null) settingBtn.gameObject.SetActive(false);
 
         btn1vs1Rect.anchoredPosition = btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
         btn2vs2Rect.anchoredPosition = btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
-
         btn1vs1CanvasGroup.alpha = 1f;
         btn2vs2CanvasGroup.alpha = 1f;
 
@@ -361,26 +286,22 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
         Vector2 startPos1 = btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
         Vector2 startPos2 = btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
-
         float time = 0f;
+
         while (time < gameModeSlideDuration)
         {
             time += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(time / gameModeSlideDuration);
             float smoothT = 1f - Mathf.Pow(1f - t, 3f);
-
             btn1vs1Rect.anchoredPosition = Vector2.LerpUnclamped(startPos1, btn1vs1OriginalPos, smoothT);
             btn2vs2Rect.anchoredPosition = Vector2.LerpUnclamped(startPos2, btn2vs2OriginalPos, smoothT);
-
             yield return null;
         }
 
         btn1vs1Rect.anchoredPosition = btn1vs1OriginalPos;
         btn2vs2Rect.anchoredPosition = btn2vs2OriginalPos;
-
         btn1vs1.interactable = true;
         btn2vs2.interactable = true;
-
         isGameModeAnimating = false;
         gameModeAnimationCoroutine = null;
     }
@@ -399,65 +320,61 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
         Vector2 startPos1 = btn1vs1Rect.anchoredPosition;
         Vector2 startPos2 = btn2vs2Rect.anchoredPosition;
-
         Vector2 targetPos1 = btn1vs1OriginalPos + Vector2.left * gameModeSlideDistance;
         Vector2 targetPos2 = btn2vs2OriginalPos + Vector2.right * gameModeSlideDistance;
-
         float startAlpha1 = btn1vs1CanvasGroup.alpha;
         float startAlpha2 = btn2vs2CanvasGroup.alpha;
-
         float time = 0f;
+
         while (time < gameModeSlideDuration)
         {
             time += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(time / gameModeSlideDuration);
             float smoothT = t * t * t;
-
             btn1vs1Rect.anchoredPosition = Vector2.LerpUnclamped(startPos1, targetPos1, smoothT);
             btn2vs2Rect.anchoredPosition = Vector2.LerpUnclamped(startPos2, targetPos2, smoothT);
-
             btn1vs1CanvasGroup.alpha = Mathf.Lerp(startAlpha1, 0f, t);
             btn2vs2CanvasGroup.alpha = Mathf.Lerp(startAlpha2, 0f, t);
-
             yield return null;
         }
 
         btn1vs1Rect.anchoredPosition = targetPos1;
         btn2vs2Rect.anchoredPosition = targetPos2;
-
-        btn1vs1CanvasGroup.alpha = 0f;
-        btn2vs2CanvasGroup.alpha = 0f;
+        ButtonCanvasGroupsFadeOut();
 
         panelGameMode.SetActive(false);
-
         btn1vs1Rect.anchoredPosition = btn1vs1OriginalPos;
         btn2vs2Rect.anchoredPosition = btn2vs2OriginalPos;
-
         btn1vs1CanvasGroup.alpha = 1f;
         btn2vs2CanvasGroup.alpha = 1f;
-
         btn1vs1.interactable = true;
         btn2vs2.interactable = true;
 
-        gameModeBtn.gameObject.SetActive(true);
-        settingBtn.gameObject.SetActive(true);
+        if (gameModeBtn != null) gameModeBtn.gameObject.SetActive(true);
+        if (settingBtn != null) settingBtn.gameObject.SetActive(true);
         if (shopBtn != null) shopBtn.gameObject.SetActive(true);
 
         isGameModeAnimating = false;
         gameModeAnimationCoroutine = null;
     }
 
+    private void ButtonCanvasGroupsFadeOut()
+    {
+        if (btn1vs1CanvasGroup != null) btn1vs1CanvasGroup.alpha = 0f;
+        if (btn2vs2CanvasGroup != null) btn2vs2CanvasGroup.alpha = 0f;
+    }
+
     private void ResetUI()
     {
-        shopBtn.gameObject.SetActive(true);
-        gameModeBtn.gameObject.SetActive(true);
-        settingBtn.gameObject.SetActive(true);
-        panelGameMode.SetActive(false);
-        panelRoom1vs1.SetActive(false);
-        panelRoom2vs2.SetActive(false);
-        startBtn_1vs1.gameObject.SetActive(false);
-        startBtn_2vs2.gameObject.SetActive(false);
-        panelSetting.SetActive(false);
+        if (shopBtn != null) shopBtn.gameObject.SetActive(true);
+        if (gameModeBtn != null) gameModeBtn.gameObject.SetActive(true);
+        if (settingBtn != null) settingBtn.gameObject.SetActive(true);
+        if (panelGameMode != null) panelGameMode.SetActive(false);
+        if (panelRoom1vs1 != null) panelRoom1vs1.SetActive(false);
+        if (panelRoom2vs2 != null) panelRoom2vs2.SetActive(false);
+        if (startBtn_1vs1 != null) startBtn_1vs1.gameObject.SetActive(false);
+        if (startBtn_2vs2 != null) startBtn_2vs2.gameObject.SetActive(false);
+        if (panelSetting != null) panelSetting.SetActive(false);
     }
 
     private async void CreateRoom(int players, GameObject roomPanelToOpen, TextMeshProUGUI roomIDText)
@@ -500,18 +417,15 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         currentRunner.ProvideInput = true;
         GameInputManager.EnsureForRunner(currentRunner);
 
-        var startGameArgs = new StartGameArgs()
+        var startGameArgs = new StartGameArgs
         {
             GameMode = GameMode.AutoHostOrClient,
             SessionName = sessionName,
-            SceneManager = networkSceneManager
+            SceneManager = networkSceneManager,
+            HostMigrationToken = null
         };
 
-        // Nếu người chơi nhấn Create, ưu tiên cấp số lượng max player cho phòng mới tạo
-        if (maxPlayers > 0)
-        {
-            startGameArgs.PlayerCount = maxPlayers;
-        }
+        if (maxPlayers > 0) startGameArgs.PlayerCount = maxPlayers;
 
         var result = await currentRunner.StartGame(startGameArgs);
 
@@ -522,10 +436,8 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
             if (currentRunner.IsServer)
             {
-                if (roomDataPrefab != null)
-                {
-                    currentRunner.Spawn(roomDataPrefab);
-                }
+                if (roomDataPrefab != null) currentRunner.Spawn(roomDataPrefab);
+
                 startBtn_1vs1.gameObject.SetActive(maxPlayers == 2);
                 startBtn_2vs2.gameObject.SetActive(maxPlayers == 4);
                 if (maxPlayers == 2) panelRoom1vs1.SetActive(true);
@@ -548,6 +460,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
                     roomID_2vs2.text = "ID: " + sessionName;
                 }
             }
+
             await Fade(0f, 0.5f);
         }
         else
@@ -574,7 +487,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         if (startBtn_1vs1 != null) startBtn_1vs1.gameObject.SetActive(false);
         if (startBtn_2vs2 != null) startBtn_2vs2.gameObject.SetActive(false);
 
-        // [FIX] Cắt đứt liên kết Runner ngay lập tức để không dùng lại Runner đang bị lỗi
         NetworkRunner runnerToShutdown = currentRunner;
         currentRunner = null;
         networkSceneManager = null;
@@ -584,7 +496,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             try
             {
                 await runnerToShutdown.Shutdown();
-                Destroy(runnerToShutdown.gameObject); // Phá hủy hoàn toàn object cũ
+                Destroy(runnerToShutdown.gameObject);
             }
             catch (Exception e)
             {
@@ -594,7 +506,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
         if (panelGameMode != null) panelGameMode.SetActive(false);
         await Fade(0f, 0.35f);
-
         OpenGameModePanel();
         Debug.Log("[Lobby] Đã thoát phòng và dọn dẹp hệ thống mạng.");
     }
@@ -614,7 +525,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         int currentPlayers = currentRunner.SessionInfo.PlayerCount;
-
         if (currentPlayers < maxPlayers)
         {
             Debug.LogWarning($"[Lobby] Chưa đủ người chơi!\nCurrent: {currentPlayers}\nRequired: {maxPlayers}");
@@ -623,7 +533,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         Debug.Log("[Lobby] Đủ người chơi. Starting Match...");
-
         if (currentRunner.SessionInfo.IsValid)
         {
             currentRunner.SessionInfo.IsOpen = false;
@@ -659,6 +568,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             yield return new WaitForSeconds(1.5f);
             errorText.gameObject.SetActive(false);
         }
+
         errorNotificationCoroutine = null;
     }
 
@@ -667,9 +577,8 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         if (fadeImage == null) return;
 
         fadeImage.gameObject.SetActive(true);
-
         float startAlpha = fadeImage.color.a;
-        float time = 0;
+        float time = 0f;
 
         while (time < duration)
         {
@@ -680,27 +589,19 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         }
 
         fadeImage.color = new Color(0, 0, 0, targetAlpha);
-
-        if (targetAlpha == 0)
-        {
-            fadeImage.gameObject.SetActive(false);
-        }
+        if (targetAlpha == 0) fadeImage.gameObject.SetActive(false);
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        if (!runner.IsServer) return;
-        if (!runner.SessionInfo.IsValid) return;
+        if (!runner.IsServer || !runner.SessionInfo.IsValid) return;
 
-        // [FIX] Đếm người chơi thực tế đang kết nối thay vì dùng SessionInfo.PlayerCount (dễ bị delay)
         int currentPlayers = 0;
         foreach (var p in runner.ActivePlayers) currentPlayers++;
 
         int roomMaxPlayers = runner.SessionInfo.MaxPlayers;
-
         Debug.Log($"[Lobby] Player Joined | Current = {currentPlayers} | Max = {roomMaxPlayers}");
 
-        // Khóa phòng và ẩn phòng đi khi đã đủ người
         if (currentPlayers >= roomMaxPlayers)
         {
             runner.SessionInfo.IsOpen = false;
@@ -711,7 +612,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        // [FIX] Chỉ cần có người thoát ra (mà trận đấu chưa bắt đầu), Host sẽ luôn mở khóa lại phòng
         if (runner.IsServer && runner.SessionInfo.IsValid)
         {
             runner.SessionInfo.IsOpen = true;
@@ -719,6 +619,9 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             Debug.Log($"[Lobby] Người chơi {player} đã thoát. Mở khóa lại phòng (IsOpen = true).");
         }
     }
+
+    public void OnInput(NetworkRunner runner, NetworkInput input) { }
+    public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
 
     public async void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
     {
@@ -737,7 +640,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
         currentRunner.AddCallbacks(this);
         networkSceneManager = currentRunner.gameObject.AddComponent<NetworkSceneManagerDefault>();
 
-        var startGameArgs = new StartGameArgs()
+        var startGameArgs = new StartGameArgs
         {
             HostMigrationToken = hostMigrationToken,
             SceneManager = networkSceneManager
@@ -751,7 +654,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             Debug.Log("[Lobby] Chuyển quyền Host THÀNH CÔNG!");
             if (currentRunner.IsServer)
             {
-                // [FIX] Mở khóa phòng lại vì phòng có thể đã bị khóa từ trước khi Host cũ out
                 if (currentRunner.SessionInfo.IsValid)
                 {
                     currentRunner.SessionInfo.IsOpen = true;
@@ -761,11 +663,7 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
 
                 startBtn_1vs1.gameObject.SetActive(maxPlayers == 2);
                 startBtn_2vs2.gameObject.SetActive(maxPlayers == 4);
-
-                if (roomDataPrefab != null)
-                {
-                    currentRunner.Spawn(roomDataPrefab);
-                }
+                if (roomDataPrefab != null) currentRunner.Spawn(roomDataPrefab);
             }
         }
         else
@@ -778,17 +676,12 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
         Debug.LogWarning("[Lobby] Mất kết nối từ Server: " + reason);
-        // [QUAN TRỌNG] Phải để trống phần này! 
-        // Không gọi QuitRoomAndReturnToGameMode() ở đây. Nếu Host thoát, Fusion sẽ xử lý ở OnHostMigration.
-        // Nếu lỡ gọi Quit ở đây, Client sẽ tự thoát game trước khi kịp làm Host.
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         Debug.Log($"[Lobby] OnShutdown called. Reason: {shutdownReason}");
 
-        // Chỉ dọn dẹp UI và văng ra sảnh nếu Runner bị sập chính là phiên đang chơi hiện tại
-        // (Điều kiện này bỏ qua Runner cũ đang trong quá trình chuyển giao Host Migration)
         if (runner == currentRunner)
         {
             runner.RemoveCallbacks(this);
@@ -796,7 +689,6 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
             currentRunner = null;
             networkSceneManager = null;
 
-            // Xóa UI phòng cũ nếu có lỗi sập thật sự
             if ((panelRoom1vs1 != null && panelRoom1vs1.activeSelf) ||
                 (panelRoom2vs2 != null && panelRoom2vs2.activeSelf))
             {
@@ -806,16 +698,10 @@ public class LobbyController : MonoBehaviour, INetworkRunnerCallbacks
                 if (startBtn_2vs2 != null) startBtn_2vs2.gameObject.SetActive(false);
 
                 if (panelGameMode != null && !panelGameMode.activeSelf)
-                {
                     OpenGameModePanel();
-                }
             }
         }
     }
-
-    public void OnInput(NetworkRunner runner, NetworkInput input) { }
-    public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
-
 
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
